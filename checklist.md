@@ -48,3 +48,5 @@
 ## J. Build-Fixes (2026-04-23)
 - [x] Arduino-Makrokonflikt `LOW`/`HIGH` in `PressureState` behoben
 - [x] ArduinoJson-v7-kompatibles Parsing (`JsonVariantConst` statt kopierter Proxies)
+- [x] `ProjectConfig.h` auf explizite `config/...` Includes umgestellt (verhindert versehentliches Einbinden eines fremden `config.h`)
+- [x] `MqttManager::connected()` nicht-`const` gemacht (PubSubClient API ist nicht `const`-korrekt)

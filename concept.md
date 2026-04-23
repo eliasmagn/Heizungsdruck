@@ -21,3 +21,5 @@ Ein stabiler, ressourcenschonender ESP32-Heizungsdruckmonitor mit lokal bedienba
 - Erfolgreicher Build auf `esp32dev`.
 - Deterministische Host-Tests für Kernlogik.
 - Verständliche Dokumentation für Betrieb und Wartung.
+
+- Build-Stabilität: Konfigurations-Header dürfen keine fremden Framework-Header maskieren.

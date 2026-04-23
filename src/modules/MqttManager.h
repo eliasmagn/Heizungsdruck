@@ -12,7 +12,7 @@ class MqttManager {
   void begin(const AppConfig &cfg);
   void loop(uint32_t nowMs);
   void publishReading(const PressureReading &reading, PressureState state, bool wifiConnected, uint32_t uptimeSec);
-  bool connected() const { return client_.connected(); }
+  bool connected() { return client_.connected(); }
 
  private:
   void reconnect(uint32_t nowMs);
