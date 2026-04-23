@@ -9,6 +9,7 @@
 - Persistente, validierte Konfiguration
 
 ## Phase 2 (nächstes Ziel)
+- Tooling-Härtung: Build-Umgebung mit dokumentierter `intelhex`-Abhängigkeit für `esptool` stabilisieren
 - Settings-Seite um vollständige Sensor/MQTT-Felder erweitern
 - Konfig-Export/Import als JSON Endpoint
 - UI-Verbesserungen für Alarmübergänge im History-Chart

@@ -101,6 +101,7 @@ Base topic: `heizungsdruck` (configurable)
 - Main loop remains responsive (short loop delay).
 - Wi-Fi/MQTT reconnect attempts are throttled.
 - Invalid config falls back to defaults through validation.
+- Project config loader uses explicit `config/...` include paths to avoid accidental framework `config.h` collisions.
 
 ## Testing & verification
 Automated:

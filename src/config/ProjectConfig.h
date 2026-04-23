@@ -1,15 +1,16 @@
 #pragma once
 
-#if __has_include("config.h")
-#include "config.h"
+// Use explicit relative include names to avoid accidentally picking up framework/system config.h
+#if __has_include("config/config.h")
+#include "config/config.h"
 #else
-#include "config.h.example"
+#include "config/config.h.example"
 #warning "Using config.h.example defaults. Copy src/config/config.h.example to src/config/config.h"
 #endif
 
-#if __has_include("secrets.h")
-#include "secrets.h"
+#if __has_include("config/secrets.h")
+#include "config/secrets.h"
 #else
-#include "secrets.h.example"
+#include "config/secrets.h.example"
 #warning "Using secrets.h.example defaults. Copy src/config/secrets.h.example to src/config/secrets.h"
 #endif
