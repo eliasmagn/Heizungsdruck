@@ -1,0 +1,13 @@
+.pio/
+.vscode/
+.DS_Store
+*.log
+
+# Local config/secrets
+src/config/config.h
+src/config/secrets.h
+
+# Build artifacts
+coverage/
+*.gcda
+*.gcno
