@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Heizungsdruck</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Heizungsdruck Monitor</h1>
+    <nav>
+      <button data-tab="dashboard">Dashboard</button>
+      <button data-tab="settings">Settings</button>
+      <button data-tab="calibration">Kalibrierung</button>
+      <button data-tab="diag">Diagnose</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="dashboard" class="tab active">
+      <div class="card"><h2>Druck</h2><p id="pressure">--.- bar</p><p id="state">-</p></div>
+      <div class="card"><h2>History</h2><canvas id="history" width="800" height="220"></canvas></div>
+    </section>
+
+    <section id="settings" class="tab">
+      <div class="grid">
+        <div class="card">
+          <h2>Netzwerk</h2>
+          <label>WiFi SSID <input id="wifiSsid"></label>
+          <label>WiFi Passwort <input id="wifiPassword" type="password"></label>
+          <label>AP SSID <input id="apSsid"></label>
+          <label>AP Passwort <input id="apPassword"></label>
+          <button id="saveNetwork">Netzwerk speichern</button>
+        </div>
+        <div class="card">
+          <h2>MQTT</h2>
+          <label>Host <input id="mqttHost"></label>
+          <label>Port <input id="mqttPort" type="number"></label>
+          <label>User <input id="mqttUser"></label>
+          <label>Passwort <input id="mqttPass" type="password"></label>
+          <label>Topic Prefix <input id="mqttTopic"></label>
+          <label>Publish-Intervall (ms) <input id="mqttInterval" type="number"></label>
+          <button id="saveMqtt">MQTT speichern</button>
+        </div>
+        <div class="card">
+          <h2>WireGuard</h2>
+          <label><input id="wgEnabled" type="checkbox"> Integration aktiv</label>
+          <label>Status URL <input id="wgStatusUrl"></label>
+          <label>Enable URL <input id="wgEnableUrl"></label>
+          <label>Disable URL <input id="wgDisableUrl"></label>
+          <label>Auth Token <input id="wgAuthToken"></label>
+          <button id="saveWg">WireGuard speichern</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Alarm</h2>
+        <label>Low bar <input id="lowBar" type="number" step="0.01"></label>
+        <label>High bar <input id="highBar" type="number" step="0.01"></label>
+        <label>Hysterese <input id="hysteresis" type="number" step="0.01"></label>
+        <label>Wiederholung (Minuten) <input id="repeatMinutes" type="number"></label>
+        <label>Telegram Bot Token <input id="tgToken"></label>
+        <label>Telegram Chat ID <input id="tgChat"></label>
+        <label>Email Webhook URL <input id="webhook"></label>
+        <button id="saveAlarm">Alarm speichern</button>
+      </div>
+      <pre id="saveResult"></pre>
+      <div class="card">
+        <h2>Config Export / Import</h2>
+        <button id="exportConfig">Export laden</button>
+        <button id="importConfig">Import speichern</button>
+        <textarea id="configJson" rows="12"></textarea>
+      </div>
+    </section>
+
+    <section id="calibration" class="tab">
+      <div class="card">
+        <h2>Geführte Kalibrierung (21 Punkte)</h2>
+        <p>Aktueller ADC: <strong id="currentAdc">-</strong></p>
+        <label>Bar-Wert für Capture <input id="captureBar" type="number" min="0" max="10" step="0.5" value="1.0"></label>
+        <button id="capturePoint">Punkt speichern</button>
+        <button id="clearPoints">Alle Punkte löschen</button>
+        <button id="saveCalibTable">Tabelle speichern</button>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>bar</th><th>adc</th><th>valid</th></tr></thead>
+          <tbody id="pointRows"></tbody>
+        </table>
+      </div>
+      <pre id="calibResult"></pre>
+    </section>
+
+    <section id="diag" class="tab">
+      <div class="card">
+        <h2>Diagnose</h2>
+        <button id="testTelegram">Test Telegram</button>
+        <button id="testWebhook">Test Webhook</button>
+        <button id="wgStatus">WG Status</button>
+        <button id="wgEnable">WG Enable</button>
+        <button id="wgDisable">WG Disable</button>
+        <button id="reboot">Reboot</button>
+        <pre id="diagOut"></pre>
+      </div>
+    </section>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>

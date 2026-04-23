@@ -51,11 +51,25 @@ void test_config_validation() {
 void test_json_roundtrip() {
   AppConfig cfg = defaultConfig();
   cfg.alarm.lowBar = 0.9f;
+  cfg.alarm.repeatMinutes = 45;
+  cfg.calib.points[0].valid = true;
+  cfg.calib.points[0].adc = 450;
+  cfg.calib.points[1].valid = true;
+  cfg.calib.points[1].adc = 610;
+  cfg.wireguard.enabled = true;
+  cfg.wireguard.statusUrl = "https://wg.example/status";
+  cfg.wireguard.enableUrl = "https://wg.example/enable";
+  cfg.wireguard.disableUrl = "https://wg.example/disable";
   std::string json = configToJson(cfg);
   AppConfig out = defaultConfig();
   std::string err;
   TEST_ASSERT_TRUE(configFromJson(json, out, err));
   TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.9f, out.alarm.lowBar);
+  TEST_ASSERT_EQUAL_UINT16(45, out.alarm.repeatMinutes);
+  TEST_ASSERT_TRUE(out.calib.points[0].valid);
+  TEST_ASSERT_EQUAL_INT(450, out.calib.points[0].adc);
+  TEST_ASSERT_TRUE(out.wireguard.enabled);
+  TEST_ASSERT_EQUAL_STRING("https://wg.example/status", out.wireguard.statusUrl.c_str());
 }
 
 int main(int, char **) {
