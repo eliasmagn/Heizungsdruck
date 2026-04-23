@@ -5,9 +5,9 @@
 enum class PressureState : uint8_t {
   UNKNOWN = 0,
   SENSOR_FAULT = 1,
-  LOW = 2,
+  PRESSURE_LOW = 2,
   OK = 3,
-  HIGH = 4,
+  PRESSURE_HIGH = 4,
 };
 
 enum class SensorFault : uint8_t {

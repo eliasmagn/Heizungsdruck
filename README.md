@@ -29,7 +29,7 @@ Pressure Sensor VCC ---------------------------------> Sensor supply (per datash
 ## Architecture (concise)
 - `PressureSensor`: sampling + robust filtering + fault classification
 - `PressureMath`: ADC→voltage/bar conversion + calibration math
-- `PressureStateMachine`: `UNKNOWN`, `SENSOR_FAULT`, `LOW`, `OK`, `HIGH` with hysteresis
+- `PressureStateMachine`: `UNKNOWN`, `SENSOR_FAULT`, `PRESSURE_LOW`, `OK`, `PRESSURE_HIGH` with hysteresis
 - `PressureHistory`: bounded in-memory trend buffer
 - `ConfigStore`: persistent config storage in NVS/Preferences
 - `MqttManager`: telemetry + reconnect + status topics
@@ -126,6 +126,8 @@ Manual checklist:
 - `ModuleNotFoundError: intelhex`: run `pip install intelhex`.
 - Build warnings about example config: copy `.example` files as described.
 - No web UI: verify Wi-Fi connection and IP in serial monitor.
+- Arduino compile error around `LOW`/`HIGH`: fixed by using non-Arduino-conflicting pressure enum names (`PRESSURE_LOW`/`PRESSURE_HIGH`).
+- ArduinoJson v7 `MemberProxy ... is private`: avoid `auto section = doc["..."]` copies; use `JsonVariantConst` for section access.
 
 ## Limitations / future improvements
 - Settings page currently exposes core threshold/offset values only.

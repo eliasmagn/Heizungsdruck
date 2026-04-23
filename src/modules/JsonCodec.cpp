@@ -55,7 +55,7 @@ bool configFromJson(const std::string &json, AppConfig &cfgOut, std::string &err
     return false;
   }
 
-  auto s = doc["sensor"];
+  JsonVariantConst s = doc["sensor"];
   setIfExists(s["adcPin"], cfgOut.sensor.adcPin);
   setIfExists(s["sampleCount"], cfgOut.sensor.sampleCount);
   setIfExists(s["updateIntervalMs"], cfgOut.sensor.updateIntervalMs);
@@ -64,19 +64,19 @@ bool configFromJson(const std::string &json, AppConfig &cfgOut, std::string &err
   setIfExists(s["shortVccAdc"], cfgOut.sensor.shortVccAdc);
   setIfExists(s["maxJumpBar"], cfgOut.sensor.maxJumpBar);
 
-  auto c = doc["calib"];
+  JsonVariantConst c = doc["calib"];
   setIfExists(c["adcLow"], cfgOut.calib.adcLow);
   setIfExists(c["adcHigh"], cfgOut.calib.adcHigh);
   setIfExists(c["barLow"], cfgOut.calib.barLow);
   setIfExists(c["barHigh"], cfgOut.calib.barHigh);
   setIfExists(c["offsetBar"], cfgOut.calib.offsetBar);
 
-  auto a = doc["alarm"];
+  JsonVariantConst a = doc["alarm"];
   setIfExists(a["lowBar"], cfgOut.alarm.lowBar);
   setIfExists(a["highBar"], cfgOut.alarm.highBar);
   setIfExists(a["hysteresisBar"], cfgOut.alarm.hysteresisBar);
 
-  auto m = doc["mqtt"];
+  JsonVariantConst m = doc["mqtt"];
   setIfExists(m["enabled"], cfgOut.mqtt.enabled);
   setIfExists(m["host"], cfgOut.mqtt.host);
   setIfExists(m["port"], cfgOut.mqtt.port);
@@ -86,7 +86,7 @@ bool configFromJson(const std::string &json, AppConfig &cfgOut, std::string &err
   setIfExists(m["topicBase"], cfgOut.mqtt.topicBase);
   setIfExists(m["publishIntervalMs"], cfgOut.mqtt.publishIntervalMs);
 
-  auto n = doc["network"];
+  JsonVariantConst n = doc["network"];
   setIfExists(n["hostname"], cfgOut.network.hostname);
 
   return cfgOut.validate(error);

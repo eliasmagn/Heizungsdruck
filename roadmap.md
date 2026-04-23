@@ -12,6 +12,7 @@
 - Settings-Seite um vollständige Sensor/MQTT-Felder erweitern
 - Konfig-Export/Import als JSON Endpoint
 - UI-Verbesserungen für Alarmübergänge im History-Chart
+- CI/Build-Absicherung gegen Arduino-Makrokollisionen und ArduinoJson-Major-Upgrades
 
 ## Phase 3
 - OTA-Update Workflow
