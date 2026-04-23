@@ -1,0 +1,4 @@
+#pragma once
+
+#define DEVICE_HOSTNAME "heizungsdruck"
+#define WIFI_CONNECT_TIMEOUT_MS 20000
