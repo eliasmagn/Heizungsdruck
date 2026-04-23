@@ -13,7 +13,7 @@
 - [x] Fault detection (disconnect/short/jump)
 
 ## C. State machine
-- [x] Zustände `UNKNOWN`, `SENSOR_FAULT`, `LOW`, `OK`, `HIGH`
+- [x] Zustände `UNKNOWN`, `SENSOR_FAULT`, `PRESSURE_LOW`, `OK`, `PRESSURE_HIGH`
 - [x] Threshold + Hysterese umgesetzt
 - [x] Letzten gültigen Wert bei Fault beibehalten
 
@@ -44,3 +44,7 @@
 - [x] README vollständig überarbeitet
 - [x] Deterministische Tests für Kernlogik hinzugefügt
 - [x] Manuelle Verifikations-Checkliste dokumentiert
+
+## J. Build-Fixes (2026-04-23)
+- [x] Arduino-Makrokonflikt `LOW`/`HIGH` in `PressureState` behoben
+- [x] ArduinoJson-v7-kompatibles Parsing (`JsonVariantConst` statt kopierter Proxies)

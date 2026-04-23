@@ -13,21 +13,21 @@ PressureState PressureStateMachine::update(const PressureReading &reading) {
   const float h = cfg_.alarm.hysteresisBar;
 
   switch (state_) {
-    case PressureState::LOW:
+    case PressureState::PRESSURE_LOW:
       if (reading.pressureBar >= low + h) state_ = PressureState::OK;
       break;
-    case PressureState::HIGH:
+    case PressureState::PRESSURE_HIGH:
       if (reading.pressureBar <= high - h) state_ = PressureState::OK;
       break;
     case PressureState::OK:
-      if (reading.pressureBar < low - h) state_ = PressureState::LOW;
-      else if (reading.pressureBar > high + h) state_ = PressureState::HIGH;
+      if (reading.pressureBar < low - h) state_ = PressureState::PRESSURE_LOW;
+      else if (reading.pressureBar > high + h) state_ = PressureState::PRESSURE_HIGH;
       break;
     case PressureState::UNKNOWN:
     case PressureState::SENSOR_FAULT:
     default:
-      if (reading.pressureBar < low) state_ = PressureState::LOW;
-      else if (reading.pressureBar > high) state_ = PressureState::HIGH;
+      if (reading.pressureBar < low) state_ = PressureState::PRESSURE_LOW;
+      else if (reading.pressureBar > high) state_ = PressureState::PRESSURE_HIGH;
       else state_ = PressureState::OK;
       break;
   }

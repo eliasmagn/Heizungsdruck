@@ -27,9 +27,9 @@ void MqttManager::reconnect(uint32_t nowMs) {
 String MqttManager::stateToString(PressureState s) const {
   switch (s) {
     case PressureState::SENSOR_FAULT: return "SENSOR_FAULT";
-    case PressureState::LOW: return "PRESSURE_LOW";
+    case PressureState::PRESSURE_LOW: return "PRESSURE_LOW";
     case PressureState::OK: return "PRESSURE_OK";
-    case PressureState::HIGH: return "PRESSURE_HIGH";
+    case PressureState::PRESSURE_HIGH: return "PRESSURE_HIGH";
     default: return "PRESSURE_UNKNOWN";
   }
 }

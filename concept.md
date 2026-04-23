@@ -11,7 +11,7 @@ Ein stabiler, ressourcenschonender ESP32-Heizungsdruckmonitor mit lokal bedienba
 
 ## Umgesetzte Architektur
 - `PressureSensor` + `PressureMath`: ADC Pipeline, robustes Filter, 2-Punkt Kalibrierung, Offset.
-- `PressureStateMachine`: `UNKNOWN`, `SENSOR_FAULT`, `LOW`, `OK`, `HIGH` mit Hysterese.
+- `PressureStateMachine`: `UNKNOWN`, `SENSOR_FAULT`, `PRESSURE_LOW`, `OK`, `PRESSURE_HIGH` mit Hysterese.
 - `PressureHistory`: bounded trend buffer für UI.
 - `ConfigStore` + `JsonCodec`: persistente und validierte Konfiguration.
 - `WebUI`: Dashboard/History/Settings/Diagnostics + JSON APIs.

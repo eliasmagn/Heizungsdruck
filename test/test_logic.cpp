@@ -32,9 +32,9 @@ void test_state_hysteresis() {
   r.fault = SensorFault::NONE;
 
   r.pressureBar = 0.8f;
-  TEST_ASSERT_EQUAL_INT(static_cast<int>(PressureState::LOW), static_cast<int>(sm.update(r)));
+  TEST_ASSERT_EQUAL_INT(static_cast<int>(PressureState::PRESSURE_LOW), static_cast<int>(sm.update(r)));
   r.pressureBar = 1.05f;
-  TEST_ASSERT_EQUAL_INT(static_cast<int>(PressureState::LOW), static_cast<int>(sm.update(r)));
+  TEST_ASSERT_EQUAL_INT(static_cast<int>(PressureState::PRESSURE_LOW), static_cast<int>(sm.update(r)));
   r.pressureBar = 1.2f;
   TEST_ASSERT_EQUAL_INT(static_cast<int>(PressureState::OK), static_cast<int>(sm.update(r)));
 }
