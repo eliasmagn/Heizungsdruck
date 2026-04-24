@@ -1,12 +1,13 @@
 #pragma once
 
+#include <array>
 #include <stdint.h>
 #include <string>
 
 struct SensorConfig {
   uint8_t adcPin{34};
   uint16_t sampleCount{9};
-  uint32_t updateIntervalMs{1000};
+  uint32_t updateIntervalMs{100};
   float adcVref{3.3f};
   int adcMax{4095};
   int disconnectAdc{80};
@@ -21,12 +22,23 @@ struct CalibrationConfig {
   float barLow{0.0f};
   float barHigh{10.0f};
   float offsetBar{0.0f};
+  static constexpr size_t kPointCount = 21;
+  struct Point {
+    float bar{0.0f};
+    int adc{0};
+    bool valid{false};
+  };
+  std::array<Point, kPointCount> points{};
 };
 
 struct AlarmConfig {
   float lowBar{1.0f};
   float highBar{2.2f};
   float hysteresisBar{0.1f};
+  uint16_t repeatMinutes{30};
+  std::string telegramBotToken;
+  std::string telegramChatId;
+  std::string emailWebhookUrl;
 };
 
 struct MqttConfig {
@@ -41,7 +53,19 @@ struct MqttConfig {
 };
 
 struct NetworkConfig {
+  std::string wifiSsid;
+  std::string wifiPassword;
+  std::string apSsid{"Heizungsdruck-Setup"};
+  std::string apPassword;
   std::string hostname{"heizungsdruck"};
+};
+
+struct WireGuardConfig {
+  bool enabled{false};
+  std::string statusUrl;
+  std::string enableUrl;
+  std::string disableUrl;
+  std::string authToken;
 };
 
 struct AppConfig {
@@ -50,6 +74,7 @@ struct AppConfig {
   AlarmConfig alarm;
   MqttConfig mqtt;
   NetworkConfig network;
+  WireGuardConfig wireguard;
 
   bool validate(std::string &error) const;
 };

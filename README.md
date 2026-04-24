@@ -5,6 +5,19 @@ Lean ESP32 firmware for heating pressure monitoring with local web app, persiste
 ## Migration note (from ESPHome to custom firmware)
 This repository is now a **full PlatformIO project** and no longer ESPHome-centric. The old limitations (restricted UI/control paths) are replaced with modular C++ firmware and an embedded web application.
 
+## Architekturentscheidung (ergänzt)
+Für das Projektziel ist **eigene Firmware + eigene Webapp in PlatformIO** der saubere Weg. ESPHome bleibt nützlich für einfache "Sensor + MQTT"-Setups, ist für folgende Anforderungen aber zu eng:
+- echte Konfigurationsseiten
+- geführte Kalibrierung (21 Punkte)
+- Passwort- und Netzwerkkonfiguration
+- später modulare WireGuard-Steuerung
+- saubere, erweiterbare Alarm- und UX-Logik
+
+Deshalb bleibt der technische Schnitt:
+- **ESP32/Arduino unter PlatformIO** als Backend
+- **LittleFS + statische Web-Dateien** als Frontend-Auslieferung
+- **JSON/REST API** als klare Schnittstelle zwischen Firmware und UI
+
 ## Project purpose
 - Robustly read an analog pressure transducer (10 bar type, operation focus 0–2 bar).
 - Detect meaningful heating pressure states and sensor faults.
@@ -55,18 +68,109 @@ cp src/config/secrets.h.example src/config/secrets.h
 
 Tracked source never needs real credentials. `.gitignore` excludes local config/secrets.
 
-## Build / flash / monitor
+## Build / flash / monitor / filesystem upload
 ```bash
 pio run
 pio run -t upload
+pio run -t uploadfs
 pio device monitor
 ```
 
 ## Web UI overview
-- `/` Dashboard: live pressure, alarm state, connectivity, debug payload
-- `/history` Trend chart (lightweight canvas)
-- `/settings` threshold and offset updates
-- `/diag` diagnostics + restart action
+- LittleFS-hosted SPA (`data/index.html`, `data/app.js`, `data/style.css`)
+- Dashboard: live pressure + history canvas
+- Settings: network, MQTT, alarm channels
+- Optional WireGuard control integration (status/enable/disable via configured URLs)
+- Calibration: 21 points (0.0…10.0 bar in 0.5 steps), capture + clear
+- Calibration table edit + persist from UI
+- Config export/import via JSON textarea
+- Diagnostics: telemetry dump, telegram/webhook test, reboot
+
+## OLED Display (SSD1306) – live status
+- Display module: `src/modules/display_manager.h` + `src/modules/display_manager.cpp`
+- Hardware: 128x64, I2C `0x3C`, SDA `GPIO21`, SCL `GPIO22`
+- Top line (yellow area): `WLAN <SSID>` oder `AP <SSID>`, optional `WG`/`wg?`, bei Alarm periodisch `ALARM`
+- Main area: großer Druckwert (oder `---` bei invalid)
+- Bottom line: `U <wert>V`, bei Alarm `ALARM < <low> bar`, im AP-Setup `PW:<passwort>`
+- Render-Strategie: flackerfrei über Full-Frame-Buffer, Update nur bei Zustandsänderung
+
+Beispielverwendung aus `main.cpp`:
+```cpp
+if (!gDisplay.begin()) {
+  Serial.println("Display init failed");
+} else {
+  gDisplay.showBootScreen();
+}
+```
+
+## Debug-Bridge (D25 <-> D26)
+- Wenn **GPIO25 mit GPIO26 gebrückt** ist, startet die Firmware im **Verbose-Debug-Modus**:
+  - Konfigurationsdump nach Boot
+  - dichtere Detail-Logs (ADC, Filter, Fault, State, Heap, MQTT/WiFi)
+- Ohne Brücke läuft **Minimal-Debug**:
+  - nur periodische Kerninfos (`WiFi`, `IP`, `Pressure`, `Valid`)
+
+## WLAN-Verbindungslogik
+- Reihenfolge beim Verbinden:
+  1. konfigurierte SSID aus persistenter Config (`network.wifiSsid`), falls gesetzt
+  2. sonst `WIFI_SSID` aus `secrets.h`
+  3. wenn (1) fehlschlägt und `secrets.h` abweicht: Fallback auf `secrets.h`
+- Wenn der Secrets-Fallback erfolgreich ist, werden diese Credentials in die persistente Config übernommen.
+
+## Polling / Update-Rate (Druck)
+- Das Projekt erzwingt jetzt **konstantes Fast-Polling mit 100 ms** Zykluszeit für die Druckmessung.
+- Hintergrund: Netzbetrieb, **keine Batterie-Optimierung notwendig**.
+- Die Firmware überschreibt beim Booten `sensor.updateIntervalMs` auf `100`.
+
+## Sensor-Pins / Versorgung
+- Default ADC: **GPIO34** (`sensor.adcPin`)
+- Optional schaltbare Sensorversorgung: `SENSOR_POWER_PIN` (Default: GPIO32 -> HIGH bei Boot)
+- **Wichtig:** GPIO35 ist input-only und kann **nicht** als softwareseitiges GND genutzt werden.
+- Sensor-GND muss auf einen echten GND-Pin des ESP32 gelegt werden.
+
+## Website-UX / Polling
+- Dashboard-Status pollt alle **1s**
+- History/Bar-Ansicht pollt alle **500ms**
+- Settings enthält zusätzliche Sensor-Parameter (Pin, SampleCount, Interval, Fault-Schwellen)
+
+## Browser-first Architektur (neu)
+- ESP32 liefert primär **Livewerte** (`ADC`, `bar`, validity/fault/state) über `/api/status`.
+- History wird im Browser aufgebaut (localStorage), nicht mehr als begrenzter ESP-Ringbuffer vorausgesetzt.
+- Kalibrierung wird im Browser komfortabel gepflegt und bei Bedarf gesammelt an den ESP übertragen.
+- History kann als **JSON** oder **CSV** exportiert werden.
+
+## UI-Designrichtung
+- Web-UI wurde auf die gleiche visuelle Linie wie das Display-Theme gebracht:
+  - gelbe Statusleiste oben
+  - dunkler Hintergrund
+  - cyan/blue Akzente für Mess-/Markenbereiche
+  - klare Kartenstruktur für Live/History/Kalibrierung
+
+## Zielbild für API und Konfiguration
+REST/API ist umgesetzt und umfasst:
+- `GET /api/status`
+- `GET /api/config`
+- `POST /api/config/network`
+- `POST /api/config/mqtt`
+- `POST /api/config/alarm`
+- `POST /api/config/calibration`
+- `POST /api/config/wireguard`
+- `GET /api/config/export`
+- `POST /api/config/import`
+- `POST /api/calibration/capture`
+- `POST /api/calibration/clear`
+- `POST /api/test/telegram`
+- `POST /api/test/webhook`
+- `GET /api/wireguard/status`
+- `POST /api/wireguard/enable`
+- `POST /api/wireguard/disable`
+- `POST /api/reboot`
+
+Konfigurationsdaten werden als JSON in Preferences persistiert (inkl. WLAN/AP, MQTT, Alarm und Kalibrierpunkten).
+
+## Geplante Modul-Feinstruktur
+Die aktuelle modulare Struktur bleibt erhalten und wird bei Bedarf in klarere Verantwortlichkeiten weiter getrennt (z. B. `config_manager`, `sensor_manager`, `calibration`, `display_manager`, `web_server`, `alarm_manager`).
+Ziel bleibt: kleine, klar abgegrenzte Komponenten ohne schwergewichtige Frontend-Frameworks.
 
 ## Calibration procedure
 1. Measure ADC at known low point (`adcLow`, `barLow`).
@@ -74,7 +178,8 @@ pio device monitor
 3. Save values via config defaults or later extension in settings.
 4. Optionally tune `offsetBar` for local correction.
 
-Linear 2-point conversion is used:
+Wenn mindestens zwei gültige Kalibrierpunkte vorliegen, wird stückweise linear zwischen Punkten interpoliert.
+Fallback ohne Punkte bleibt die 2-Punkt-Gerade:
 `bar = barLow + (adc-adcLow)/(adcHigh-adcLow) * (barHigh-barLow) + offset`
 
 ## Threshold behavior
@@ -102,6 +207,13 @@ Base topic: `heizungsdruck` (configurable)
 - Wi-Fi/MQTT reconnect attempts are throttled.
 - Invalid config falls back to defaults through validation.
 - Project config loader uses explicit `config/...` include paths to avoid accidental framework `config.h` collisions.
+- AlarmManager sends real Telegram/Webhook notifications on alarm states and repeat interval.
+- ArduinoOTA is enabled for in-network firmware updates.
+
+## CI / quality gate
+- GitHub Actions workflow runs:
+  - `pio test -e native`
+  - `pio run -e esp32dev`
 
 ## Testing & verification
 Automated:
@@ -131,6 +243,4 @@ Manual checklist:
 - ArduinoJson v7 `MemberProxy ... is private`: avoid `auto section = doc["..."]` copies; use `JsonVariantConst` for section access.
 
 ## Limitations / future improvements
-- Settings page currently exposes core threshold/offset values only.
-- Optional WireGuard status/toggle can be added if networking stack requires it.
-- Add OTA update page and structured config export/import endpoint.
+- OTA-Update-Seite ist weiterhin offen.

@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Heizungsdruck UI</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="left"><span id="wifiIcon">▂▄▆</span> <span id="wifiState">OK</span></div>
+    <div class="center" id="modeState">IDLE</div>
+    <div class="right"><span id="tempMock">--.-°C</span> <span>🔋</span></div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="gauge">⚙</div>
+      <div>
+        <h1>Heizungs<span>druck</span></h1>
+        <p>pressure monitor</p>
+      </div>
+    </section>
+
+    <nav class="tabs-nav">
+      <button data-tab="live">Live</button>
+      <button data-tab="history">History</button>
+      <button data-tab="calibration">Kalibrierung</button>
+      <button data-tab="settings">ESP Config</button>
+    </nav>
+
+    <section id="live" class="tab active">
+      <div class="card live-card">
+        <div>
+          <h2>Druck</h2>
+          <div id="barValue" class="big">--.--</div>
+          <div class="muted">bar</div>
+        </div>
+        <div>
+          <h2>ADC</h2>
+          <div id="adcValue" class="mid">----</div>
+          <div id="voltValue" class="muted">--.- V</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="bar-wrap"><div id="pressureBar" class="bar-fill"></div></div>
+        <p id="statusLine">Warte auf ESP...</p>
+      </div>
+    </section>
+
+    <section id="history" class="tab">
+      <div class="card">
+        <h2>Browser-History</h2>
+        <canvas id="historyCanvas" width="1100" height="340"></canvas>
+        <div class="actions">
+          <button id="clearHistory">History leeren</button>
+          <button id="exportJson">Export JSON</button>
+          <button id="exportCsv">Export CSV</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="calibration" class="tab">
+      <div class="card">
+        <h2>Kalibrierung</h2>
+        <p>Aktueller ADC: <strong id="calibLiveAdc">----</strong></p>
+        <label>Bar-Wert<input id="calibBarInput" type="number" min="0" max="10" step="0.1" value="1.0"></label>
+        <div class="actions">
+          <button id="captureCalib">ADC übernehmen</button>
+          <button id="sendCalib">An ESP senden</button>
+          <button id="resetCalib">Punkte löschen</button>
+        </div>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>#</th><th>bar</th><th>adc</th><th></th></tr></thead>
+          <tbody id="calibRows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="settings" class="tab">
+      <div class="card">
+        <h2>ESP Sensor Settings</h2>
+        <label>ADC Pin<input id="sensorAdcPin" type="number"></label>
+        <label>Sample Count<input id="sensorSampleCount" type="number"></label>
+        <label>Update ms<input id="sensorInterval" type="number"></label>
+        <button id="saveSensor">Sensor speichern</button>
+      </div>
+    </section>
+
+    <div id="toast" class="toast hidden"></div>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>

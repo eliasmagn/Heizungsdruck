@@ -18,10 +18,21 @@ std::string configToJson(const AppConfig &cfg) {
   doc["calib"]["barLow"] = cfg.calib.barLow;
   doc["calib"]["barHigh"] = cfg.calib.barHigh;
   doc["calib"]["offsetBar"] = cfg.calib.offsetBar;
+  JsonArray points = doc["calib"]["points"].to<JsonArray>();
+  for (const auto &p : cfg.calib.points) {
+    JsonObject item = points.add<JsonObject>();
+    item["bar"] = p.bar;
+    item["adc"] = p.adc;
+    item["valid"] = p.valid;
+  }
 
   doc["alarm"]["lowBar"] = cfg.alarm.lowBar;
   doc["alarm"]["highBar"] = cfg.alarm.highBar;
   doc["alarm"]["hysteresisBar"] = cfg.alarm.hysteresisBar;
+  doc["alarm"]["repeatMinutes"] = cfg.alarm.repeatMinutes;
+  doc["alarm"]["telegramBotToken"] = cfg.alarm.telegramBotToken;
+  doc["alarm"]["telegramChatId"] = cfg.alarm.telegramChatId;
+  doc["alarm"]["emailWebhookUrl"] = cfg.alarm.emailWebhookUrl;
 
   doc["mqtt"]["enabled"] = cfg.mqtt.enabled;
   doc["mqtt"]["host"] = cfg.mqtt.host;
@@ -32,7 +43,17 @@ std::string configToJson(const AppConfig &cfg) {
   doc["mqtt"]["topicBase"] = cfg.mqtt.topicBase;
   doc["mqtt"]["publishIntervalMs"] = cfg.mqtt.publishIntervalMs;
 
+  doc["network"]["wifiSsid"] = cfg.network.wifiSsid;
+  doc["network"]["wifiPassword"] = cfg.network.wifiPassword;
+  doc["network"]["apSsid"] = cfg.network.apSsid;
+  doc["network"]["apPassword"] = cfg.network.apPassword;
   doc["network"]["hostname"] = cfg.network.hostname;
+
+  doc["wireguard"]["enabled"] = cfg.wireguard.enabled;
+  doc["wireguard"]["statusUrl"] = cfg.wireguard.statusUrl;
+  doc["wireguard"]["enableUrl"] = cfg.wireguard.enableUrl;
+  doc["wireguard"]["disableUrl"] = cfg.wireguard.disableUrl;
+  doc["wireguard"]["authToken"] = cfg.wireguard.authToken;
 
   std::string out;
   serializeJson(doc, out);
@@ -70,11 +91,26 @@ bool configFromJson(const std::string &json, AppConfig &cfgOut, std::string &err
   setIfExists(c["barLow"], cfgOut.calib.barLow);
   setIfExists(c["barHigh"], cfgOut.calib.barHigh);
   setIfExists(c["offsetBar"], cfgOut.calib.offsetBar);
+  JsonArrayConst points = c["points"].as<JsonArrayConst>();
+  if (!points.isNull()) {
+    size_t idx = 0;
+    for (JsonObjectConst point : points) {
+      if (idx >= cfgOut.calib.points.size()) break;
+      setIfExists(point["bar"], cfgOut.calib.points[idx].bar);
+      setIfExists(point["adc"], cfgOut.calib.points[idx].adc);
+      setIfExists(point["valid"], cfgOut.calib.points[idx].valid);
+      ++idx;
+    }
+  }
 
   JsonVariantConst a = doc["alarm"];
   setIfExists(a["lowBar"], cfgOut.alarm.lowBar);
   setIfExists(a["highBar"], cfgOut.alarm.highBar);
   setIfExists(a["hysteresisBar"], cfgOut.alarm.hysteresisBar);
+  setIfExists(a["repeatMinutes"], cfgOut.alarm.repeatMinutes);
+  setIfExists(a["telegramBotToken"], cfgOut.alarm.telegramBotToken);
+  setIfExists(a["telegramChatId"], cfgOut.alarm.telegramChatId);
+  setIfExists(a["emailWebhookUrl"], cfgOut.alarm.emailWebhookUrl);
 
   JsonVariantConst m = doc["mqtt"];
   setIfExists(m["enabled"], cfgOut.mqtt.enabled);
@@ -87,7 +123,18 @@ bool configFromJson(const std::string &json, AppConfig &cfgOut, std::string &err
   setIfExists(m["publishIntervalMs"], cfgOut.mqtt.publishIntervalMs);
 
   JsonVariantConst n = doc["network"];
+  setIfExists(n["wifiSsid"], cfgOut.network.wifiSsid);
+  setIfExists(n["wifiPassword"], cfgOut.network.wifiPassword);
+  setIfExists(n["apSsid"], cfgOut.network.apSsid);
+  setIfExists(n["apPassword"], cfgOut.network.apPassword);
   setIfExists(n["hostname"], cfgOut.network.hostname);
+
+  JsonVariantConst w = doc["wireguard"];
+  setIfExists(w["enabled"], cfgOut.wireguard.enabled);
+  setIfExists(w["statusUrl"], cfgOut.wireguard.statusUrl);
+  setIfExists(w["enableUrl"], cfgOut.wireguard.enableUrl);
+  setIfExists(w["disableUrl"], cfgOut.wireguard.disableUrl);
+  setIfExists(w["authToken"], cfgOut.wireguard.authToken);
 
   return cfgOut.validate(error);
 }

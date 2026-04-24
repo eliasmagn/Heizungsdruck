@@ -1,5 +1,6 @@
 #include "MqttManager.h"
 
+#include <Arduino.h>
 #include <ArduinoJson.h>
 
 MqttManager::MqttManager() : client_(wifiClient_) {}
@@ -7,6 +8,15 @@ MqttManager::MqttManager() : client_(wifiClient_) {}
 void MqttManager::begin(const AppConfig &cfg) {
   cfg_ = cfg;
   client_.setServer(cfg_.mqtt.host.c_str(), cfg_.mqtt.port);
+  client_.setCallback([](char *topic, uint8_t *payload, unsigned int length) {
+    (void)payload;
+    (void)length;
+    const String t(topic);
+    if (t.endsWith("/cmd/restart")) {
+      delay(100);
+      ESP.restart();
+    }
+  });
 }
 
 void MqttManager::reconnect(uint32_t nowMs) {
