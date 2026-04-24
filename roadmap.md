@@ -23,3 +23,4 @@
 - ✅ Optional WireGuard-Statusintegration (nach stabiler Mess-/UI-/MQTT-Basis)
 - Erweiterte Selbstdiagnose und Telemetrie-Ratensteuerung
 - ✅ Alarm-Benachrichtigungen via Telegram/Webhook mit Repeat-Intervall
+- ✅ Eigenständiges SSD1306-Display-Modul mit flackerarmer Status-/Druckanzeige

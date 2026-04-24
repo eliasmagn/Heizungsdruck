@@ -47,6 +47,13 @@
 - [x] Recovery auf Defaults bei invalid config
 - [x] Aktive Alarmbenachrichtigung (Telegram/Webhook, inkl. Wiederholung)
 
+## L. Display
+- [x] Eigenständiges SSD1306-Display-Modul (`display_manager.h/.cpp`) erstellt
+- [x] Obere Statuszeile (WLAN/AP + WG + Alarm-Overlay) umgesetzt
+- [x] Große, ruhige Druckanzeige (`---` bei invalid) umgesetzt
+- [x] Untere Statuszeile inkl. Alarmtext/AP-Passwort umgesetzt
+- [x] Flackerarmes Rendering mit Change-Detection umgesetzt
+
 ## H/I. Docs & tests
 - [x] README vollständig überarbeitet
 - [x] Deterministische Tests für Kernlogik hinzugefügt

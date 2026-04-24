@@ -8,6 +8,7 @@
 #include "modules/AlarmManager.h"
 #include "modules/ConfigStore.h"
 #include "modules/MqttManager.h"
+#include "modules/display_manager.h"
 #include "modules/PressureHistory.h"
 #include "modules/PressureSensor.h"
 #include "modules/PressureStateMachine.h"
@@ -22,6 +23,7 @@ PressureHistory gHistory(240);
 MqttManager gMqtt;
 AlarmManager gAlarm;
 WebUI gWeb;
+DisplayManager gDisplay;
 
 PressureReading gLastReading;
 PressureState gLastState = PressureState::UNKNOWN;
@@ -82,6 +84,11 @@ void setup() {
   gConfig.mqtt.enabled = !gConfig.mqtt.host.empty();
 
   connectWifi();
+  if (!gDisplay.begin()) {
+    Serial.println("Display init failed");
+  } else {
+    gDisplay.showBootScreen();
+  }
   ArduinoOTA.setHostname(gConfig.network.hostname.c_str());
   ArduinoOTA.begin();
 
@@ -117,6 +124,22 @@ void loop() {
   gWeb.updateLiveData(gLastReading, gLastState, wifiConnected, gMqtt.connected(), now / 1000);
   gWeb.loop();
   ArduinoOTA.handle();
+
+  DisplayState ds;
+  ds.wifi_connected = wifiConnected;
+  ds.wifi_ssid = WiFi.SSID();
+  ds.ap_mode = !wifiConnected;
+  ds.ap_ssid = gConfig.network.apSsid.c_str();
+  ds.ap_password = gConfig.network.apPassword.c_str();
+  ds.wireguard_enabled = gConfig.wireguard.enabled;
+  ds.wireguard_online = false;
+  ds.alarm_active = (gLastState == PressureState::PRESSURE_LOW || gLastState == PressureState::PRESSURE_HIGH ||
+                     gLastState == PressureState::SENSOR_FAULT);
+  ds.pressure_bar = gLastReading.pressureBar;
+  ds.pressure_valid = gLastReading.valid;
+  ds.adc_voltage = gLastReading.voltage;
+  ds.low_alarm_bar = gConfig.alarm.lowBar;
+  gDisplay.update(ds);
 
   delay(5);
 }

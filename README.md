@@ -86,6 +86,23 @@ pio device monitor
 - Config export/import via JSON textarea
 - Diagnostics: telemetry dump, telegram/webhook test, reboot
 
+## OLED Display (SSD1306) – live status
+- Display module: `src/modules/display_manager.h` + `src/modules/display_manager.cpp`
+- Hardware: 128x64, I2C `0x3C`, SDA `GPIO21`, SCL `GPIO22`
+- Top line (yellow area): `WLAN <SSID>` oder `AP <SSID>`, optional `WG`/`wg?`, bei Alarm periodisch `ALARM`
+- Main area: großer Druckwert (oder `---` bei invalid)
+- Bottom line: `U <wert>V`, bei Alarm `ALARM < <low> bar`, im AP-Setup `PW:<passwort>`
+- Render-Strategie: flackerfrei über Full-Frame-Buffer, Update nur bei Zustandsänderung
+
+Beispielverwendung aus `main.cpp`:
+```cpp
+if (!gDisplay.begin()) {
+  Serial.println("Display init failed");
+} else {
+  gDisplay.showBootScreen();
+}
+```
+
 ## Zielbild für API und Konfiguration
 REST/API ist umgesetzt und umfasst:
 - `GET /api/status`

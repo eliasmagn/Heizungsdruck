@@ -40,6 +40,7 @@ Begründung:
 - OTA-Updatepfad über ArduinoOTA ist aktiv.
 - CI-Absicherung (native tests + esp32 build) liegt als GitHub Workflow vor.
 - Optionale WireGuard-Status/Enable/Disable-Integration über externe Control-URLs ist integriert.
+- Eigenständiges Display-Modul für SSD1306 (statusorientierte, ruhige 128x64-Anzeige) ist integriert.
 
 ## Qualitätsziele
 - Erfolgreicher Build auf `esp32dev`.
