@@ -103,6 +103,20 @@ if (!gDisplay.begin()) {
 }
 ```
 
+## Debug-Bridge (D25 <-> D26)
+- Wenn **GPIO25 mit GPIO26 gebrückt** ist, startet die Firmware im **Verbose-Debug-Modus**:
+  - Konfigurationsdump nach Boot
+  - dichtere Detail-Logs (ADC, Filter, Fault, State, Heap, MQTT/WiFi)
+- Ohne Brücke läuft **Minimal-Debug**:
+  - nur periodische Kerninfos (`WiFi`, `IP`, `Pressure`, `Valid`)
+
+## WLAN-Verbindungslogik
+- Reihenfolge beim Verbinden:
+  1. konfigurierte SSID aus persistenter Config (`network.wifiSsid`), falls gesetzt
+  2. sonst `WIFI_SSID` aus `secrets.h`
+  3. wenn (1) fehlschlägt und `secrets.h` abweicht: Fallback auf `secrets.h`
+- Wenn der Secrets-Fallback erfolgreich ist, werden diese Credentials in die persistente Config übernommen.
+
 ## Zielbild für API und Konfiguration
 REST/API ist umgesetzt und umfasst:
 - `GET /api/status`

@@ -54,6 +54,12 @@
 - [x] Untere Statuszeile inkl. Alarmtext/AP-Passwort umgesetzt
 - [x] Flackerarmes Rendering mit Change-Detection umgesetzt
 
+## M. Debug / Inbetriebnahme
+- [x] Enforced Debug-Mode über Hardware-Brücke D25<->D26 umgesetzt
+- [x] Verbose-Bootdump der gesamten Konfiguration im Bridge-Debug-Modus
+- [x] Minimal-Logmodus ohne Brücke (WLAN/IP/Druck)
+- [x] WLAN-Connect-Fallback auf `secrets.h` ergänzt, inkl. Persistenz bei erfolgreichem Fallback
+
 ## H/I. Docs & tests
 - [x] README vollständig überarbeitet
 - [x] Deterministische Tests für Kernlogik hinzugefügt

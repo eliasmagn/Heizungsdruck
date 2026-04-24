@@ -41,6 +41,8 @@ Begründung:
 - CI-Absicherung (native tests + esp32 build) liegt als GitHub Workflow vor.
 - Optionale WireGuard-Status/Enable/Disable-Integration über externe Control-URLs ist integriert.
 - Eigenständiges Display-Modul für SSD1306 (statusorientierte, ruhige 128x64-Anzeige) ist integriert.
+- Hardware-basierter Debug-Modus via Brücke D25<->D26 ist integriert (Verbose vs. Minimal Logs).
+- WLAN-Verbindungslogik nutzt konfiguriertes WLAN mit Secrets-Fallback und persistiert erfolgreiche Fallback-Credentials.
 
 ## Qualitätsziele
 - Erfolgreicher Build auf `esp32dev`.
