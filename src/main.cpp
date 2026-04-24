@@ -31,6 +31,7 @@ PressureState gLastState = PressureState::UNKNOWN;
 uint32_t gLastSampleMs = 0;
 uint32_t gLastMinimalLogMs = 0;
 bool gDebugVerbose = false;
+constexpr uint32_t kEnforcedPollIntervalMs = 100;
 
 bool bridgeDebugEnabled() {
   pinMode(25, OUTPUT);
@@ -144,6 +145,11 @@ void setup() {
   if (gConfig.mqtt.username.empty()) gConfig.mqtt.username = MQTT_USERNAME;
   if (gConfig.mqtt.password.empty()) gConfig.mqtt.password = MQTT_PASSWORD;
   gConfig.mqtt.enabled = !gConfig.mqtt.host.empty();
+  // Enforce fast constant polling (battery is not a concern for this project).
+  if (gConfig.sensor.updateIntervalMs != kEnforcedPollIntervalMs) {
+    gConfig.sensor.updateIntervalMs = kEnforcedPollIntervalMs;
+    gStore.save(gConfig);
+  }
   logConfigIfVerbose();
 
   connectWifi();
@@ -216,5 +222,5 @@ void loop() {
                   gMqtt.connected() ? 1 : 0, ESP.getFreeHeap());
   }
 
-  delay(5);
+  delay(1);
 }

@@ -21,8 +21,8 @@ bool AppConfig::validate(std::string &error) const {
     error = "sampleCount must be odd and in range 3..31";
     return false;
   }
-  if (sensor.updateIntervalMs < 200 || sensor.updateIntervalMs > 10000) {
-    error = "updateIntervalMs must be in range 200..10000";
+  if (sensor.updateIntervalMs < 20 || sensor.updateIntervalMs > 10000) {
+    error = "updateIntervalMs must be in range 20..10000";
     return false;
   }
   if (calib.adcLow >= calib.adcHigh) {

@@ -60,6 +60,10 @@
 - [x] Minimal-Logmodus ohne Brücke (WLAN/IP/Druck)
 - [x] WLAN-Connect-Fallback auf `secrets.h` ergänzt, inkl. Persistenz bei erfolgreichem Fallback
 
+## N. Polling
+- [x] Fast-Polling für Druckmessung auf 100 ms erzwungen
+- [x] Update-Rate-Validierung auf 20..10000 ms angepasst
+
 ## H/I. Docs & tests
 - [x] README vollständig überarbeitet
 - [x] Deterministische Tests für Kernlogik hinzugefügt

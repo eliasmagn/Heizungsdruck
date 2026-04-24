@@ -43,6 +43,7 @@ Begründung:
 - Eigenständiges Display-Modul für SSD1306 (statusorientierte, ruhige 128x64-Anzeige) ist integriert.
 - Hardware-basierter Debug-Modus via Brücke D25<->D26 ist integriert (Verbose vs. Minimal Logs).
 - WLAN-Verbindungslogik nutzt konfiguriertes WLAN mit Secrets-Fallback und persistiert erfolgreiche Fallback-Credentials.
+- Druckmessung läuft mit erzwungenem Fast-Polling (100 ms), da keine Batterie-Limitierung besteht.
 
 ## Qualitätsziele
 - Erfolgreicher Build auf `esp32dev`.

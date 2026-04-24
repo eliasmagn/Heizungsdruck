@@ -117,6 +117,11 @@ if (!gDisplay.begin()) {
   3. wenn (1) fehlschlägt und `secrets.h` abweicht: Fallback auf `secrets.h`
 - Wenn der Secrets-Fallback erfolgreich ist, werden diese Credentials in die persistente Config übernommen.
 
+## Polling / Update-Rate (Druck)
+- Das Projekt erzwingt jetzt **konstantes Fast-Polling mit 100 ms** Zykluszeit für die Druckmessung.
+- Hintergrund: Netzbetrieb, **keine Batterie-Optimierung notwendig**.
+- Die Firmware überschreibt beim Booten `sensor.updateIntervalMs` auf `100`.
+
 ## Zielbild für API und Konfiguration
 REST/API ist umgesetzt und umfasst:
 - `GET /api/status`

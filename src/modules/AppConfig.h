@@ -7,7 +7,7 @@
 struct SensorConfig {
   uint8_t adcPin{34};
   uint16_t sampleCount{9};
-  uint32_t updateIntervalMs{1000};
+  uint32_t updateIntervalMs{100};
   float adcVref{3.3f};
   int adcMax{4095};
   int disconnectAdc{80};
