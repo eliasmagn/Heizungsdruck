@@ -2,3 +2,16 @@
 
 #define DEVICE_HOSTNAME "heizungsdruck"
 #define WIFI_CONNECT_TIMEOUT_MS 20000
+
+// Compile-time defaults / hardware mapping
+#define SENSOR_ADC_PIN_DEFAULT 34
+#define SENSOR_SAMPLE_COUNT_DEFAULT 9
+#define SENSOR_UPDATE_INTERVAL_MS_DEFAULT 100
+
+// Optional sensor power switching (set -1 to disable).
+// NOTE: GPIO35 is input-only and cannot be used as software GND.
+#define SENSOR_POWER_PIN 32
+
+// Debug bridge pins
+#define DEBUG_BRIDGE_OUT_PIN 25
+#define DEBUG_BRIDGE_IN_PIN 26

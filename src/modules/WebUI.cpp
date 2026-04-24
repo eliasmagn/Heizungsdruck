@@ -253,6 +253,23 @@ void WebUI::setupRoutes() {
     server_.send(200, "text/plain", "network saved");
   });
 
+  server_.on("/api/config/sensor", HTTP_POST, [this]() {
+    if (!cfg_) return server_.send(500, "text/plain", "config unavailable");
+    AppConfig candidate = *cfg_;
+    JsonDocument doc;
+    if (deserializeJson(doc, server_.arg("plain"))) return server_.send(400, "text/plain", "invalid json");
+    if (!doc["adcPin"].isNull()) candidate.sensor.adcPin = doc["adcPin"].as<uint8_t>();
+    if (!doc["sampleCount"].isNull()) candidate.sensor.sampleCount = doc["sampleCount"].as<uint16_t>();
+    if (!doc["updateIntervalMs"].isNull()) candidate.sensor.updateIntervalMs = doc["updateIntervalMs"].as<uint32_t>();
+    if (!doc["disconnectAdc"].isNull()) candidate.sensor.disconnectAdc = doc["disconnectAdc"].as<int>();
+    if (!doc["shortGndAdc"].isNull()) candidate.sensor.shortGndAdc = doc["shortGndAdc"].as<int>();
+    if (!doc["shortVccAdc"].isNull()) candidate.sensor.shortVccAdc = doc["shortVccAdc"].as<int>();
+    if (!doc["maxJumpBar"].isNull()) candidate.sensor.maxJumpBar = doc["maxJumpBar"].as<float>();
+    String outErr;
+    if (!saveUpdatedConfig(candidate, outErr)) return server_.send(400, "text/plain", outErr);
+    server_.send(200, "text/plain", "sensor saved");
+  });
+
   server_.on("/api/config/import", HTTP_POST, [this]() {
     AppConfig candidate = cfg_ ? *cfg_ : defaultConfig();
     std::string err;

@@ -15,6 +15,25 @@
 #include "modules/PressureStateMachine.h"
 #include "modules/WebUI.h"
 
+#ifndef SENSOR_ADC_PIN_DEFAULT
+#define SENSOR_ADC_PIN_DEFAULT 34
+#endif
+#ifndef SENSOR_SAMPLE_COUNT_DEFAULT
+#define SENSOR_SAMPLE_COUNT_DEFAULT 9
+#endif
+#ifndef SENSOR_UPDATE_INTERVAL_MS_DEFAULT
+#define SENSOR_UPDATE_INTERVAL_MS_DEFAULT 100
+#endif
+#ifndef SENSOR_POWER_PIN
+#define SENSOR_POWER_PIN -1
+#endif
+#ifndef DEBUG_BRIDGE_OUT_PIN
+#define DEBUG_BRIDGE_OUT_PIN 25
+#endif
+#ifndef DEBUG_BRIDGE_IN_PIN
+#define DEBUG_BRIDGE_IN_PIN 26
+#endif
+
 namespace {
 ConfigStore gStore;
 AppConfig gConfig;
@@ -31,16 +50,28 @@ PressureState gLastState = PressureState::UNKNOWN;
 uint32_t gLastSampleMs = 0;
 uint32_t gLastMinimalLogMs = 0;
 bool gDebugVerbose = false;
-constexpr uint32_t kEnforcedPollIntervalMs = 100;
+DisplayState gDisplayState;
+portMUX_TYPE gDisplayMux = portMUX_INITIALIZER_UNLOCKED;
+
+void displayTask(void *) {
+  DisplayState local;
+  for (;;) {
+    taskENTER_CRITICAL(&gDisplayMux);
+    local = gDisplayState;
+    taskEXIT_CRITICAL(&gDisplayMux);
+    gDisplay.update(local);
+    vTaskDelay(pdMS_TO_TICKS(500));
+  }
+}
 
 bool bridgeDebugEnabled() {
-  pinMode(25, OUTPUT);
-  digitalWrite(25, LOW);
-  pinMode(26, INPUT_PULLUP);
+  pinMode(DEBUG_BRIDGE_OUT_PIN, OUTPUT);
+  digitalWrite(DEBUG_BRIDGE_OUT_PIN, LOW);
+  pinMode(DEBUG_BRIDGE_IN_PIN, INPUT_PULLUP);
   delay(2);
   int lowReads = 0;
   for (int i = 0; i < 5; ++i) {
-    if (digitalRead(26) == LOW) lowReads++;
+    if (digitalRead(DEBUG_BRIDGE_IN_PIN) == LOW) lowReads++;
     delay(1);
   }
   return lowReads >= 4;
@@ -140,23 +171,31 @@ void setup() {
   gStore.begin();
   gConfig = gStore.load();
   if (gConfig.network.hostname.empty()) gConfig.network.hostname = DEVICE_HOSTNAME;
+  if (gConfig.sensor.adcPin == 34) gConfig.sensor.adcPin = SENSOR_ADC_PIN_DEFAULT;
+  if (gConfig.sensor.sampleCount == 9) gConfig.sensor.sampleCount = SENSOR_SAMPLE_COUNT_DEFAULT;
   if (gConfig.mqtt.host.empty()) gConfig.mqtt.host = MQTT_HOST;
   if (gConfig.mqtt.port == 0) gConfig.mqtt.port = MQTT_PORT;
   if (gConfig.mqtt.username.empty()) gConfig.mqtt.username = MQTT_USERNAME;
   if (gConfig.mqtt.password.empty()) gConfig.mqtt.password = MQTT_PASSWORD;
   gConfig.mqtt.enabled = !gConfig.mqtt.host.empty();
   // Enforce fast constant polling (battery is not a concern for this project).
-  if (gConfig.sensor.updateIntervalMs != kEnforcedPollIntervalMs) {
-    gConfig.sensor.updateIntervalMs = kEnforcedPollIntervalMs;
+  if (gConfig.sensor.updateIntervalMs != SENSOR_UPDATE_INTERVAL_MS_DEFAULT) {
+    gConfig.sensor.updateIntervalMs = SENSOR_UPDATE_INTERVAL_MS_DEFAULT;
     gStore.save(gConfig);
   }
   logConfigIfVerbose();
+
+  if (SENSOR_POWER_PIN >= 0) {
+    pinMode(SENSOR_POWER_PIN, OUTPUT);
+    digitalWrite(SENSOR_POWER_PIN, HIGH);
+  }
 
   connectWifi();
   if (!gDisplay.begin()) {
     Serial.println("Display init failed");
   } else {
     gDisplay.showBootScreen();
+    xTaskCreatePinnedToCore(displayTask, "displayTask", 4096, nullptr, 1, nullptr, 0);
   }
   ArduinoOTA.setHostname(gConfig.network.hostname.c_str());
   ArduinoOTA.begin();
@@ -208,7 +247,9 @@ void loop() {
   ds.pressure_valid = gLastReading.valid;
   ds.adc_voltage = gLastReading.voltage;
   ds.low_alarm_bar = gConfig.alarm.lowBar;
-  gDisplay.update(ds);
+  taskENTER_CRITICAL(&gDisplayMux);
+  gDisplayState = ds;
+  taskEXIT_CRITICAL(&gDisplayMux);
 
   if (!gDebugVerbose && now - gLastMinimalLogMs > 10000) {
     gLastMinimalLogMs = now;

@@ -44,6 +44,8 @@ Begründung:
 - Hardware-basierter Debug-Modus via Brücke D25<->D26 ist integriert (Verbose vs. Minimal Logs).
 - WLAN-Verbindungslogik nutzt konfiguriertes WLAN mit Secrets-Fallback und persistiert erfolgreiche Fallback-Credentials.
 - Druckmessung läuft mit erzwungenem Fast-Polling (100 ms), da keine Batterie-Limitierung besteht.
+- Display-Update läuft auf separatem Core-Task (500 ms), während Web/API responsiv auf dem Hauptloop bleiben.
+- Sensorparameter sind zusätzlich über Web-UI/API konfigurierbar (`/api/config/sensor`).
 
 ## Qualitätsziele
 - Erfolgreicher Build auf `esp32dev`.

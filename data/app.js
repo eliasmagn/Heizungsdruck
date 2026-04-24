@@ -17,6 +17,8 @@ async function refreshStatus(){
   document.getElementById('pressure').textContent = `${fmt(s.pressureBar)} bar`;
   document.getElementById('state').textContent = `State ${s.state} | Fault ${s.fault} | WiFi ${s.wifi} MQTT ${s.mqtt}`;
   document.getElementById('currentAdc').textContent = s.filteredAdc;
+  const pct = Math.max(0, Math.min(100, ((Number(s.pressureBar)||0) / 3.0) * 100));
+  document.getElementById('pressureBar').style.width = `${pct}%`;
 }
 
 async function refreshHistory(){
@@ -41,6 +43,10 @@ async function loadConfig(){
   mqttHost.value=c.mqtt.host||''; mqttPort.value=c.mqtt.port||1883;
   mqttUser.value=c.mqtt.username||''; mqttPass.value=c.mqtt.password||'';
   mqttTopic.value=c.mqtt.topicBase||''; mqttInterval.value=c.mqtt.publishIntervalMs||10000;
+  sensorAdcPin.value=c.sensor.adcPin; sensorSampleCount.value=c.sensor.sampleCount;
+  sensorInterval.value=c.sensor.updateIntervalMs; sensorDisconnect.value=c.sensor.disconnectAdc;
+  sensorShortGnd.value=c.sensor.shortGndAdc; sensorShortVcc.value=c.sensor.shortVccAdc;
+  sensorMaxJump.value=c.sensor.maxJumpBar;
   wgEnabled.checked=!!c.wireguard?.enabled; wgStatusUrl.value=c.wireguard?.statusUrl||'';
   wgEnableUrl.value=c.wireguard?.enableUrl||''; wgDisableUrl.value=c.wireguard?.disableUrl||'';
   wgAuthToken.value=c.wireguard?.authToken||'';
@@ -59,6 +65,7 @@ async function loadConfig(){
 saveNetwork.onclick = async ()=> saveResult.textContent = await post('/api/config/network',{wifiSsid:wifiSsid.value,wifiPassword:wifiPassword.value,apSsid:apSsid.value,apPassword:apPassword.value});
 saveMqtt.onclick = async ()=> saveResult.textContent = await post('/api/config/mqtt',{enabled:!!mqttHost.value,host:mqttHost.value,port:+mqttPort.value,username:mqttUser.value,password:mqttPass.value,topicBase:mqttTopic.value,publishIntervalMs:+mqttInterval.value});
 saveWg.onclick = async ()=> saveResult.textContent = await post('/api/config/wireguard',{enabled:wgEnabled.checked,statusUrl:wgStatusUrl.value,enableUrl:wgEnableUrl.value,disableUrl:wgDisableUrl.value,authToken:wgAuthToken.value});
+saveSensor.onclick = async ()=> saveResult.textContent = await post('/api/config/sensor',{adcPin:+sensorAdcPin.value,sampleCount:+sensorSampleCount.value,updateIntervalMs:+sensorInterval.value,disconnectAdc:+sensorDisconnect.value,shortGndAdc:+sensorShortGnd.value,shortVccAdc:+sensorShortVcc.value,maxJumpBar:+sensorMaxJump.value});
 saveAlarm.onclick = async ()=> saveResult.textContent = await post('/api/config/alarm',{lowBar:+lowBar.value,highBar:+highBar.value,hysteresisBar:+hysteresis.value,repeatMinutes:+repeatMinutes.value,telegramBotToken:tgToken.value,telegramChatId:tgChat.value,emailWebhookUrl:webhook.value});
 capturePoint.onclick = async ()=> {calibResult.textContent = await post('/api/calibration/capture',{bar:+captureBar.value}); await loadConfig();};
 clearPoints.onclick = async ()=> {calibResult.textContent = await post('/api/calibration/clear'); await loadConfig();};
@@ -90,7 +97,7 @@ importConfig.onclick = async ()=> {
 
 async function pollDiag(){diagOut.textContent = JSON.stringify(await jget('/api/diag'),null,2);}
 
-setInterval(refreshStatus,1500);
-setInterval(refreshHistory,3000);
+setInterval(refreshStatus,1000);
+setInterval(refreshHistory,500);
 setInterval(pollDiag,3000);
 refreshStatus(); refreshHistory(); pollDiag(); loadConfig();

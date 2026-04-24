@@ -26,3 +26,5 @@
 - ✅ Eigenständiges SSD1306-Display-Modul mit flackerarmer Status-/Druckanzeige
 - ✅ Hardware-gebundener Debug-Mode (D25<->D26) + robuste WLAN-Fallback-Connect-Strategie
 - ✅ Erzwungenes Fast-Polling (100 ms) für konstant schnelle Druckaktualisierung
+- ✅ UI-Refresh verbessert (1s Status / 500ms History) + Sensor-Config im Web
+- ✅ Display-Rendering auf separatem Core-Task entkoppelt

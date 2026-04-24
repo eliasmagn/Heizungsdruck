@@ -19,7 +19,12 @@
 
   <main>
     <section id="dashboard" class="tab active">
-      <div class="card"><h2>Druck</h2><p id="pressure">--.- bar</p><p id="state">-</p></div>
+      <div class="card hero">
+        <h2>Druck</h2>
+        <p id="pressure">--.- bar</p>
+        <div class="bar-wrap"><div id="pressureBar" class="bar-fill"></div></div>
+        <p id="state">-</p>
+      </div>
       <div class="card"><h2>History</h2><canvas id="history" width="800" height="220"></canvas></div>
     </section>
 
@@ -51,6 +56,17 @@
           <label>Disable URL <input id="wgDisableUrl"></label>
           <label>Auth Token <input id="wgAuthToken"></label>
           <button id="saveWg">WireGuard speichern</button>
+        </div>
+        <div class="card">
+          <h2>Sensor</h2>
+          <label title="Default: GPIO34">ADC Pin <input id="sensorAdcPin" type="number"></label>
+          <label title="Odd number recommended">Sample Count <input id="sensorSampleCount" type="number"></label>
+          <label title="Polling interval in ms">Update Intervall (ms) <input id="sensorInterval" type="number"></label>
+          <label>Disconnect ADC <input id="sensorDisconnect" type="number"></label>
+          <label>Short GND ADC <input id="sensorShortGnd" type="number"></label>
+          <label>Short VCC ADC <input id="sensorShortVcc" type="number"></label>
+          <label>Max Jump bar <input id="sensorMaxJump" type="number" step="0.01"></label>
+          <button id="saveSensor">Sensor speichern</button>
         </div>
       </div>
       <div class="card">

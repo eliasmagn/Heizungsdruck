@@ -64,6 +64,12 @@
 - [x] Fast-Polling für Druckmessung auf 100 ms erzwungen
 - [x] Update-Rate-Validierung auf 20..10000 ms angepasst
 
+## O. UX / Sensor-Konfig
+- [x] Website-Design mit Hover/Overlay-Effekten überarbeitet
+- [x] Dashboard-Polling auf 1s und History/Bar-Polling auf 500ms gesetzt
+- [x] Sensor-Settings über Web-UI + `/api/config/sensor` konfigurierbar gemacht
+- [x] Display-Updates in separaten Core-Task ausgelagert
+
 ## H/I. Docs & tests
 - [x] README vollständig überarbeitet
 - [x] Deterministische Tests für Kernlogik hinzugefügt

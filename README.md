@@ -122,6 +122,17 @@ if (!gDisplay.begin()) {
 - Hintergrund: Netzbetrieb, **keine Batterie-Optimierung notwendig**.
 - Die Firmware überschreibt beim Booten `sensor.updateIntervalMs` auf `100`.
 
+## Sensor-Pins / Versorgung
+- Default ADC: **GPIO34** (`sensor.adcPin`)
+- Optional schaltbare Sensorversorgung: `SENSOR_POWER_PIN` (Default: GPIO32 -> HIGH bei Boot)
+- **Wichtig:** GPIO35 ist input-only und kann **nicht** als softwareseitiges GND genutzt werden.
+- Sensor-GND muss auf einen echten GND-Pin des ESP32 gelegt werden.
+
+## Website-UX / Polling
+- Dashboard-Status pollt alle **1s**
+- History/Bar-Ansicht pollt alle **500ms**
+- Settings enthält zusätzliche Sensor-Parameter (Pin, SampleCount, Interval, Fault-Schwellen)
+
 ## Zielbild für API und Konfiguration
 REST/API ist umgesetzt und umfasst:
 - `GET /api/status`
