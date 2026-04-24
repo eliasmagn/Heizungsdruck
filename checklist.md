@@ -75,6 +75,7 @@
 - [x] Laufende Auto-Reloads entfernt, nur gezieltes 1s-Polling für Livewerte
 - [x] History vollständig im Browser (localStorage, langes Retention-Fenster)
 - [x] History-Export als JSON/CSV ergänzt
+- [x] Web-UI auf Display-/Branding-Look umgestellt (Topbar/Theme/Farbsystem)
 
 ## H/I. Docs & tests
 - [x] README vollständig überarbeitet

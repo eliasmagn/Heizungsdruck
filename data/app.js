@@ -86,6 +86,10 @@ async function refreshStatus() {
     $('adcValue').textContent = String(s.filteredAdc ?? '----');
     $('voltValue').textContent = `${(Number(s.voltage || 0)).toFixed(2)} V`;
     $('statusLine').textContent = `valid=${!!s.valid} fault=${s.fault} state=${s.state}`;
+    $('modeState').textContent = (s.state === 2 ? 'LOW' : s.state === 4 ? 'HIGH' : s.state === 1 ? 'FAULT' : 'IDLE');
+    $('wifiState').textContent = s.wifi ? 'OK' : 'AP';
+    $('wifiIcon').textContent = s.wifi ? '▂▄▆' : '▂';
+    $('tempMock').textContent = `${(Number(s.voltage || 0)).toFixed(1)}V`;
     $('calibLiveAdc').textContent = String(s.filteredAdc ?? '----');
     appendHistoryFromStatus(s);
   } catch {

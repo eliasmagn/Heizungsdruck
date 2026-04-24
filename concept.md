@@ -47,6 +47,7 @@ Begründung:
 - Display-Update läuft auf separatem Core-Task (500 ms), während Web/API responsiv auf dem Hauptloop bleiben.
 - Sensorparameter sind zusätzlich über Web-UI/API konfigurierbar (`/api/config/sensor`).
 - Browser-first Frontend: Verlauf und Kalibrier-Workflow laufen lokal im Browser (inkl. Export), ESP liefert primär Live-Messwerte.
+- UI-Theme orientiert sich jetzt sichtbar am Display-/Branding-Look (gelbe Statusleiste, dunkles Dashboard, cyan Fokusfarbe).
 
 ## Qualitätsziele
 - Erfolgreicher Build auf `esp32dev`.

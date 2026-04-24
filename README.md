@@ -139,6 +139,13 @@ if (!gDisplay.begin()) {
 - Kalibrierung wird im Browser komfortabel gepflegt und bei Bedarf gesammelt an den ESP übertragen.
 - History kann als **JSON** oder **CSV** exportiert werden.
 
+## UI-Designrichtung
+- Web-UI wurde auf die gleiche visuelle Linie wie das Display-Theme gebracht:
+  - gelbe Statusleiste oben
+  - dunkler Hintergrund
+  - cyan/blue Akzente für Mess-/Markenbereiche
+  - klare Kartenstruktur für Live/History/Kalibrierung
+
 ## Zielbild für API und Konfiguration
 REST/API ist umgesetzt und umfasst:
 - `GET /api/status`

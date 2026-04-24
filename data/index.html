@@ -3,22 +3,32 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Heizungsdruck Browser Console</title>
+  <title>Heizungsdruck UI</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
-  <header>
-    <h1>Heizungsdruck</h1>
-    <p>ESP liefert nur Live-Messwerte (ADC + bar). Verlauf/Kalibrierung laufen im Browser.</p>
-    <nav>
+  <header class="topbar">
+    <div class="left"><span id="wifiIcon">▂▄▆</span> <span id="wifiState">OK</span></div>
+    <div class="center" id="modeState">IDLE</div>
+    <div class="right"><span id="tempMock">--.-°C</span> <span>🔋</span></div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="gauge">⚙</div>
+      <div>
+        <h1>Heizungs<span>druck</span></h1>
+        <p>pressure monitor</p>
+      </div>
+    </section>
+
+    <nav class="tabs-nav">
       <button data-tab="live">Live</button>
       <button data-tab="history">History</button>
       <button data-tab="calibration">Kalibrierung</button>
       <button data-tab="settings">ESP Config</button>
     </nav>
-  </header>
 
-  <main>
     <section id="live" class="tab active">
       <div class="card live-card">
         <div>
@@ -33,7 +43,7 @@
         </div>
       </div>
       <div class="card">
-        <h3>Status</h3>
+        <div class="bar-wrap"><div id="pressureBar" class="bar-fill"></div></div>
         <p id="statusLine">Warte auf ESP...</p>
       </div>
     </section>
@@ -52,7 +62,7 @@
 
     <section id="calibration" class="tab">
       <div class="card">
-        <h2>Kalibrierung (Browser-first)</h2>
+        <h2>Kalibrierung</h2>
         <p>Aktueller ADC: <strong id="calibLiveAdc">----</strong></p>
         <label>Bar-Wert<input id="calibBarInput" type="number" min="0" max="10" step="0.1" value="1.0"></label>
         <div class="actions">

@@ -29,3 +29,4 @@
 - ✅ UI-Refresh verbessert (1s Status / 500ms History) + Sensor-Config im Web
 - ✅ Display-Rendering auf separatem Core-Task entkoppelt
 - ✅ Browser-first Kalibrierung/History (lokal, exportierbar, ESP primär Live-Messdaten)
+- ✅ UI visuell auf Referenz-Display/Branding-Look angepasst
