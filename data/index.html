@@ -3,89 +3,185 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Heizungsdruck UI</title>
+  <title>Heizungsdruck Control</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <header class="topbar">
-    <div class="left"><span id="wifiIcon">▂▄▆</span> <span id="wifiState">OK</span></div>
-    <div class="center" id="modeState">IDLE</div>
-    <div class="right"><span id="tempMock">--.-°C</span> <span>🔋</span></div>
+    <div class="brand">
+      <img src="/assets/logo-gauge.svg" alt="Heizungsdruck Gauge" />
+      <div>
+        <strong>Heizungsdruck</strong>
+        <small>Pressure Control Surface</small>
+      </div>
+    </div>
+    <div class="status-stack">
+      <span id="wifiPill" class="pill">WiFi: --</span>
+      <span id="mqttPill" class="pill">MQTT: --</span>
+      <span id="statePill" class="pill">State: --</span>
+    </div>
   </header>
 
   <main>
-    <section class="hero">
-      <div class="gauge">⚙</div>
-      <div>
-        <h1>Heizungs<span>druck</span></h1>
-        <p>pressure monitor</p>
-      </div>
-    </section>
-
     <nav class="tabs-nav">
-      <button data-tab="live">Live</button>
-      <button data-tab="history">History</button>
-      <button data-tab="calibration">Kalibrierung</button>
-      <button data-tab="settings">ESP Config</button>
+      <button class="tab-btn active" data-tab="live">Live</button>
+      <button class="tab-btn" data-tab="history">Verlauf</button>
+      <button class="tab-btn" data-tab="calibration">Kalibrierung</button>
+      <button class="tab-btn" data-tab="settings">Einstellungen</button>
+      <button class="tab-btn" data-tab="diag">Diagnose</button>
     </nav>
 
     <section id="live" class="tab active">
-      <div class="card live-card">
-        <div>
-          <h2>Druck</h2>
-          <div id="barValue" class="big">--.--</div>
-          <div class="muted">bar</div>
-        </div>
-        <div>
-          <h2>ADC</h2>
-          <div id="adcValue" class="mid">----</div>
-          <div id="voltValue" class="muted">--.- V</div>
-        </div>
+      <div class="grid two">
+        <article class="card">
+          <h2>Aktueller Druck</h2>
+          <div id="barValue" class="metric-main">--.--</div>
+          <p class="unit">bar</p>
+          <div class="gauge-track"><div id="pressureFill" class="gauge-fill"></div></div>
+        </article>
+        <article class="card">
+          <h2>Live Telemetrie</h2>
+          <dl class="kv">
+            <dt>ADC gefiltert</dt><dd id="adcValue">--</dd>
+            <dt>ADC roh</dt><dd id="adcRawValue">--</dd>
+            <dt>Spannung</dt><dd id="voltageValue">--</dd>
+            <dt>Uptime</dt><dd id="uptimeValue">--</dd>
+          </dl>
+        </article>
       </div>
-      <div class="card">
-        <div class="bar-wrap"><div id="pressureBar" class="bar-fill"></div></div>
-        <p id="statusLine">Warte auf ESP...</p>
-      </div>
+      <article class="card">
+        <h2>Status</h2>
+        <p id="statusLine" class="status-line">Verbinde...</p>
+      </article>
     </section>
 
     <section id="history" class="tab">
-      <div class="card">
-        <h2>Browser-History</h2>
-        <canvas id="historyCanvas" width="1100" height="340"></canvas>
+      <article class="card">
+        <h2>Messverlauf (ESP-Ringbuffer)</h2>
+        <canvas id="historyCanvas" width="1200" height="360"></canvas>
         <div class="actions">
-          <button id="clearHistory">History leeren</button>
+          <button id="refreshHistory">Neu laden</button>
           <button id="exportJson">Export JSON</button>
           <button id="exportCsv">Export CSV</button>
         </div>
-      </div>
+      </article>
     </section>
 
     <section id="calibration" class="tab">
-      <div class="card">
-        <h2>Kalibrierung</h2>
-        <p>Aktueller ADC: <strong id="calibLiveAdc">----</strong></p>
-        <label>Bar-Wert<input id="calibBarInput" type="number" min="0" max="10" step="0.1" value="1.0"></label>
-        <div class="actions">
-          <button id="captureCalib">ADC übernehmen</button>
-          <button id="sendCalib">An ESP senden</button>
-          <button id="resetCalib">Punkte löschen</button>
-        </div>
+      <div class="grid two">
+        <article class="card">
+          <h2>Kalibrierung</h2>
+          <p>Live ADC: <strong id="calibLiveAdc">--</strong></p>
+          <label>bar für Capture<input id="captureBar" type="number" min="0" max="10" step="0.5" value="1.0"></label>
+          <div class="actions">
+            <button id="capturePoint">Punkt aufnehmen</button>
+            <button id="saveCalibration">An ESP senden</button>
+            <button id="clearCalibration">Alle löschen</button>
+          </div>
+        </article>
+        <article class="card">
+          <h2>Kalibrierwerte</h2>
+          <label>adcLow<input id="adcLow" type="number"></label>
+          <label>adcHigh<input id="adcHigh" type="number"></label>
+          <label>barLow<input id="barLow" type="number" step="0.1"></label>
+          <label>barHigh<input id="barHigh" type="number" step="0.1"></label>
+          <label>offsetBar<input id="offsetBar" type="number" step="0.01"></label>
+        </article>
       </div>
-      <div class="card">
+      <article class="card">
         <table>
-          <thead><tr><th>#</th><th>bar</th><th>adc</th><th></th></tr></thead>
-          <tbody id="calibRows"></tbody>
+          <thead><tr><th>Index</th><th>bar</th><th>adc</th><th>valid</th></tr></thead>
+          <tbody id="calibrationRows"></tbody>
         </table>
-      </div>
+      </article>
     </section>
 
     <section id="settings" class="tab">
-      <div class="card">
-        <h2>ESP Sensor Settings</h2>
-        <label>ADC Pin<input id="sensorAdcPin" type="number"></label>
-        <label>Sample Count<input id="sensorSampleCount" type="number"></label>
-        <label>Update ms<input id="sensorInterval" type="number"></label>
-        <button id="saveSensor">Sensor speichern</button>
+      <div class="grid two">
+        <article class="card">
+          <h2>Sensor</h2>
+          <label>ADC Pin<input id="sensorAdcPin" type="number"></label>
+          <label>Samples<input id="sensorSampleCount" type="number"></label>
+          <label>Intervall ms<input id="sensorInterval" type="number"></label>
+          <label>Disconnect ADC<input id="sensorDisconnectAdc" type="number"></label>
+          <label>Short GND ADC<input id="sensorShortGndAdc" type="number"></label>
+          <label>Short VCC ADC<input id="sensorShortVccAdc" type="number"></label>
+          <label>Max Jump bar<input id="sensorMaxJumpBar" type="number" step="0.01"></label>
+          <button id="saveSensor">Sensor speichern</button>
+        </article>
+
+        <article class="card">
+          <h2>Netzwerk</h2>
+          <label>WiFi SSID<input id="wifiSsid" type="text"></label>
+          <label>WiFi Passwort<input id="wifiPassword" type="password"></label>
+          <label>AP SSID<input id="apSsid" type="text"></label>
+          <label>AP Passwort<input id="apPassword" type="password"></label>
+          <label>Hostname<input id="hostname" type="text"></label>
+          <button id="saveNetwork">Netzwerk speichern</button>
+        </article>
+
+        <article class="card">
+          <h2>MQTT</h2>
+          <label>Aktiv<input id="mqttEnabled" type="checkbox"></label>
+          <label>Host<input id="mqttHost" type="text"></label>
+          <label>Port<input id="mqttPort" type="number"></label>
+          <label>User<input id="mqttUser" type="text"></label>
+          <label>Passwort<input id="mqttPassword" type="password"></label>
+          <label>Topic Base<input id="mqttTopicBase" type="text"></label>
+          <label>Publish Intervall ms<input id="mqttPublishInterval" type="number"></label>
+          <button id="saveMqtt">MQTT speichern</button>
+        </article>
+
+        <article class="card">
+          <h2>Alarm</h2>
+          <label>Low bar<input id="alarmLow" type="number" step="0.01"></label>
+          <label>High bar<input id="alarmHigh" type="number" step="0.01"></label>
+          <label>Hysterese bar<input id="alarmHysteresis" type="number" step="0.01"></label>
+          <label>Repeat min<input id="alarmRepeat" type="number"></label>
+          <label>Telegram Bot Token<input id="telegramToken" type="text"></label>
+          <label>Telegram Chat ID<input id="telegramChat" type="text"></label>
+          <label>Webhook URL<input id="webhookUrl" type="text"></label>
+          <button id="saveAlarm">Alarm speichern</button>
+        </article>
+
+        <article class="card wide">
+          <h2>WireGuard</h2>
+          <label>Aktiv<input id="wgEnabled" type="checkbox"></label>
+          <label>Status URL<input id="wgStatusUrl" type="text"></label>
+          <label>Enable URL<input id="wgEnableUrl" type="text"></label>
+          <label>Disable URL<input id="wgDisableUrl" type="text"></label>
+          <label>Auth Token<input id="wgAuthToken" type="text"></label>
+          <div class="actions">
+            <button id="saveWireguard">WireGuard speichern</button>
+            <button id="wgStatus">Status prüfen</button>
+            <button id="wgEnable">Enable</button>
+            <button id="wgDisable">Disable</button>
+          </div>
+          <pre id="wgOutput" class="mono"></pre>
+        </article>
+      </div>
+    </section>
+
+    <section id="diag" class="tab">
+      <div class="grid two">
+        <article class="card">
+          <h2>Systemdiagnose</h2>
+          <pre id="diagOutput" class="mono"></pre>
+        </article>
+        <article class="card">
+          <h2>Aktionen</h2>
+          <div class="actions">
+            <button id="testTelegram">Telegram Test</button>
+            <button id="testWebhook">Webhook Test</button>
+            <button id="rebootDevice">Neustart</button>
+            <button id="refreshConfig">Config neu laden</button>
+            <button id="exportConfig">Config Export</button>
+          </div>
+          <label>Config Import JSON
+            <textarea id="configImport" rows="10" class="mono"></textarea>
+          </label>
+          <button id="importConfig">Config importieren</button>
+        </article>
       </div>
     </section>
 

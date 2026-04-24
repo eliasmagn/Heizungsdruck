@@ -18,15 +18,14 @@
 - [x] Letzten gültigen Wert bei Fault beibehalten
 
 ## D. Web app
-- [x] Dashboard
-- [x] History view
-- [x] Settings page
-- [x] Diagnostics page
-- [x] Lightweight HTML/CSS/JS ohne schweres Frontend-Framework
-- [x] Geführte Kalibrierseite (21 Punkte à 0.5 bar von 0.0–10.0)
-- [x] UI-Workflow für Kalibrierpunkte speichern/löschen via API-Capture/Clear
-- [x] UI-Workflow für Kalibriertabelle editieren + persistieren
-- [x] LittleFS-Webapp-Dateien (`index.html`, `app.js`, `style.css`)
+- [x] Eine kanonische LittleFS-Weboberfläche (Root `/` -> `data/index.html`)
+- [x] Alte C++-Inline-Seiten für `/`, `/history`, `/settings`, `/calibration`, `/diag` entfernt/deaktiviert
+- [x] Dashboard/Live-Bereich vollständig an `/api/status` angebunden
+- [x] Verlauf an `/api/history` angebunden + Canvas-Chart + JSON/CSV-Export
+- [x] Kalibrier-Workflow über `/api/calibration/capture`, `/api/calibration/clear`, `/api/config/calibration`
+- [x] Settings-Workflow über `/api/config/sensor|network|mqtt|alarm|wireguard`
+- [x] Diagnose-Workflow über `/api/diag`, `/api/test/telegram`, `/api/test/webhook`, `/api/reboot`
+- [x] Branding-Design (dunkel + cyan/weiß/amber) mit Assets unter `data/assets/`
 
 ## E. Persistence / config
 - [x] Persistenz via Preferences
@@ -47,50 +46,8 @@
 - [x] Recovery auf Defaults bei invalid config
 - [x] Aktive Alarmbenachrichtigung (Telegram/Webhook, inkl. Wiederholung)
 
-## L. Display
-- [x] Eigenständiges SSD1306-Display-Modul (`display_manager.h/.cpp`) erstellt
-- [x] Obere Statuszeile (WLAN/AP + WG + Alarm-Overlay) umgesetzt
-- [x] Große, ruhige Druckanzeige (`---` bei invalid) umgesetzt
-- [x] Untere Statuszeile inkl. Alarmtext/AP-Passwort umgesetzt
-- [x] Flackerarmes Rendering mit Change-Detection umgesetzt
-
-## M. Debug / Inbetriebnahme
-- [x] Enforced Debug-Mode über Hardware-Brücke D25<->D26 umgesetzt
-- [x] Verbose-Bootdump der gesamten Konfiguration im Bridge-Debug-Modus
-- [x] Minimal-Logmodus ohne Brücke (WLAN/IP/Druck)
-- [x] WLAN-Connect-Fallback auf `secrets.h` ergänzt, inkl. Persistenz bei erfolgreichem Fallback
-
-## N. Polling
-- [x] Fast-Polling für Druckmessung auf 100 ms erzwungen
-- [x] Update-Rate-Validierung auf 20..10000 ms angepasst
-
-## O. UX / Sensor-Konfig
-- [x] Website-Design mit Hover/Overlay-Effekten überarbeitet
-- [x] Dashboard-Polling auf 1s und History/Bar-Polling auf 500ms gesetzt
-- [x] Sensor-Settings über Web-UI + `/api/config/sensor` konfigurierbar gemacht
-- [x] Display-Updates in separaten Core-Task ausgelagert
-
-## P. Browser-first UI
-- [x] Kalibrierseite vereinfacht und mit klarer Button-Rückmeldung (Toast) versehen
-- [x] Laufende Auto-Reloads entfernt, nur gezieltes 1s-Polling für Livewerte
-- [x] History vollständig im Browser (localStorage, langes Retention-Fenster)
-- [x] History-Export als JSON/CSV ergänzt
-- [x] Web-UI auf Display-/Branding-Look umgestellt (Topbar/Theme/Farbsystem)
-
 ## H/I. Docs & tests
-- [x] README vollständig überarbeitet
+- [x] README überarbeitet inkl. klarer `uploadfs`-Deployment-Hinweise für Webapp-Änderungen
 - [x] Deterministische Tests für Kernlogik hinzugefügt
 - [x] Manuelle Verifikations-Checkliste dokumentiert
 - [x] CI-Workflow für native Tests + ESP32 Build ergänzt
-
-## J. Build-Fixes (2026-04-23)
-- [x] Arduino-Makrokonflikt `LOW`/`HIGH` in `PressureState` behoben
-- [x] ArduinoJson-v7-kompatibles Parsing (`JsonVariantConst` statt kopierter Proxies)
-- [x] `ProjectConfig.h` auf explizite `config/...` Includes umgestellt (verhindert versehentliches Einbinden eines fremden `config.h`)
-- [x] `MqttManager::connected()` nicht-`const` gemacht (PubSubClient API ist nicht `const`-korrekt)
-
-## K. Architekturentscheidung / Ausbaupfad (2026-04-23)
-- [x] Entscheidung dokumentiert: PlatformIO + eigene Firmware + eigene Webapp als Zielbild
-- [x] REST-Endpunkte für getrennte Config-Domänen (`network`, `mqtt`, `alarm`, `calibration`) vervollständigt
-- [x] Endpunkte für Kalibrier-Capture/Clear ergänzt
-- [x] WireGuard-Statusintegration (status/enable/disable via API + UI) umgesetzt

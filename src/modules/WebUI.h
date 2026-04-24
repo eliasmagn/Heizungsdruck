@@ -19,13 +19,11 @@ class WebUI {
   void attachHistory(PressureHistory *history);
 
  private:
-  static String pageTemplate(const char *title, const char *body, const char *script = "");
   String statusJson() const;
   String historyJson() const;
   String diagnosticsJson() const;
   String configJson() const;
   bool saveUpdatedConfig(const AppConfig &candidate, String &errorOut);
-  static bool parseFloatArg(const String &value, float &out);
   void setupRoutes();
 
   WebServer server_;
