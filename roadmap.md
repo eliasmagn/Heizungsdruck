@@ -28,3 +28,4 @@
 - ✅ Erzwungenes Fast-Polling (100 ms) für konstant schnelle Druckaktualisierung
 - ✅ UI-Refresh verbessert (1s Status / 500ms History) + Sensor-Config im Web
 - ✅ Display-Rendering auf separatem Core-Task entkoppelt
+- ✅ Browser-first Kalibrierung/History (lokal, exportierbar, ESP primär Live-Messdaten)

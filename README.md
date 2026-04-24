@@ -133,6 +133,12 @@ if (!gDisplay.begin()) {
 - History/Bar-Ansicht pollt alle **500ms**
 - Settings enthält zusätzliche Sensor-Parameter (Pin, SampleCount, Interval, Fault-Schwellen)
 
+## Browser-first Architektur (neu)
+- ESP32 liefert primär **Livewerte** (`ADC`, `bar`, validity/fault/state) über `/api/status`.
+- History wird im Browser aufgebaut (localStorage), nicht mehr als begrenzter ESP-Ringbuffer vorausgesetzt.
+- Kalibrierung wird im Browser komfortabel gepflegt und bei Bedarf gesammelt an den ESP übertragen.
+- History kann als **JSON** oder **CSV** exportiert werden.
+
 ## Zielbild für API und Konfiguration
 REST/API ist umgesetzt und umfasst:
 - `GET /api/status`

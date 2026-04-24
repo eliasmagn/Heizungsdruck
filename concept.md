@@ -46,6 +46,7 @@ Begründung:
 - Druckmessung läuft mit erzwungenem Fast-Polling (100 ms), da keine Batterie-Limitierung besteht.
 - Display-Update läuft auf separatem Core-Task (500 ms), während Web/API responsiv auf dem Hauptloop bleiben.
 - Sensorparameter sind zusätzlich über Web-UI/API konfigurierbar (`/api/config/sensor`).
+- Browser-first Frontend: Verlauf und Kalibrier-Workflow laufen lokal im Browser (inkl. Export), ESP liefert primär Live-Messwerte.
 
 ## Qualitätsziele
 - Erfolgreicher Build auf `esp32dev`.

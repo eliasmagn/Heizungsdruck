@@ -70,6 +70,12 @@
 - [x] Sensor-Settings über Web-UI + `/api/config/sensor` konfigurierbar gemacht
 - [x] Display-Updates in separaten Core-Task ausgelagert
 
+## P. Browser-first UI
+- [x] Kalibrierseite vereinfacht und mit klarer Button-Rückmeldung (Toast) versehen
+- [x] Laufende Auto-Reloads entfernt, nur gezieltes 1s-Polling für Livewerte
+- [x] History vollständig im Browser (localStorage, langes Retention-Fenster)
+- [x] History-Export als JSON/CSV ergänzt
+
 ## H/I. Docs & tests
 - [x] README vollständig überarbeitet
 - [x] Deterministische Tests für Kernlogik hinzugefügt
