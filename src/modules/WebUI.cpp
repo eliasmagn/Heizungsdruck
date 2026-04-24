@@ -106,7 +106,12 @@ bool WebUI::saveUpdatedConfig(const AppConfig &candidate, String &errorOut) {
 
 void WebUI::setupRoutes() {
   if (LittleFS.exists("/index.html")) {
-    server_.on("/", HTTP_GET, [this]() { server_.streamFile(LittleFS.open("/index.html", "r"), "text/html"); });
+    server_.on("/", HTTP_GET, [this]() {
+      auto file = LittleFS.open("/index.html", "r");
+      if (!file) return server_.send(500, "text/plain", "LittleFS index.html open failed");
+      server_.streamFile(file, "text/html");
+      file.close();
+    });
   } else {
     server_.on("/", HTTP_GET, [this]() { server_.send(500, "text/plain", "LittleFS index.html missing"); });
   }

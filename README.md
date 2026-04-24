@@ -216,6 +216,10 @@ Base topic: `heizungsdruck` (configurable)
   - `pio test -e native`
   - `pio run -e esp32dev`
 
+## Build-Fix Hinweis (WebUI)
+- Für den Root-Handler `/` wird `index.html` jetzt zuerst als `fs::File`-Variable geöffnet und dann an `server_.streamFile(...)` übergeben.
+- Hintergrund: `WebServer::streamFile` erwartet eine **nicht-konstante Referenz** auf ein File-Objekt; ein direktes temporäres `LittleFS.open(...)` führt auf ESP32-Arduino zu einem Compile-Fehler.
+
 ## Testing & verification
 Automated:
 ```bash

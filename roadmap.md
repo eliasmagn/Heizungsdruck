@@ -16,6 +16,7 @@
 - ✅ README um klaren Deployment-Workflow (`upload` vs `uploadfs`) ergänzt
 
 ## Phase 3 (in Arbeit)
+- ✅ Build-Stabilisierung: WebUI Root-Handler an `WebServer::streamFile(T&)`-Signatur angepasst (kein temporäres File mehr)
 - Erweiterte Selbstdiagnose und Telemetrie-Ratensteuerung
 - OTA-Update-UX in die Webapp integrieren (Backend via ArduinoOTA steht)
 - Erweiterte WireGuard-Statusvisualisierung (strukturierte Response-Darstellung)
