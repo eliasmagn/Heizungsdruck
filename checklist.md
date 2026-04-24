@@ -19,6 +19,7 @@
 
 ## D. Web app
 - [x] Eine kanonische LittleFS-Weboberfläche (Root `/` -> `data/index.html`)
+- [x] Root-Route-Streaming korrigiert (`fs::File`-Lvalue statt temporäres `LittleFS.open(...)`) für ESP32-Arduino Build-Kompatibilität
 - [x] Alte C++-Inline-Seiten für `/`, `/history`, `/settings`, `/calibration`, `/diag` entfernt/deaktiviert
 - [x] Dashboard/Live-Bereich vollständig an `/api/status` angebunden
 - [x] Verlauf an `/api/history` angebunden + Canvas-Chart + JSON/CSV-Export

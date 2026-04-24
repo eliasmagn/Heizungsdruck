@@ -44,3 +44,6 @@ Für die Zielsetzung gilt explizit: **eigene Firmware + eigene Webapp mit Platfo
 - Erfolgreicher Build auf `esp32dev`.
 - Deterministische Host-Tests für Kernlogik.
 - Verständliche Dokumentation für Betrieb und Wartung.
+
+## Technische Notiz (Build-Kompatibilität)
+- Die WebUI-Implementierung berücksichtigt die `WebServer::streamFile(T&)`-Signatur explizit und übergibt `fs::File` als benannte Lvalue-Variable (nicht als temporäres `LittleFS.open(...)`).
