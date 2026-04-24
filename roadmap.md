@@ -4,29 +4,18 @@
 - PlatformIO-Basis und modulare Firmwarestruktur
 - Sensorpipeline + Fault-Handling
 - Zustandsmaschine mit Hysterese
-- Lokale Web-App (Dashboard/History/Settings/Diagnostics)
-- MQTT-Telemetrie + reconnect
 - Persistente, validierte Konfiguration
+- MQTT-Telemetrie + reconnect
 
-## Phase 2 (in Arbeit)
+## Phase 2 (abgeschlossen)
 - ✅ Architekturentscheidung festgezogen: PlatformIO + eigene Firmware + eigene Webapp
-- ✅ Settings/API auf getrennte Konfig-Domänen ausgebaut (`network`, `mqtt`, `alarm`, `calibration`)
-- ✅ Setup-Flow für Erstinbetriebnahme mit AP-Passwort-Generierung (OLED-Ausgabe als separates Display-Thema)
-- Tooling-Härtung: Build-Umgebung mit dokumentierter `intelhex`-Abhängigkeit für `esptool` stabilisieren
-- ✅ Konfig-Export/Import als JSON Endpoint
-- ✅ UI-Verbesserungen für Alarmübergänge im History-Chart
-- ✅ CI/Build-Absicherung (native tests + esp32 build via GitHub Actions)
+- ✅ WebUI-Routing bereinigt: nur noch LittleFS-UI als kanonisches Frontend
+- ✅ Inline-C++-Seiten entfernt/deaktiviert; Legacy-Routen zeigen auf Root
+- ✅ Vollständiger API-Abgleich für Live/Verlauf/Kalibrierung/Settings/Diagnose
+- ✅ UI-Design auf Produkt-Branding umgestellt (dark + cyan/amber + technische Kartenstruktur)
+- ✅ README um klaren Deployment-Workflow (`upload` vs `uploadfs`) ergänzt
 
-## Phase 3
-- ✅ Geführte 21-Punkte-Kalibrierung (Erfassen, Speichern, Löschen)
-- ✅ OTA-Update Workflow (ArduinoOTA)
-- ✅ Optional WireGuard-Statusintegration (nach stabiler Mess-/UI-/MQTT-Basis)
+## Phase 3 (in Arbeit)
 - Erweiterte Selbstdiagnose und Telemetrie-Ratensteuerung
-- ✅ Alarm-Benachrichtigungen via Telegram/Webhook mit Repeat-Intervall
-- ✅ Eigenständiges SSD1306-Display-Modul mit flackerarmer Status-/Druckanzeige
-- ✅ Hardware-gebundener Debug-Mode (D25<->D26) + robuste WLAN-Fallback-Connect-Strategie
-- ✅ Erzwungenes Fast-Polling (100 ms) für konstant schnelle Druckaktualisierung
-- ✅ UI-Refresh verbessert (1s Status / 500ms History) + Sensor-Config im Web
-- ✅ Display-Rendering auf separatem Core-Task entkoppelt
-- ✅ Browser-first Kalibrierung/History (lokal, exportierbar, ESP primär Live-Messdaten)
-- ✅ UI visuell auf Referenz-Display/Branding-Look angepasst
+- OTA-Update-UX in die Webapp integrieren (Backend via ArduinoOTA steht)
+- Erweiterte WireGuard-Statusvisualisierung (strukturierte Response-Darstellung)

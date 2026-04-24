@@ -9,22 +9,6 @@
 
 WebUI::WebUI(uint16_t port) : server_(port) {}
 
-String WebUI::pageTemplate(const char *title, const char *body, const char *script) {
-  String html = "<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>";
-  html += "<title>" + String(title) + "</title>";
-  html += "<style>body{font-family:Arial,sans-serif;background:#0f172a;color:#e2e8f0;margin:0;padding:1rem}"
-          ".card{background:#1e293b;padding:1rem;border-radius:10px;margin-bottom:1rem}"
-          "input,select,textarea{width:100%;padding:8px;margin:5px 0;background:#0b1220;color:#e2e8f0;border:1px solid #334155}"
-          "button{padding:8px 12px;background:#0284c7;color:#fff;border:0;border-radius:6px;margin-right:0.5rem}"
-          "table{border-collapse:collapse;width:100%}th,td{border:1px solid #334155;padding:6px;text-align:left}"
-          "nav a{color:#7dd3fc;margin-right:12px}</style></head><body><nav>"
-          "<a href='/'>Dashboard</a><a href='/history'>History</a><a href='/settings'>Settings</a><a href='/calibration'>Calibration</a><a href='/diag'>Diagnostics</a>"
-          "</nav>";
-  html += body;
-  html += "<script>" + String(script) + "</script></body></html>";
-  return html;
-}
-
 void WebUI::begin() {
   LittleFS.begin(true);
   setupRoutes();
@@ -120,107 +104,29 @@ bool WebUI::saveUpdatedConfig(const AppConfig &candidate, String &errorOut) {
   return true;
 }
 
-bool WebUI::parseFloatArg(const String &value, float &out) {
-  if (value.isEmpty()) return false;
-  char *end = nullptr;
-  out = strtof(value.c_str(), &end);
-  return end != value.c_str();
-}
-
 void WebUI::setupRoutes() {
   if (LittleFS.exists("/index.html")) {
-    server_.serveStatic("/", LittleFS, "/index.html");
+    server_.on("/", HTTP_GET, [this]() { server_.streamFile(LittleFS.open("/index.html", "r"), "text/html"); });
+  } else {
+    server_.on("/", HTTP_GET, [this]() { server_.send(500, "text/plain", "LittleFS index.html missing"); });
   }
+
   if (LittleFS.exists("/app.js")) {
-    server_.serveStatic("/app.js", LittleFS, "/app.js");
+    server_.serveStatic("/app.js", LittleFS, "/app.js", "max-age=60");
   }
   if (LittleFS.exists("/style.css")) {
-    server_.serveStatic("/style.css", LittleFS, "/style.css");
+    server_.serveStatic("/style.css", LittleFS, "/style.css", "max-age=60");
+  }
+  if (LittleFS.exists("/assets")) {
+    server_.serveStatic("/assets", LittleFS, "/assets", "max-age=86400");
   }
 
-  const char *dashBody =
-      "<div class='card'><h2>Druck</h2><h1 id='p'>--.- bar</h1><div id='s'></div><small id='meta'></small></div>"
-      "<div class='card'><h3>Debug</h3><pre id='dbg'></pre></div>";
-  const char *dashScript =
-      "async function upd(){const r=await fetch('/api/status');const j=await r.json();"
-      "document.getElementById('p').textContent=(j.pressureBar??0).toFixed(2)+' bar';"
-      "document.getElementById('s').textContent='State '+j.state+' | Fault '+j.fault;"
-      "document.getElementById('meta').textContent='WiFi:'+j.wifi+' MQTT:'+j.mqtt+' Uptime:'+j.uptimeSec+'s';"
-      "document.getElementById('dbg').textContent=JSON.stringify(j,null,2);}"
-      "setInterval(upd,1500);upd();";
-
-  server_.on("/", HTTP_GET, [this, dashBody, dashScript]() {
-    server_.send(200, "text/html", pageTemplate("Dashboard", dashBody, dashScript));
-  });
-
-  const char *historyBody = "<div class='card'><h2>History</h2><canvas id='c' width='720' height='220'></canvas></div>";
-  const char *historyScript =
-      "async function plot(){const r=await fetch('/api/history');const d=await r.json();const c=document.getElementById('c');"
-      "const x=c.getContext('2d');x.fillStyle='#0b1220';x.fillRect(0,0,c.width,c.height);"
-      "const e=d.entries||[];if(e.length<2)return;"
-      "x.strokeStyle='#1e293b';for(let i=0;i<=6;i++){const y=i*c.height/6;x.beginPath();x.moveTo(0,y);x.lineTo(c.width,y);x.stroke();}"
-      "x.strokeStyle='#22d3ee';x.beginPath();"
-      "for(let i=0;i<e.length;i++){const px=i*(c.width/(e.length-1));const py=c.height-((e[i].bar||0)/3.0*c.height);if(i===0)x.moveTo(px,py);else x.lineTo(px,py);}x.stroke();}"
-      "setInterval(plot,3000);plot();";
-  server_.on("/history", HTTP_GET, [this, historyBody, historyScript]() {
-    server_.send(200, "text/html", pageTemplate("History", historyBody, historyScript));
-  });
-
-  const char *settingsBody =
-      "<div class='card'><h2>Network</h2><label>WiFi SSID<input id='wifiSsid'></label><label>WiFi Password<input id='wifiPassword' type='password'></label>"
-      "<label>AP SSID<input id='apSsid'></label><label>AP Password<input id='apPassword'></label><button onclick='saveNetwork()'>Save Network</button></div>"
-      "<div class='card'><h2>MQTT</h2><label>Host<input id='mqttHost'></label><label>Port<input id='mqttPort' type='number'></label>"
-      "<label>User<input id='mqttUser'></label><label>Password<input id='mqttPass' type='password'></label><label>Topic Prefix<input id='mqttTopic'></label>"
-      "<label>Publish Interval ms<input id='mqttInterval' type='number'></label><button onclick='saveMqtt()'>Save MQTT</button></div>"
-      "<div class='card'><h2>Alarm</h2><label>Low bar<input id='low' type='number' step='0.01'></label><label>High bar<input id='high' type='number' step='0.01'></label>"
-      "<label>Hysteresis<input id='hyst' type='number' step='0.01'></label><label>Repeat minutes<input id='repeat' type='number'></label>"
-      "<label>Telegram Bot Token<input id='tgToken'></label><label>Telegram Chat ID<input id='tgChat'></label><label>Email Webhook URL<input id='webhook'></label>"
-      "<button onclick='saveAlarm()'>Save Alarm</button></div><pre id='result'></pre>";
-  const char *settingsScript =
-      "async function cfg(){return await (await fetch('/api/config')).json();}"
-      "async function load(){const j=await cfg();"
-      "wifiSsid.value=j.network.wifiSsid||'';wifiPassword.value=j.network.wifiPassword||'';apSsid.value=j.network.apSsid||'';apPassword.value=j.network.apPassword||'';"
-      "mqttHost.value=j.mqtt.host||'';mqttPort.value=j.mqtt.port||1883;mqttUser.value=j.mqtt.username||'';mqttPass.value=j.mqtt.password||'';mqttTopic.value=j.mqtt.topicBase||'';mqttInterval.value=j.mqtt.publishIntervalMs||10000;"
-      "low.value=j.alarm.lowBar;high.value=j.alarm.highBar;hyst.value=j.alarm.hysteresisBar;repeat.value=j.alarm.repeatMinutes||30;tgToken.value=j.alarm.telegramBotToken||'';tgChat.value=j.alarm.telegramChatId||'';webhook.value=j.alarm.emailWebhookUrl||'';}"
-      "async function post(url,body){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});result.textContent=await r.text();}"
-      "async function saveNetwork(){await post('/api/config/network',{wifiSsid:wifiSsid.value,wifiPassword:wifiPassword.value,apSsid:apSsid.value,apPassword:apPassword.value});}"
-      "async function saveMqtt(){await post('/api/config/mqtt',{host:mqttHost.value,port:+mqttPort.value,username:mqttUser.value,password:mqttPass.value,topicBase:mqttTopic.value,publishIntervalMs:+mqttInterval.value,enabled:!!mqttHost.value});}"
-      "async function saveAlarm(){await post('/api/config/alarm',{lowBar:+low.value,highBar:+high.value,hysteresisBar:+hyst.value,repeatMinutes:+repeat.value,telegramBotToken:tgToken.value,telegramChatId:tgChat.value,emailWebhookUrl:webhook.value});}"
-      "load();";
-  server_.on("/settings", HTTP_GET, [this, settingsBody, settingsScript]() {
-    server_.send(200, "text/html", pageTemplate("Settings", settingsBody, settingsScript));
-  });
-
-  const char *calibBody =
-      "<div class='card'><h2>Kalibrierung 0.0 bis 10.0 bar</h2><p>Aktueller ADC: <b id='adc'>-</b></p>"
-      "<label>Bar für Capture<input id='captureBar' type='number' step='0.5' min='0' max='10' value='1.0'></label>"
-      "<button onclick='capture()'>Punkt speichern</button><button onclick='clearAll()'>Alle löschen</button>"
-      "<table><thead><tr><th>Bar</th><th>ADC</th><th>Valid</th><th>Aktion</th></tr></thead><tbody id='rows'></tbody></table></div><pre id='msg'></pre>";
-  const char *calibScript =
-      "let config=null;"
-      "function barToIndex(bar){return Math.round(bar*2);}"
-      "async function load(){const s=await (await fetch('/api/status')).json();adc.textContent=s.filteredAdc;config=await (await fetch('/api/config')).json();render();}"
-      "function render(){rows.innerHTML='';(config.calib.points||[]).forEach((p,i)=>{const tr=document.createElement('tr');"
-      "tr.innerHTML=`<td>${p.bar.toFixed(1)}</td><td><input type='number' value='${p.adc||0}' onchange='updateAdc(${i},this.value)'></td><td>${p.valid?'ja':'nein'}</td><td><button onclick='toggle(${i})'>${p.valid?'deaktivieren':'aktivieren'}</button></td>`;rows.appendChild(tr);});}"
-      "function updateAdc(i,v){config.calib.points[i].adc=+v;}"
-      "function toggle(i){config.calib.points[i].valid=!config.calib.points[i].valid;render();}"
-      "async function capture(){const bar=+captureBar.value;const idx=barToIndex(bar);const r=await fetch('/api/calibration/capture',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({bar})});msg.textContent=await r.text();await load();}"
-      "async function clearAll(){const r=await fetch('/api/calibration/clear',{method:'POST'});msg.textContent=await r.text();await load();}"
-      "setInterval(load,2500);load();";
-  server_.on("/calibration", HTTP_GET, [this, calibBody, calibScript]() {
-    server_.send(200, "text/html", pageTemplate("Calibration", calibBody, calibScript));
-  });
-
-  const char *diagBody =
-      "<div class='card'><h2>Diagnostics</h2><button onclick='sendTelegram()'>Test Telegram</button><button onclick='sendWebhook()'>Test Webhook</button><button onclick='restart()'>Restart</button><pre id='diag'></pre></div>";
-  const char *diagScript =
-      "async function upd(){diag.textContent=JSON.stringify(await (await fetch('/api/diag')).json(),null,2);}"
-      "async function sendTelegram(){await fetch('/api/test/telegram',{method:'POST'});upd();}"
-      "async function sendWebhook(){await fetch('/api/test/webhook',{method:'POST'});upd();}"
-      "async function restart(){await fetch('/api/reboot',{method:'POST'});}setInterval(upd,2000);upd();";
-  server_.on("/diag", HTTP_GET, [this, diagBody, diagScript]() {
-    server_.send(200, "text/html", pageTemplate("Diagnostics", diagBody, diagScript));
-  });
+  for (const char *legacyRoute : {"/history", "/settings", "/calibration", "/diag"}) {
+    server_.on(legacyRoute, HTTP_GET, [this]() {
+      server_.sendHeader("Location", "/");
+      server_.send(302, "text/plain", "Moved to /");
+    });
+  }
 
   server_.on("/api/status", HTTP_GET, [this]() { server_.send(200, "application/json", statusJson()); });
   server_.on("/api/history", HTTP_GET, [this]() { server_.send(200, "application/json", historyJson()); });
@@ -248,6 +154,7 @@ void WebUI::setupRoutes() {
     if (!doc["wifiPassword"].isNull()) candidate.network.wifiPassword = doc["wifiPassword"].as<const char *>();
     if (!doc["apSsid"].isNull()) candidate.network.apSsid = doc["apSsid"].as<const char *>();
     if (!doc["apPassword"].isNull()) candidate.network.apPassword = doc["apPassword"].as<const char *>();
+    if (!doc["hostname"].isNull()) candidate.network.hostname = doc["hostname"].as<const char *>();
     String outErr;
     if (!saveUpdatedConfig(candidate, outErr)) return server_.send(400, "text/plain", outErr);
     server_.send(200, "text/plain", "network saved");
@@ -333,7 +240,6 @@ void WebUI::setupRoutes() {
   server_.on("/api/config/calibration", HTTP_POST, [this]() {
     if (!cfg_) return server_.send(500, "text/plain", "config unavailable");
     AppConfig candidate = *cfg_;
-    std::string err;
     JsonDocument doc;
     if (deserializeJson(doc, server_.arg("plain"))) return server_.send(400, "text/plain", "invalid json");
     JsonVariantConst cv = doc["calib"];
@@ -488,4 +394,6 @@ void WebUI::setupRoutes() {
     delay(100);
     ESP.restart();
   });
+
+  server_.onNotFound([this]() { server_.send(404, "text/plain", "not found"); });
 }

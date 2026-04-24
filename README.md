@@ -76,15 +76,16 @@ pio run -t uploadfs
 pio device monitor
 ```
 
+> **Wichtig für Deployment:** Änderungen an `data/index.html`, `data/app.js`, `data/style.css` oder `data/assets/*` werden **erst nach `pio run -t uploadfs`** auf dem Gerät sichtbar. `pio run -t upload` alleine aktualisiert nur die Firmware, nicht das LittleFS-Dateisystem.
+
 ## Web UI overview
 - LittleFS-hosted SPA (`data/index.html`, `data/app.js`, `data/style.css`)
-- Dashboard: live pressure + history canvas
-- Settings: network, MQTT, alarm channels
-- Optional WireGuard control integration (status/enable/disable via configured URLs)
-- Calibration: 21 points (0.0…10.0 bar in 0.5 steps), capture + clear
-- Calibration table edit + persist from UI
-- Config export/import via JSON textarea
-- Diagnostics: telemetry dump, telegram/webhook test, reboot
+- Eine kanonische LittleFS-Webapp (`/` lädt ausschließlich `data/index.html`)
+- Bereiche: Live, Verlauf, Kalibrierung, Einstellungen, Diagnose
+- Einstellungen mit API-gebundener Bearbeitung für Sensor, Netzwerk, MQTT, Alarm und WireGuard
+- Kalibrierung: 21 Punkte (0.0…10.0 bar), Capture/Clear und persistentes Speichern
+- Verlauf aus `/api/history` mit Canvas-Chart + JSON/CSV-Export
+- Diagnose: Statusdump, Telegram-/Webhook-Test, Neustart und Config-Export/Import
 
 ## OLED Display (SSD1306) – live status
 - Display module: `src/modules/display_manager.h` + `src/modules/display_manager.cpp`
@@ -133,11 +134,11 @@ if (!gDisplay.begin()) {
 - History/Bar-Ansicht pollt alle **500ms**
 - Settings enthält zusätzliche Sensor-Parameter (Pin, SampleCount, Interval, Fault-Schwellen)
 
-## Browser-first Architektur (neu)
-- ESP32 liefert primär **Livewerte** (`ADC`, `bar`, validity/fault/state) über `/api/status`.
-- History wird im Browser aufgebaut (localStorage), nicht mehr als begrenzter ESP-Ringbuffer vorausgesetzt.
-- Kalibrierung wird im Browser komfortabel gepflegt und bei Bedarf gesammelt an den ESP übertragen.
-- History kann als **JSON** oder **CSV** exportiert werden.
+## Webapp-Architektur (aktuell)
+- ESP32 liefert Livewerte über `/api/status` und Verlauf über `/api/history`.
+- Die SPA in `data/` ist die **einzige** Weboberfläche; alte inline C++-HTML-Seiten sind entfernt.
+- Historie wird direkt aus den API-Daten gezeichnet und als JSON/CSV exportiert.
+- Kalibrierung, Settings und Diagnose sind vollständig API-gebunden umgesetzt.
 
 ## UI-Designrichtung
 - Web-UI wurde auf die gleiche visuelle Linie wie das Display-Theme gebracht:
