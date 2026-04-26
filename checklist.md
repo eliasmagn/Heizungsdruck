@@ -56,6 +56,8 @@
 - [x] 2026-04-26: SPA-Fallback für Nicht-API-Routen aktiviert; API-Routen bleiben 404
 - [x] 2026-04-26: Kalibrier-Tabelle auf fixe 21 Punkte normalisiert, inklusive Punkt-Löschen/Reload/Save-Flow
 
-- [x] 2026-04-26: Geplantes WireGuard-Netz (`plannedNetworkCidr`) inkl. Defaults aus `config.h`/`secrets.h` ergänzt
+- [x] 2026-04-26: Pseudo-WireGuard-Proxy entfernt und echte lokale WireGuard-Konfiguration inkl. Runtime-Manager ergänzt
 
 - [x] 2026-04-26: Diagnose-Tab kann gesamte Konfiguration atomar über `POST /api/config` speichern
+
+- [x] 2026-04-26: Echter lokaler WireGuard-Manager (`WireGuardManager`) integriert; alte URL-Proxy-Steuerung entfernt

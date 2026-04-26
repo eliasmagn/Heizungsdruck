@@ -50,8 +50,28 @@ bool AppConfig::validate(std::string &error) const {
     return false;
   }
   if (wireguard.enabled) {
-    if (wireguard.statusUrl.empty() || wireguard.enableUrl.empty() || wireguard.disableUrl.empty()) {
-      error = "wireguard urls must not be empty when enabled";
+    if (wireguard.localAddress.empty()) {
+      error = "wireguard localAddress must not be empty when enabled";
+      return false;
+    }
+    if (wireguard.privateKey.empty()) {
+      error = "wireguard privateKey must not be empty when enabled";
+      return false;
+    }
+    if (wireguard.peerEndpoint.empty()) {
+      error = "wireguard peerEndpoint must not be empty when enabled";
+      return false;
+    }
+    if (wireguard.peerPort == 0) {
+      error = "wireguard peerPort must not be 0 when enabled";
+      return false;
+    }
+    if (wireguard.peerPublicKey.empty()) {
+      error = "wireguard peerPublicKey must not be empty when enabled";
+      return false;
+    }
+    if (wireguard.allowedIp1.empty() && wireguard.allowedIp2.empty()) {
+      error = "wireguard requires at least one allowed IP when enabled";
       return false;
     }
   }

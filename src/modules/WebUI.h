@@ -5,6 +5,7 @@
 #include "AppConfig.h"
 #include "PressureHistory.h"
 #include "PressureTypes.h"
+#include "WireGuardManager.h"
 
 class WebUI {
  public:
@@ -17,6 +18,7 @@ class WebUI {
                       uint32_t uptimeSec);
   void attachConfig(AppConfig *cfg, bool (*saveFn)(const AppConfig &));
   void attachHistory(PressureHistory *history);
+  void attachWireGuardManager(WireGuardManager *wireguard);
 
  private:
   String statusJson() const;
@@ -36,4 +38,5 @@ class WebUI {
   AppConfig *cfg_{nullptr};
   bool (*saveConfig_)(const AppConfig &) = nullptr;
   PressureHistory *history_{nullptr};
+  WireGuardManager *wireguard_{nullptr};
 };

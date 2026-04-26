@@ -14,6 +14,7 @@
 #include "modules/PressureSensor.h"
 #include "modules/PressureStateMachine.h"
 #include "modules/WebUI.h"
+#include "modules/WireGuardManager.h"
 
 #ifndef SENSOR_ADC_PIN_DEFAULT
 #define SENSOR_ADC_PIN_DEFAULT 34
@@ -36,20 +37,35 @@
 #ifndef WIREGUARD_ENABLED_DEFAULT
 #define WIREGUARD_ENABLED_DEFAULT 0
 #endif
-#ifndef WIREGUARD_PLANNED_NETWORK_CIDR
-#define WIREGUARD_PLANNED_NETWORK_CIDR ""
+#ifndef WIREGUARD_LOCAL_ADDRESS
+#define WIREGUARD_LOCAL_ADDRESS ""
 #endif
-#ifndef WIREGUARD_STATUS_URL
-#define WIREGUARD_STATUS_URL ""
+#ifndef WIREGUARD_NETMASK
+#define WIREGUARD_NETMASK "255.255.255.0"
 #endif
-#ifndef WIREGUARD_ENABLE_URL
-#define WIREGUARD_ENABLE_URL ""
+#ifndef WIREGUARD_PRIVATE_KEY
+#define WIREGUARD_PRIVATE_KEY ""
 #endif
-#ifndef WIREGUARD_DISABLE_URL
-#define WIREGUARD_DISABLE_URL ""
+#ifndef WIREGUARD_PEER_ENDPOINT
+#define WIREGUARD_PEER_ENDPOINT ""
 #endif
-#ifndef WIREGUARD_AUTH_TOKEN
-#define WIREGUARD_AUTH_TOKEN ""
+#ifndef WIREGUARD_PEER_PORT
+#define WIREGUARD_PEER_PORT 0
+#endif
+#ifndef WIREGUARD_PEER_PUBLIC_KEY
+#define WIREGUARD_PEER_PUBLIC_KEY ""
+#endif
+#ifndef WIREGUARD_PRESHARED_KEY
+#define WIREGUARD_PRESHARED_KEY ""
+#endif
+#ifndef WIREGUARD_ALLOWED_IP1
+#define WIREGUARD_ALLOWED_IP1 ""
+#endif
+#ifndef WIREGUARD_ALLOWED_IP2
+#define WIREGUARD_ALLOWED_IP2 ""
+#endif
+#ifndef WIREGUARD_KEEPALIVE_SECONDS
+#define WIREGUARD_KEEPALIVE_SECONDS 0
 #endif
 
 namespace {
@@ -62,6 +78,7 @@ MqttManager gMqtt;
 AlarmManager gAlarm;
 WebUI gWeb;
 DisplayManager gDisplay;
+WireGuardManager gWireGuard;
 
 PressureReading gLastReading;
 PressureState gLastState = PressureState::UNKNOWN;
@@ -117,6 +134,11 @@ bool saveCfg(const AppConfig &cfg) {
   if (gStateMachine) gStateMachine->updateConfig(gConfig);
   gMqtt.begin(gConfig);
   gAlarm.updateConfig(gConfig);
+  if (gConfig.wireguard.enabled) {
+    gWireGuard.enable(gConfig.wireguard);
+  } else {
+    gWireGuard.disable();
+  }
   return true;
 }
 
@@ -195,11 +217,16 @@ void setup() {
   if (gConfig.mqtt.port == 0) gConfig.mqtt.port = MQTT_PORT;
   if (gConfig.mqtt.username.empty()) gConfig.mqtt.username = MQTT_USERNAME;
   if (gConfig.mqtt.password.empty()) gConfig.mqtt.password = MQTT_PASSWORD;
-  if (gConfig.wireguard.plannedNetworkCidr.empty()) gConfig.wireguard.plannedNetworkCidr = WIREGUARD_PLANNED_NETWORK_CIDR;
-  if (gConfig.wireguard.statusUrl.empty()) gConfig.wireguard.statusUrl = WIREGUARD_STATUS_URL;
-  if (gConfig.wireguard.enableUrl.empty()) gConfig.wireguard.enableUrl = WIREGUARD_ENABLE_URL;
-  if (gConfig.wireguard.disableUrl.empty()) gConfig.wireguard.disableUrl = WIREGUARD_DISABLE_URL;
-  if (gConfig.wireguard.authToken.empty()) gConfig.wireguard.authToken = WIREGUARD_AUTH_TOKEN;
+  if (gConfig.wireguard.localAddress.empty()) gConfig.wireguard.localAddress = WIREGUARD_LOCAL_ADDRESS;
+  if (gConfig.wireguard.netmask.empty()) gConfig.wireguard.netmask = WIREGUARD_NETMASK;
+  if (gConfig.wireguard.privateKey.empty()) gConfig.wireguard.privateKey = WIREGUARD_PRIVATE_KEY;
+  if (gConfig.wireguard.peerEndpoint.empty()) gConfig.wireguard.peerEndpoint = WIREGUARD_PEER_ENDPOINT;
+  if (gConfig.wireguard.peerPort == 0) gConfig.wireguard.peerPort = WIREGUARD_PEER_PORT;
+  if (gConfig.wireguard.peerPublicKey.empty()) gConfig.wireguard.peerPublicKey = WIREGUARD_PEER_PUBLIC_KEY;
+  if (gConfig.wireguard.presharedKey.empty()) gConfig.wireguard.presharedKey = WIREGUARD_PRESHARED_KEY;
+  if (gConfig.wireguard.allowedIp1.empty()) gConfig.wireguard.allowedIp1 = WIREGUARD_ALLOWED_IP1;
+  if (gConfig.wireguard.allowedIp2.empty()) gConfig.wireguard.allowedIp2 = WIREGUARD_ALLOWED_IP2;
+  if (gConfig.wireguard.keepAliveSeconds == 0) gConfig.wireguard.keepAliveSeconds = WIREGUARD_KEEPALIVE_SECONDS;
   if (!gConfig.wireguard.enabled && WIREGUARD_ENABLED_DEFAULT) gConfig.wireguard.enabled = true;
   gConfig.mqtt.enabled = !gConfig.mqtt.host.empty();
   // Enforce fast constant polling (battery is not a concern for this project).
@@ -235,6 +262,8 @@ void setup() {
   gAlarm.begin(gConfig);
   gWeb.attachConfig(&gConfig, saveCfg);
   gWeb.attachHistory(&gHistory);
+  gWeb.attachWireGuardManager(&gWireGuard);
+  gWireGuard.begin(gConfig.wireguard);
   gWeb.begin();
 }
 
@@ -253,6 +282,7 @@ void loop() {
   gMqtt.publishReading(gLastReading, gLastState, wifiConnected, now / 1000);
   gAlarm.loop(now, gLastReading, gLastState);
 
+  gWireGuard.loop(now / 1000);
   gWeb.updateLiveData(gLastReading, gLastState, wifiConnected, gMqtt.connected(), now / 1000);
   gWeb.loop();
   ArduinoOTA.handle();
@@ -263,8 +293,9 @@ void loop() {
   ds.ap_mode = !wifiConnected;
   ds.ap_ssid = gConfig.network.apSsid.c_str();
   ds.ap_password = gConfig.network.apPassword.c_str();
-  ds.wireguard_enabled = gConfig.wireguard.enabled;
-  ds.wireguard_online = false;
+  const WireGuardStatus wgStatus = gWireGuard.status();
+  ds.wireguard_enabled = wgStatus.enabled;
+  ds.wireguard_online = wgStatus.online;
   ds.alarm_active = (gLastState == PressureState::PRESSURE_LOW || gLastState == PressureState::PRESSURE_HIGH ||
                      gLastState == PressureState::SENSOR_FAULT);
   ds.pressure_bar = gLastReading.pressureBar;

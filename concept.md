@@ -54,6 +54,6 @@ Für die Zielsetzung gilt explizit: **eigene Firmware + eigene Webapp mit Platfo
 - Frontend-Routen werden via SPA-Fallback auf `index.html` aufgelöst; `/api/*` bleibt strikt Backend-Schnittstelle.
 - Kalibrierlogik in der SPA ist backend-dominiert (21 feste Punkte, laden/speichern/capture/clear gegen API).
 
-- WireGuard-Planungsparameter werden über Build-Konfiguration (`config.h`/`secrets.h`) vorbefüllt und dann persistent im AppConfig geführt.
+- WireGuard wird lokal auf dem ESP32 betrieben; Tunnelparameter werden via Build-Defaults vorbefüllt und persistent gespeichert.
 
 - Diagnose-Workflow unterstützt jetzt neben Teilupdates auch atomare Gesamtkonfigurations-Saves via `POST /api/config`.

@@ -57,10 +57,12 @@ void test_json_roundtrip() {
   cfg.calib.points[1].valid = true;
   cfg.calib.points[1].adc = 610;
   cfg.wireguard.enabled = true;
-  cfg.wireguard.plannedNetworkCidr = "10.66.0.0/24";
-  cfg.wireguard.statusUrl = "https://wg.example/status";
-  cfg.wireguard.enableUrl = "https://wg.example/enable";
-  cfg.wireguard.disableUrl = "https://wg.example/disable";
+  cfg.wireguard.localAddress = "10.66.0.2";
+  cfg.wireguard.privateKey = "private-key";
+  cfg.wireguard.peerEndpoint = "vpn.example.com";
+  cfg.wireguard.peerPort = 51820;
+  cfg.wireguard.peerPublicKey = "peer-pub-key";
+  cfg.wireguard.allowedIp1 = "0.0.0.0/0";
   std::string json = configToJson(cfg);
   AppConfig out = defaultConfig();
   std::string err;
@@ -70,8 +72,9 @@ void test_json_roundtrip() {
   TEST_ASSERT_TRUE(out.calib.points[0].valid);
   TEST_ASSERT_EQUAL_INT(450, out.calib.points[0].adc);
   TEST_ASSERT_TRUE(out.wireguard.enabled);
-  TEST_ASSERT_EQUAL_STRING("10.66.0.0/24", out.wireguard.plannedNetworkCidr.c_str());
-  TEST_ASSERT_EQUAL_STRING("https://wg.example/status", out.wireguard.statusUrl.c_str());
+  TEST_ASSERT_EQUAL_STRING("10.66.0.2", out.wireguard.localAddress.c_str());
+  TEST_ASSERT_EQUAL_UINT16(51820, out.wireguard.peerPort);
+  TEST_ASSERT_EQUAL_STRING("vpn.example.com", out.wireguard.peerEndpoint.c_str());
 }
 
 int main(int, char **) {

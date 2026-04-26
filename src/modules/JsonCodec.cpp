@@ -50,11 +50,16 @@ std::string configToJson(const AppConfig &cfg) {
   doc["network"]["hostname"] = cfg.network.hostname;
 
   doc["wireguard"]["enabled"] = cfg.wireguard.enabled;
-  doc["wireguard"]["plannedNetworkCidr"] = cfg.wireguard.plannedNetworkCidr;
-  doc["wireguard"]["statusUrl"] = cfg.wireguard.statusUrl;
-  doc["wireguard"]["enableUrl"] = cfg.wireguard.enableUrl;
-  doc["wireguard"]["disableUrl"] = cfg.wireguard.disableUrl;
-  doc["wireguard"]["authToken"] = cfg.wireguard.authToken;
+  doc["wireguard"]["localAddress"] = cfg.wireguard.localAddress;
+  doc["wireguard"]["netmask"] = cfg.wireguard.netmask;
+  doc["wireguard"]["privateKey"] = cfg.wireguard.privateKey;
+  doc["wireguard"]["peerEndpoint"] = cfg.wireguard.peerEndpoint;
+  doc["wireguard"]["peerPort"] = cfg.wireguard.peerPort;
+  doc["wireguard"]["peerPublicKey"] = cfg.wireguard.peerPublicKey;
+  doc["wireguard"]["presharedKey"] = cfg.wireguard.presharedKey;
+  doc["wireguard"]["allowedIp1"] = cfg.wireguard.allowedIp1;
+  doc["wireguard"]["allowedIp2"] = cfg.wireguard.allowedIp2;
+  doc["wireguard"]["keepAliveSeconds"] = cfg.wireguard.keepAliveSeconds;
 
   std::string out;
   serializeJson(doc, out);
@@ -132,11 +137,16 @@ bool configFromJson(const std::string &json, AppConfig &cfgOut, std::string &err
 
   JsonVariantConst w = doc["wireguard"];
   setIfExists(w["enabled"], cfgOut.wireguard.enabled);
-  setIfExists(w["plannedNetworkCidr"], cfgOut.wireguard.plannedNetworkCidr);
-  setIfExists(w["statusUrl"], cfgOut.wireguard.statusUrl);
-  setIfExists(w["enableUrl"], cfgOut.wireguard.enableUrl);
-  setIfExists(w["disableUrl"], cfgOut.wireguard.disableUrl);
-  setIfExists(w["authToken"], cfgOut.wireguard.authToken);
+  setIfExists(w["localAddress"], cfgOut.wireguard.localAddress);
+  setIfExists(w["netmask"], cfgOut.wireguard.netmask);
+  setIfExists(w["privateKey"], cfgOut.wireguard.privateKey);
+  setIfExists(w["peerEndpoint"], cfgOut.wireguard.peerEndpoint);
+  setIfExists(w["peerPort"], cfgOut.wireguard.peerPort);
+  setIfExists(w["peerPublicKey"], cfgOut.wireguard.peerPublicKey);
+  setIfExists(w["presharedKey"], cfgOut.wireguard.presharedKey);
+  setIfExists(w["allowedIp1"], cfgOut.wireguard.allowedIp1);
+  setIfExists(w["allowedIp2"], cfgOut.wireguard.allowedIp2);
+  setIfExists(w["keepAliveSeconds"], cfgOut.wireguard.keepAliveSeconds);
 
   return cfgOut.validate(error);
 }
