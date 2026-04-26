@@ -33,6 +33,8 @@ void WebUI::attachConfig(AppConfig *cfg, bool (*saveFn)(const AppConfig &)) {
 
 void WebUI::attachHistory(PressureHistory *history) { history_ = history; }
 
+void WebUI::attachWireGuardManager(WireGuardManager *wireguard) { wireguard_ = wireguard; }
+
 String WebUI::statusJson() const {
   JsonDocument doc;
   doc["pressureBar"] = lastReading_.pressureBar;
@@ -45,6 +47,18 @@ String WebUI::statusJson() const {
   doc["wifi"] = wifiConnected_;
   doc["mqtt"] = mqttConnected_;
   doc["uptimeSec"] = uptimeSec_;
+  if (wireguard_ != nullptr) {
+    const WireGuardStatus wg = wireguard_->status();
+    JsonObject w = doc["wireguard"].to<JsonObject>();
+    w["enabled"] = wg.enabled;
+    w["configured"] = wg.configured;
+    w["online"] = wg.online;
+    w["localAddress"] = wg.localAddress.c_str();
+    w["peerEndpoint"] = wg.peerEndpoint.c_str();
+    w["peerPort"] = wg.peerPort;
+    w["lastHandshake"] = wg.lastHandshake;
+    w["lastError"] = wg.lastError.c_str();
+  }
   String out;
   serializeJson(doc, out);
   return out;
@@ -76,6 +90,18 @@ String WebUI::diagnosticsJson() const {
   doc["wifiRssi"] = WiFi.RSSI();
   doc["wifiIp"] = WiFi.localIP().toString();
   doc["apIp"] = WiFi.softAPIP().toString();
+  if (wireguard_ != nullptr) {
+    const WireGuardStatus wg = wireguard_->status();
+    JsonObject w = doc["wireguard"].to<JsonObject>();
+    w["enabled"] = wg.enabled;
+    w["configured"] = wg.configured;
+    w["online"] = wg.online;
+    w["localAddress"] = wg.localAddress.c_str();
+    w["peerEndpoint"] = wg.peerEndpoint.c_str();
+    w["peerPort"] = wg.peerPort;
+    w["lastHandshake"] = wg.lastHandshake;
+    w["lastError"] = wg.lastError.c_str();
+  }
   String out;
   serializeJson(doc, out);
   return out;
@@ -201,13 +227,25 @@ void WebUI::setupRoutes() {
     JsonDocument doc;
     if (deserializeJson(doc, server_.arg("plain"))) return server_.send(400, "text/plain", "invalid json");
     if (!doc["enabled"].isNull()) candidate.wireguard.enabled = doc["enabled"].as<bool>();
-    if (!doc["plannedNetworkCidr"].isNull()) candidate.wireguard.plannedNetworkCidr = doc["plannedNetworkCidr"].as<const char *>();
-    if (!doc["statusUrl"].isNull()) candidate.wireguard.statusUrl = doc["statusUrl"].as<const char *>();
-    if (!doc["enableUrl"].isNull()) candidate.wireguard.enableUrl = doc["enableUrl"].as<const char *>();
-    if (!doc["disableUrl"].isNull()) candidate.wireguard.disableUrl = doc["disableUrl"].as<const char *>();
-    if (!doc["authToken"].isNull()) candidate.wireguard.authToken = doc["authToken"].as<const char *>();
+    if (!doc["localAddress"].isNull()) candidate.wireguard.localAddress = doc["localAddress"].as<const char *>();
+    if (!doc["netmask"].isNull()) candidate.wireguard.netmask = doc["netmask"].as<const char *>();
+    if (!doc["privateKey"].isNull()) candidate.wireguard.privateKey = doc["privateKey"].as<const char *>();
+    if (!doc["peerEndpoint"].isNull()) candidate.wireguard.peerEndpoint = doc["peerEndpoint"].as<const char *>();
+    if (!doc["peerPort"].isNull()) candidate.wireguard.peerPort = doc["peerPort"].as<uint16_t>();
+    if (!doc["peerPublicKey"].isNull()) candidate.wireguard.peerPublicKey = doc["peerPublicKey"].as<const char *>();
+    if (!doc["presharedKey"].isNull()) candidate.wireguard.presharedKey = doc["presharedKey"].as<const char *>();
+    if (!doc["allowedIp1"].isNull()) candidate.wireguard.allowedIp1 = doc["allowedIp1"].as<const char *>();
+    if (!doc["allowedIp2"].isNull()) candidate.wireguard.allowedIp2 = doc["allowedIp2"].as<const char *>();
+    if (!doc["keepAliveSeconds"].isNull()) candidate.wireguard.keepAliveSeconds = doc["keepAliveSeconds"].as<uint16_t>();
     String outErr;
     if (!saveUpdatedConfig(candidate, outErr)) return server_.send(400, "text/plain", outErr);
+    if (wireguard_ != nullptr) {
+      if (candidate.wireguard.enabled) {
+        wireguard_->enable(candidate.wireguard);
+      } else {
+        wireguard_->disable();
+      }
+    }
     server_.send(200, "text/plain", "wireguard saved");
   });
 
@@ -336,48 +374,35 @@ void WebUI::setupRoutes() {
   });
 
   server_.on("/api/wireguard/status", HTTP_GET, [this]() {
-    if (!cfg_ || !cfg_->wireguard.enabled) return server_.send(400, "text/plain", "wireguard disabled");
-    if (cfg_->wireguard.statusUrl.empty()) return server_.send(400, "text/plain", "wireguard statusUrl missing");
-    HTTPClient http;
-    http.begin(cfg_->wireguard.statusUrl.c_str());
-    if (!cfg_->wireguard.authToken.empty()) {
-      http.addHeader("Authorization", ("Bearer " + String(cfg_->wireguard.authToken.c_str())));
-    }
-    const int code = http.GET();
-    const String resp = http.getString();
-    http.end();
-    if (code < 200 || code >= 300) return server_.send(502, "text/plain", String("wireguard status failed: ") + code);
-    server_.send(200, "application/json", resp);
+    if (wireguard_ == nullptr) return server_.send(500, "text/plain", "wireguard manager unavailable");
+    const WireGuardStatus wg = wireguard_->status();
+    JsonDocument doc;
+    doc["enabled"] = wg.enabled;
+    doc["configured"] = wg.configured;
+    doc["online"] = wg.online;
+    doc["localAddress"] = wg.localAddress.c_str();
+    doc["peerEndpoint"] = wg.peerEndpoint.c_str();
+    doc["peerPort"] = wg.peerPort;
+    doc["lastHandshake"] = wg.lastHandshake;
+    doc["lastError"] = wg.lastError.c_str();
+    String out;
+    serializeJson(doc, out);
+    server_.send(200, "application/json", out);
   });
 
   server_.on("/api/wireguard/enable", HTTP_POST, [this]() {
-    if (!cfg_ || !cfg_->wireguard.enabled) return server_.send(400, "text/plain", "wireguard disabled");
-    if (cfg_->wireguard.enableUrl.empty()) return server_.send(400, "text/plain", "wireguard enableUrl missing");
-    HTTPClient http;
-    http.begin(cfg_->wireguard.enableUrl.c_str());
-    if (!cfg_->wireguard.authToken.empty()) {
-      http.addHeader("Authorization", ("Bearer " + String(cfg_->wireguard.authToken.c_str())));
+    if (!cfg_ || wireguard_ == nullptr) return server_.send(500, "text/plain", "wireguard unavailable");
+    if (!wireguard_->enable(cfg_->wireguard)) {
+      const WireGuardStatus wg = wireguard_->status();
+      return server_.send(400, "text/plain", String("wireguard enable failed: ") + wg.lastError.c_str());
     }
-    const int code = http.POST("");
-    const String resp = http.getString();
-    http.end();
-    if (code < 200 || code >= 300) return server_.send(502, "text/plain", String("wireguard enable failed: ") + code);
-    server_.send(200, "text/plain", resp.isEmpty() ? "enabled" : resp);
+    server_.send(200, "text/plain", "enabled");
   });
 
   server_.on("/api/wireguard/disable", HTTP_POST, [this]() {
-    if (!cfg_ || !cfg_->wireguard.enabled) return server_.send(400, "text/plain", "wireguard disabled");
-    if (cfg_->wireguard.disableUrl.empty()) return server_.send(400, "text/plain", "wireguard disableUrl missing");
-    HTTPClient http;
-    http.begin(cfg_->wireguard.disableUrl.c_str());
-    if (!cfg_->wireguard.authToken.empty()) {
-      http.addHeader("Authorization", ("Bearer " + String(cfg_->wireguard.authToken.c_str())));
-    }
-    const int code = http.POST("");
-    const String resp = http.getString();
-    http.end();
-    if (code < 200 || code >= 300) return server_.send(502, "text/plain", String("wireguard disable failed: ") + code);
-    server_.send(200, "text/plain", resp.isEmpty() ? "disabled" : resp);
+    if (wireguard_ == nullptr) return server_.send(500, "text/plain", "wireguard manager unavailable");
+    wireguard_->disable();
+    server_.send(200, "text/plain", "disabled");
   });
 
   server_.on("/api/reboot", HTTP_POST, [this]() {

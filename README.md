@@ -79,20 +79,31 @@ pio device monitor
 > **Wichtig für Deployment:** Änderungen an `data/index.html`, `data/app.js`, `data/style.css` oder `data/assets/*` werden **erst nach `pio run -t uploadfs`** auf dem Gerät sichtbar. `pio run -t upload` alleine aktualisiert nur die Firmware, nicht das LittleFS-Dateisystem.
 
 ## WireGuard defaults from config/secrets
-Compile-time default values for planned WireGuard setup can be supplied without hardcoding in runtime code paths:
-- `src/config/config.h`: `WIREGUARD_PLANNED_NETWORK_CIDR`, `WIREGUARD_ENABLED_DEFAULT`
-- `src/config/secrets.h`: `WIREGUARD_STATUS_URL`, `WIREGUARD_ENABLE_URL`, `WIREGUARD_DISABLE_URL`, `WIREGUARD_AUTH_TOKEN`
+WireGuard läuft lokal auf dem ESP32 (kein HTTP-Proxy auf externe Control-URLs).
+Compile-time Defaults können weiterhin über Config/Secrets vorbefüllt werden:
+- `src/config/config.h`: `WIREGUARD_ENABLED_DEFAULT`, `WIREGUARD_LOCAL_ADDRESS`, `WIREGUARD_NETMASK`, `WIREGUARD_PEER_ENDPOINT`, `WIREGUARD_PEER_PORT`, `WIREGUARD_ALLOWED_IP1`, `WIREGUARD_ALLOWED_IP2`, `WIREGUARD_KEEPALIVE_SECONDS`
+- `src/config/secrets.h`: `WIREGUARD_PRIVATE_KEY`, `WIREGUARD_PEER_PUBLIC_KEY`, `WIREGUARD_PRESHARED_KEY`
 
-At boot, empty persisted WireGuard fields are seeded from these macros.
+Zur Laufzeit wird die Tunnelkonfiguration persistent über `wireguard.*` im AppConfig gespeichert und lokal durch `WireGuardManager` aktiviert/deaktiviert.
 
 ## Web UI overview
 - LittleFS-hosted SPA (`data/index.html`, `data/app.js`, `data/style.css`)
 - Eine kanonische LittleFS-Webapp (`/` lädt ausschließlich `data/index.html`)
 - Bereiche: Live, Verlauf, Kalibrierung, Einstellungen, Diagnose
-- Einstellungen mit API-gebundener Bearbeitung für Sensor, Netzwerk, MQTT, Alarm und WireGuard
+- Einstellungen mit API-gebundener Bearbeitung für Sensor, Netzwerk, MQTT, Alarm und lokalen WireGuard-Tunnel
 - Kalibrierung: 21 Punkte (0.0…10.0 bar), Capture/Clear und persistentes Speichern
 - Verlauf aus `/api/history` mit Canvas-Chart + JSON/CSV-Export
 - Diagnose: Statusdump, Telegram-/Webhook-Test, Neustart, Gesamt-Config-Save (`POST /api/config`) und Config-Export/Import
+
+
+## WireGuard (lokale Implementierung)
+- Runtime-Modul: `src/modules/WireGuardManager.*`
+- Konfigurierbare Felder: `enabled`, `localAddress`, `netmask`, `privateKey`, `peerEndpoint`, `peerPort`, `peerPublicKey`, `presharedKey`, `allowedIp1`, `allowedIp2`, `keepAliveSeconds`
+- Status-Endpunkte liefern strukturierte Local-State-Infos (`enabled`, `configured`, `online`, `lastHandshake`, `lastError`)
+
+**Limitierungen auf ESP32:**
+- Die verwendete Arduino-WireGuard-Bibliothek bietet nur begrenzte Laufzeitmetriken; `lastHandshake` ist daher ein best-effort Online-Zeitstempel.
+- Erweiterte Features wie detaillierte Peer-Statistiken/Mehrpeer-Management sind nicht vollständig verfügbar.
 
 ## OLED Display (SSD1306) – live status
 - Display module: `src/modules/display_manager.h` + `src/modules/display_manager.cpp`
@@ -172,9 +183,9 @@ REST/API ist umgesetzt und umfasst:
 - `POST /api/calibration/clear`
 - `POST /api/test/telegram`
 - `POST /api/test/webhook`
-- `GET /api/wireguard/status`
-- `POST /api/wireguard/enable`
-- `POST /api/wireguard/disable`
+- `GET /api/wireguard/status` (lokaler Tunnelstatus)
+- `POST /api/wireguard/enable` (lokalen Tunnel aktivieren)
+- `POST /api/wireguard/disable` (lokalen Tunnel deaktivieren)
 - `POST /api/reboot`
 
 Konfigurationsdaten werden als JSON in Preferences persistiert (inkl. WLAN/AP, MQTT, Alarm und Kalibrierpunkten).

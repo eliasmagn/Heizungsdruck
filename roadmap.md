@@ -19,7 +19,7 @@
 - ✅ Build-Stabilisierung: WebUI Root-Handler an `WebServer::streamFile(T&)`-Signatur angepasst (kein temporäres File mehr)
 - Erweiterte Selbstdiagnose und Telemetrie-Ratensteuerung
 - OTA-Update-UX in die Webapp integrieren (Backend via ArduinoOTA steht)
-- Erweiterte WireGuard-Statusvisualisierung (strukturierte Response-Darstellung)
+- Lokale WireGuard-Laufzeitmetriken und bessere Online/Fehler-Visualisierung
 
 
 ## Phase 3 (Update 2026-04-26)
@@ -29,3 +29,5 @@
 - ✅ Deploy-Hinweise für `upload` vs `uploadfs` vereinheitlicht
 
 - ✅ Diagnose um atomaren Full-Config-Save über `POST /api/config` ergänzt
+
+- ✅ 2026-04-26: WireGuard lokal auf ESP32 umgesetzt (Config-Modell, Runtime-Manager, API/UI-Migration)

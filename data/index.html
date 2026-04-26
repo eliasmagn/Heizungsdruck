@@ -149,16 +149,21 @@
         <article class="card wide">
           <h2>WireGuard</h2>
           <label class="inline-cb"><input id="wgEnabled" type="checkbox"> Aktiv</label>
-          <label>Geplantes Netzwerk (CIDR)<input id="wgPlannedNetwork" type="text" placeholder="10.66.0.0/24"></label>
-          <label>Status URL<input id="wgStatusUrl" type="text"></label>
-          <label>Enable URL<input id="wgEnableUrl" type="text"></label>
-          <label>Disable URL<input id="wgDisableUrl" type="text"></label>
-          <label>Auth Token<input id="wgAuthToken" type="text"></label>
+          <label>Lokale Tunnel-IP<input id="wgLocalAddress" type="text" placeholder="10.66.0.2"></label>
+          <label>Netzmaske<input id="wgNetmask" type="text" placeholder="255.255.255.0"></label>
+          <label>Private Key<input id="wgPrivateKey" type="password"></label>
+          <label>Peer Endpoint<input id="wgPeerEndpoint" type="text" placeholder="vpn.example.com"></label>
+          <label>Peer Port<input id="wgPeerPort" type="number" min="1" max="65535"></label>
+          <label>Peer Public Key<input id="wgPeerPublicKey" type="text"></label>
+          <label>Preshared Key (optional)<input id="wgPresharedKey" type="password"></label>
+          <label>Allowed IP 1<input id="wgAllowedIp1" type="text" placeholder="0.0.0.0/0"></label>
+          <label>Allowed IP 2 (optional)<input id="wgAllowedIp2" type="text"></label>
+          <label>Keepalive Sekunden (optional)<input id="wgKeepAliveSeconds" type="number" min="0" max="65535"></label>
           <div class="actions">
             <button id="saveWireguard">WireGuard speichern</button>
             <button id="wgStatus">Status prüfen</button>
-            <button id="wgEnable">Enable</button>
-            <button id="wgDisable">Disable</button>
+            <button id="wgEnable">Tunnel aktivieren</button>
+            <button id="wgDisable">Tunnel deaktivieren</button>
           </div>
           <pre id="wgOutput" class="mono"></pre>
         </article>

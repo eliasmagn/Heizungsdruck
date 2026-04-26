@@ -169,11 +169,16 @@ function fillConfig(cfg) {
   $('webhookUrl').value = cfg.alarm.emailWebhookUrl || '';
 
   $('wgEnabled').checked = Boolean(cfg.wireguard.enabled);
-  $('wgPlannedNetwork').value = cfg.wireguard.plannedNetworkCidr || '';
-  $('wgStatusUrl').value = cfg.wireguard.statusUrl || '';
-  $('wgEnableUrl').value = cfg.wireguard.enableUrl || '';
-  $('wgDisableUrl').value = cfg.wireguard.disableUrl || '';
-  $('wgAuthToken').value = cfg.wireguard.authToken || '';
+  $('wgLocalAddress').value = cfg.wireguard.localAddress || '';
+  $('wgNetmask').value = cfg.wireguard.netmask || '255.255.255.0';
+  $('wgPrivateKey').value = cfg.wireguard.privateKey || '';
+  $('wgPeerEndpoint').value = cfg.wireguard.peerEndpoint || '';
+  $('wgPeerPort').value = cfg.wireguard.peerPort || 0;
+  $('wgPeerPublicKey').value = cfg.wireguard.peerPublicKey || '';
+  $('wgPresharedKey').value = cfg.wireguard.presharedKey || '';
+  $('wgAllowedIp1').value = cfg.wireguard.allowedIp1 || '';
+  $('wgAllowedIp2').value = cfg.wireguard.allowedIp2 || '';
+  $('wgKeepAliveSeconds').value = cfg.wireguard.keepAliveSeconds || 0;
 
   $('adcLow').value = cfg.calib.adcLow;
   $('adcHigh').value = cfg.calib.adcHigh;
@@ -246,7 +251,7 @@ $('saveAlarm').onclick = async () => {
   catch (e) { toast(e.message, true); }
 };
 $('saveWireguard').onclick = async () => {
-  try { await apiText('/api/config/wireguard', 'POST', {enabled: $('wgEnabled').checked, plannedNetworkCidr: $('wgPlannedNetwork').value, statusUrl: $('wgStatusUrl').value, enableUrl: $('wgEnableUrl').value, disableUrl: $('wgDisableUrl').value, authToken: $('wgAuthToken').value}); toast('WireGuard gespeichert'); }
+  try { await apiText('/api/config/wireguard', 'POST', {enabled: $('wgEnabled').checked, localAddress: $('wgLocalAddress').value, netmask: $('wgNetmask').value, privateKey: $('wgPrivateKey').value, peerEndpoint: $('wgPeerEndpoint').value, peerPort: Number($('wgPeerPort').value || 0), peerPublicKey: $('wgPeerPublicKey').value, presharedKey: $('wgPresharedKey').value, allowedIp1: $('wgAllowedIp1').value, allowedIp2: $('wgAllowedIp2').value, keepAliveSeconds: Number($('wgKeepAliveSeconds').value || 0)}); toast('WireGuard gespeichert'); }
   catch (e) { toast(e.message, true); }
 };
 
@@ -287,11 +292,16 @@ $('saveAllConfig').onclick = async () => {
     configCache.alarm.telegramChatId = $('telegramChat').value;
     configCache.alarm.emailWebhookUrl = $('webhookUrl').value;
     configCache.wireguard.enabled = $('wgEnabled').checked;
-    configCache.wireguard.plannedNetworkCidr = $('wgPlannedNetwork').value;
-    configCache.wireguard.statusUrl = $('wgStatusUrl').value;
-    configCache.wireguard.enableUrl = $('wgEnableUrl').value;
-    configCache.wireguard.disableUrl = $('wgDisableUrl').value;
-    configCache.wireguard.authToken = $('wgAuthToken').value;
+    configCache.wireguard.localAddress = $('wgLocalAddress').value;
+    configCache.wireguard.netmask = $('wgNetmask').value;
+    configCache.wireguard.privateKey = $('wgPrivateKey').value;
+    configCache.wireguard.peerEndpoint = $('wgPeerEndpoint').value;
+    configCache.wireguard.peerPort = Number($('wgPeerPort').value || 0);
+    configCache.wireguard.peerPublicKey = $('wgPeerPublicKey').value;
+    configCache.wireguard.presharedKey = $('wgPresharedKey').value;
+    configCache.wireguard.allowedIp1 = $('wgAllowedIp1').value;
+    configCache.wireguard.allowedIp2 = $('wgAllowedIp2').value;
+    configCache.wireguard.keepAliveSeconds = Number($('wgKeepAliveSeconds').value || 0);
     configCache.calib.adcLow = Number($('adcLow').value || 0);
     configCache.calib.adcHigh = Number($('adcHigh').value || 0);
     configCache.calib.barLow = Number($('barLow').value || 0);

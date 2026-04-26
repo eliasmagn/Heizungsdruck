@@ -62,11 +62,16 @@ struct NetworkConfig {
 
 struct WireGuardConfig {
   bool enabled{false};
-  std::string plannedNetworkCidr;
-  std::string statusUrl;
-  std::string enableUrl;
-  std::string disableUrl;
-  std::string authToken;
+  std::string localAddress;
+  std::string netmask{"255.255.255.0"};
+  std::string privateKey;
+  std::string peerEndpoint;
+  uint16_t peerPort{0};
+  std::string peerPublicKey;
+  std::string presharedKey;
+  std::string allowedIp1;
+  std::string allowedIp2;
+  uint16_t keepAliveSeconds{0};
 };
 
 struct AppConfig {
