@@ -94,17 +94,13 @@ main { max-width: 1240px; margin: 0 auto; padding: 1rem; }
   background: linear-gradient(90deg, #0ea5b7, #22d3ee, #fbbf24);
 }
 
-.kv {
-  margin: 0;
-  display: grid;
-  grid-template-columns: auto auto;
-  gap: 0.35rem 1rem;
-}
+.kv { margin: 0; display: grid; grid-template-columns: auto auto; gap: 0.35rem 1rem; }
 .kv dt { color: var(--muted); }
 .kv dd { margin: 0; font-weight: 700; }
 .status-line { margin: 0; font-size: 0.97rem; color: #dbeafe; }
 
 label { display: block; font-size: 0.9rem; margin: 0.4rem 0; color: #bae6fd; }
+.inline-cb { display: flex; align-items: center; gap: 0.45rem; font-weight: 600; }
 input, textarea {
   width: 100%;
   margin-top: 0.2rem;
@@ -114,7 +110,7 @@ input, textarea {
   background: var(--bg-elev);
   padding: 0.55rem 0.62rem;
 }
-input[type='checkbox'] { width: auto; transform: translateY(2px); }
+input[type='checkbox'] { width: auto; transform: translateY(1px); margin: 0; }
 button {
   border: 1px solid #0e7490;
   border-radius: 8px;
@@ -138,7 +134,15 @@ canvas {
 table { width: 100%; border-collapse: collapse; font-size: 0.93rem; }
 th, td { border: 1px solid #29415f; padding: 0.42rem; text-align: left; }
 th { color: #7dd3fc; }
-.mono { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 0.82rem; }
+.mono {
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+  background: #020910;
+  border: 1px solid #29415f;
+  border-radius: 8px;
+  padding: 0.6rem;
+  overflow: auto;
+}
 
 .toast {
   position: fixed;
@@ -151,10 +155,7 @@ th { color: #7dd3fc; }
   padding: 0.62rem 0.85rem;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
 }
-.toast.error {
-  background: #7f1d1d;
-  border-color: var(--danger);
-}
+.toast.error { background: #7f1d1d; border-color: var(--danger); }
 .hidden { display: none; }
 
 @media (max-width: 920px) {

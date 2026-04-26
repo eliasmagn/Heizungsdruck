@@ -15,3 +15,9 @@
 // Debug bridge pins
 #define DEBUG_BRIDGE_OUT_PIN 25
 #define DEBUG_BRIDGE_IN_PIN 26
+
+// WireGuard plan defaults (non-secret)
+// This is the intended tunnel/subnet displayed and stored in runtime config.
+#define WIREGUARD_PLANNED_NETWORK_CIDR "10.66.0.0/24"
+// Set to 1 if WireGuard control should be enabled by default on first boot.
+#define WIREGUARD_ENABLED_DEFAULT 0

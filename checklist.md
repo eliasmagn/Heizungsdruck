@@ -52,3 +52,10 @@
 - [x] Deterministische Tests für Kernlogik hinzugefügt
 - [x] Manuelle Verifikations-Checkliste dokumentiert
 - [x] CI-Workflow für native Tests + ESP32 Build ergänzt
+
+- [x] 2026-04-26: SPA-Fallback für Nicht-API-Routen aktiviert; API-Routen bleiben 404
+- [x] 2026-04-26: Kalibrier-Tabelle auf fixe 21 Punkte normalisiert, inklusive Punkt-Löschen/Reload/Save-Flow
+
+- [x] 2026-04-26: Geplantes WireGuard-Netz (`plannedNetworkCidr`) inkl. Defaults aus `config.h`/`secrets.h` ergänzt
+
+- [x] 2026-04-26: Diagnose-Tab kann gesamte Konfiguration atomar über `POST /api/config` speichern

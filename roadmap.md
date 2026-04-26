@@ -20,3 +20,12 @@
 - Erweiterte Selbstdiagnose und Telemetrie-Ratensteuerung
 - OTA-Update-UX in die Webapp integrieren (Backend via ArduinoOTA steht)
 - Erweiterte WireGuard-Statusvisualisierung (strukturierte Response-Darstellung)
+
+
+## Phase 3 (Update 2026-04-26)
+- ✅ WireGuard-Planungsnetz in Config-Modell und SPA aufgenommen; Boot-Defaults aus `config.h`/`secrets.h`
+- ✅ Single-UI-Architektur finalisiert (nur LittleFS-SPA, inkl. SPA-Fallback)
+- ✅ Settings/Diagnose/Kalibrierung auf konsistente API-Endpunkte abgeglichen
+- ✅ Deploy-Hinweise für `upload` vs `uploadfs` vereinheitlicht
+
+- ✅ Diagnose um atomaren Full-Config-Save über `POST /api/config` ergänzt

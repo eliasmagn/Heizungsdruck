@@ -78,6 +78,13 @@ pio device monitor
 
 > **Wichtig für Deployment:** Änderungen an `data/index.html`, `data/app.js`, `data/style.css` oder `data/assets/*` werden **erst nach `pio run -t uploadfs`** auf dem Gerät sichtbar. `pio run -t upload` alleine aktualisiert nur die Firmware, nicht das LittleFS-Dateisystem.
 
+## WireGuard defaults from config/secrets
+Compile-time default values for planned WireGuard setup can be supplied without hardcoding in runtime code paths:
+- `src/config/config.h`: `WIREGUARD_PLANNED_NETWORK_CIDR`, `WIREGUARD_ENABLED_DEFAULT`
+- `src/config/secrets.h`: `WIREGUARD_STATUS_URL`, `WIREGUARD_ENABLE_URL`, `WIREGUARD_DISABLE_URL`, `WIREGUARD_AUTH_TOKEN`
+
+At boot, empty persisted WireGuard fields are seeded from these macros.
+
 ## Web UI overview
 - LittleFS-hosted SPA (`data/index.html`, `data/app.js`, `data/style.css`)
 - Eine kanonische LittleFS-Webapp (`/` lädt ausschließlich `data/index.html`)
@@ -85,7 +92,7 @@ pio device monitor
 - Einstellungen mit API-gebundener Bearbeitung für Sensor, Netzwerk, MQTT, Alarm und WireGuard
 - Kalibrierung: 21 Punkte (0.0…10.0 bar), Capture/Clear und persistentes Speichern
 - Verlauf aus `/api/history` mit Canvas-Chart + JSON/CSV-Export
-- Diagnose: Statusdump, Telegram-/Webhook-Test, Neustart und Config-Export/Import
+- Diagnose: Statusdump, Telegram-/Webhook-Test, Neustart, Gesamt-Config-Save (`POST /api/config`) und Config-Export/Import
 
 ## OLED Display (SSD1306) – live status
 - Display module: `src/modules/display_manager.h` + `src/modules/display_manager.cpp`
@@ -131,12 +138,14 @@ if (!gDisplay.begin()) {
 
 ## Website-UX / Polling
 - Dashboard-Status pollt alle **1s**
-- History/Bar-Ansicht pollt alle **500ms**
+- History-Ansicht pollt alle **5s**
 - Settings enthält zusätzliche Sensor-Parameter (Pin, SampleCount, Interval, Fault-Schwellen)
 
 ## Webapp-Architektur (aktuell)
 - ESP32 liefert Livewerte über `/api/status` und Verlauf über `/api/history`.
-- Die SPA in `data/` ist die **einzige** Weboberfläche; alte inline C++-HTML-Seiten sind entfernt.
+- Die SPA in `data/` ist die **einzige** Weboberfläche; es gibt keine konkurrierenden C++-HTML-Seiten mehr.
+- `/` liefert ausschließlich `index.html` aus LittleFS, Assets kommen über `/app.js`, `/style.css`, `/assets/*`.
+- Unbekannte Nicht-API-Routen fallen auf die SPA (`index.html`) zurück, API-Routen bleiben strikt 404.
 - Historie wird direkt aus den API-Daten gezeichnet und als JSON/CSV exportiert.
 - Kalibrierung, Settings und Diagnose sind vollständig API-gebunden umgesetzt.
 
@@ -151,6 +160,7 @@ if (!gDisplay.begin()) {
 REST/API ist umgesetzt und umfasst:
 - `GET /api/status`
 - `GET /api/config`
+- `POST /api/config`
 - `POST /api/config/network`
 - `POST /api/config/mqtt`
 - `POST /api/config/alarm`
@@ -249,3 +259,9 @@ Manual checklist:
 
 ## Limitations / future improvements
 - OTA-Update-Seite ist weiterhin offen.
+
+
+## Stand 2026-04-26
+- Single-UI-Architektur ist konsolidiert: nur LittleFS-SPA als Frontend.
+- Kalibrierung zeigt 21 Punkte (0.0..10.0 in 0.5 Schritten) und synchronisiert aktiv mit dem ESP (`laden`, `senden`, `capture`, `clear`).
+- Deployment bleibt zweistufig: Firmware mit `pio run -t upload`, Webapp-Dateien zusätzlich mit `pio run -t uploadfs`.

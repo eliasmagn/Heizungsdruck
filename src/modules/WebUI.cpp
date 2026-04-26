@@ -105,33 +105,18 @@ bool WebUI::saveUpdatedConfig(const AppConfig &candidate, String &errorOut) {
 }
 
 void WebUI::setupRoutes() {
-  if (LittleFS.exists("/index.html")) {
-    server_.on("/", HTTP_GET, [this]() {
-      auto file = LittleFS.open("/index.html", "r");
-      if (!file) return server_.send(500, "text/plain", "LittleFS index.html open failed");
-      server_.streamFile(file, "text/html");
-      file.close();
-    });
-  } else {
-    server_.on("/", HTTP_GET, [this]() { server_.send(500, "text/plain", "LittleFS index.html missing"); });
-  }
+  auto serveSpaIndex = [this]() {
+    if (!LittleFS.exists("/index.html")) return server_.send(500, "text/plain", "LittleFS index.html missing");
+    auto file = LittleFS.open("/index.html", "r");
+    if (!file) return server_.send(500, "text/plain", "LittleFS index.html open failed");
+    server_.streamFile(file, "text/html");
+    file.close();
+  };
 
-  if (LittleFS.exists("/app.js")) {
-    server_.serveStatic("/app.js", LittleFS, "/app.js", "max-age=60");
-  }
-  if (LittleFS.exists("/style.css")) {
-    server_.serveStatic("/style.css", LittleFS, "/style.css", "max-age=60");
-  }
-  if (LittleFS.exists("/assets")) {
-    server_.serveStatic("/assets", LittleFS, "/assets", "max-age=86400");
-  }
-
-  for (const char *legacyRoute : {"/history", "/settings", "/calibration", "/diag"}) {
-    server_.on(legacyRoute, HTTP_GET, [this]() {
-      server_.sendHeader("Location", "/");
-      server_.send(302, "text/plain", "Moved to /");
-    });
-  }
+  server_.on("/", HTTP_GET, serveSpaIndex);
+  server_.serveStatic("/app.js", LittleFS, "/app.js", "max-age=60");
+  server_.serveStatic("/style.css", LittleFS, "/style.css", "max-age=60");
+  server_.serveStatic("/assets", LittleFS, "/assets", "max-age=86400");
 
   server_.on("/api/status", HTTP_GET, [this]() { server_.send(200, "application/json", statusJson()); });
   server_.on("/api/history", HTTP_GET, [this]() { server_.send(200, "application/json", historyJson()); });
@@ -216,6 +201,7 @@ void WebUI::setupRoutes() {
     JsonDocument doc;
     if (deserializeJson(doc, server_.arg("plain"))) return server_.send(400, "text/plain", "invalid json");
     if (!doc["enabled"].isNull()) candidate.wireguard.enabled = doc["enabled"].as<bool>();
+    if (!doc["plannedNetworkCidr"].isNull()) candidate.wireguard.plannedNetworkCidr = doc["plannedNetworkCidr"].as<const char *>();
     if (!doc["statusUrl"].isNull()) candidate.wireguard.statusUrl = doc["statusUrl"].as<const char *>();
     if (!doc["enableUrl"].isNull()) candidate.wireguard.enableUrl = doc["enableUrl"].as<const char *>();
     if (!doc["disableUrl"].isNull()) candidate.wireguard.disableUrl = doc["disableUrl"].as<const char *>();
@@ -400,5 +386,8 @@ void WebUI::setupRoutes() {
     ESP.restart();
   });
 
-  server_.onNotFound([this]() { server_.send(404, "text/plain", "not found"); });
+  server_.onNotFound([this, serveSpaIndex]() {
+    if (server_.uri().startsWith("/api/")) return server_.send(404, "text/plain", "not found");
+    serveSpaIndex();
+  });
 }
