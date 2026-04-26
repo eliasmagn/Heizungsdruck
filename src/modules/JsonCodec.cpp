@@ -50,6 +50,7 @@ std::string configToJson(const AppConfig &cfg) {
   doc["network"]["hostname"] = cfg.network.hostname;
 
   doc["wireguard"]["enabled"] = cfg.wireguard.enabled;
+  doc["wireguard"]["plannedNetworkCidr"] = cfg.wireguard.plannedNetworkCidr;
   doc["wireguard"]["statusUrl"] = cfg.wireguard.statusUrl;
   doc["wireguard"]["enableUrl"] = cfg.wireguard.enableUrl;
   doc["wireguard"]["disableUrl"] = cfg.wireguard.disableUrl;
@@ -131,6 +132,7 @@ bool configFromJson(const std::string &json, AppConfig &cfgOut, std::string &err
 
   JsonVariantConst w = doc["wireguard"];
   setIfExists(w["enabled"], cfgOut.wireguard.enabled);
+  setIfExists(w["plannedNetworkCidr"], cfgOut.wireguard.plannedNetworkCidr);
   setIfExists(w["statusUrl"], cfgOut.wireguard.statusUrl);
   setIfExists(w["enableUrl"], cfgOut.wireguard.enableUrl);
   setIfExists(w["disableUrl"], cfgOut.wireguard.disableUrl);

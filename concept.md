@@ -47,3 +47,13 @@ Für die Zielsetzung gilt explizit: **eigene Firmware + eigene Webapp mit Platfo
 
 ## Technische Notiz (Build-Kompatibilität)
 - Die WebUI-Implementierung berücksichtigt die `WebServer::streamFile(T&)`-Signatur explizit und übergibt `fs::File` als benannte Lvalue-Variable (nicht als temporäres `LittleFS.open(...)`).
+
+
+## Fortschritt 2026-04-26
+- WebUI bedient ausschließlich LittleFS-SPA + REST/JSON-API.
+- Frontend-Routen werden via SPA-Fallback auf `index.html` aufgelöst; `/api/*` bleibt strikt Backend-Schnittstelle.
+- Kalibrierlogik in der SPA ist backend-dominiert (21 feste Punkte, laden/speichern/capture/clear gegen API).
+
+- WireGuard-Planungsparameter werden über Build-Konfiguration (`config.h`/`secrets.h`) vorbefüllt und dann persistent im AppConfig geführt.
+
+- Diagnose-Workflow unterstützt jetzt neben Teilupdates auch atomare Gesamtkonfigurations-Saves via `POST /api/config`.

@@ -57,6 +57,7 @@ void test_json_roundtrip() {
   cfg.calib.points[1].valid = true;
   cfg.calib.points[1].adc = 610;
   cfg.wireguard.enabled = true;
+  cfg.wireguard.plannedNetworkCidr = "10.66.0.0/24";
   cfg.wireguard.statusUrl = "https://wg.example/status";
   cfg.wireguard.enableUrl = "https://wg.example/enable";
   cfg.wireguard.disableUrl = "https://wg.example/disable";
@@ -69,6 +70,7 @@ void test_json_roundtrip() {
   TEST_ASSERT_TRUE(out.calib.points[0].valid);
   TEST_ASSERT_EQUAL_INT(450, out.calib.points[0].adc);
   TEST_ASSERT_TRUE(out.wireguard.enabled);
+  TEST_ASSERT_EQUAL_STRING("10.66.0.0/24", out.wireguard.plannedNetworkCidr.c_str());
   TEST_ASSERT_EQUAL_STRING("https://wg.example/status", out.wireguard.statusUrl.c_str());
 }
 

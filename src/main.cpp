@@ -33,6 +33,24 @@
 #ifndef DEBUG_BRIDGE_IN_PIN
 #define DEBUG_BRIDGE_IN_PIN 26
 #endif
+#ifndef WIREGUARD_ENABLED_DEFAULT
+#define WIREGUARD_ENABLED_DEFAULT 0
+#endif
+#ifndef WIREGUARD_PLANNED_NETWORK_CIDR
+#define WIREGUARD_PLANNED_NETWORK_CIDR ""
+#endif
+#ifndef WIREGUARD_STATUS_URL
+#define WIREGUARD_STATUS_URL ""
+#endif
+#ifndef WIREGUARD_ENABLE_URL
+#define WIREGUARD_ENABLE_URL ""
+#endif
+#ifndef WIREGUARD_DISABLE_URL
+#define WIREGUARD_DISABLE_URL ""
+#endif
+#ifndef WIREGUARD_AUTH_TOKEN
+#define WIREGUARD_AUTH_TOKEN ""
+#endif
 
 namespace {
 ConfigStore gStore;
@@ -177,6 +195,12 @@ void setup() {
   if (gConfig.mqtt.port == 0) gConfig.mqtt.port = MQTT_PORT;
   if (gConfig.mqtt.username.empty()) gConfig.mqtt.username = MQTT_USERNAME;
   if (gConfig.mqtt.password.empty()) gConfig.mqtt.password = MQTT_PASSWORD;
+  if (gConfig.wireguard.plannedNetworkCidr.empty()) gConfig.wireguard.plannedNetworkCidr = WIREGUARD_PLANNED_NETWORK_CIDR;
+  if (gConfig.wireguard.statusUrl.empty()) gConfig.wireguard.statusUrl = WIREGUARD_STATUS_URL;
+  if (gConfig.wireguard.enableUrl.empty()) gConfig.wireguard.enableUrl = WIREGUARD_ENABLE_URL;
+  if (gConfig.wireguard.disableUrl.empty()) gConfig.wireguard.disableUrl = WIREGUARD_DISABLE_URL;
+  if (gConfig.wireguard.authToken.empty()) gConfig.wireguard.authToken = WIREGUARD_AUTH_TOKEN;
+  if (!gConfig.wireguard.enabled && WIREGUARD_ENABLED_DEFAULT) gConfig.wireguard.enabled = true;
   gConfig.mqtt.enabled = !gConfig.mqtt.host.empty();
   // Enforce fast constant polling (battery is not a concern for this project).
   if (gConfig.sensor.updateIntervalMs != SENSOR_UPDATE_INTERVAL_MS_DEFAULT) {

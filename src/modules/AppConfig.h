@@ -62,6 +62,7 @@ struct NetworkConfig {
 
 struct WireGuardConfig {
   bool enabled{false};
+  std::string plannedNetworkCidr;
   std::string statusUrl;
   std::string enableUrl;
   std::string disableUrl;
