@@ -58,6 +58,8 @@ struct NetworkConfig {
   std::string apSsid{"Heizungsdruck-Setup"};
   std::string apPassword;
   std::string hostname{"heizungsdruck"};
+  float wifiTxPowerDbm{8.5f};
+  bool wifi11bMode{true};
 };
 
 struct WireGuardConfig {

@@ -25,6 +25,8 @@
 - [x] Verlauf an `/api/history` angebunden + Canvas-Chart + JSON/CSV-Export
 - [x] Kalibrier-Workflow über `/api/calibration/capture`, `/api/calibration/clear`, `/api/config/calibration`
 - [x] Settings-Workflow über `/api/config/sensor|network|mqtt|alarm|wireguard`
+- [x] WLAN-Scan-API (`/api/wifi/scan`) + SSID-Auswahl im Netzwerk-Formular
+- [x] Netzwerk-Settings um WLAN-Sendeleistung (dBm) und 802.11b-only Modus erweitert
 - [x] Diagnose-Workflow über `/api/diag`, `/api/test/telegram`, `/api/test/webhook`, `/api/reboot`
 - [x] Branding-Design (dunkel + cyan/weiß/amber) mit Assets unter `data/assets/`
 
@@ -61,3 +63,4 @@
 - [x] 2026-04-26: Diagnose-Tab kann gesamte Konfiguration atomar über `POST /api/config` speichern
 
 - [x] 2026-04-26: Echter lokaler WireGuard-Manager (`WireGuardManager`) integriert; alte URL-Proxy-Steuerung entfernt
+- [x] 2026-05-01: WLAN-Scan im GUI + konfigurierbare WLAN-Sendeleistung/11b-Modus umgesetzt

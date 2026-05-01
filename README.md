@@ -94,6 +94,8 @@ Zur Laufzeit wird die Tunnelkonfiguration persistent über `wireguard.*` im AppC
 - Kalibrierung: 21 Punkte (0.0…10.0 bar), Capture/Clear und persistentes Speichern
 - Verlauf aus `/api/history` mit Canvas-Chart + JSON/CSV-Export
 - Diagnose: Statusdump, Telegram-/Webhook-Test, Neustart, Gesamt-Config-Save (`POST /api/config`) und Config-Export/Import
+- Netzwerk: WLAN-Scan (`GET /api/wifi/scan`) für SSID-Auswahl im Dropdown
+- Netzwerk: einstellbare WLAN-Sendeleistung (`network.wifiTxPowerDbm`) und optionaler 802.11b-only Modus (`network.wifi11bMode`, max. ~11 Mbit/s)
 
 
 ## WireGuard (lokale Implementierung)
@@ -173,6 +175,7 @@ REST/API ist umgesetzt und umfasst:
 - `GET /api/config`
 - `POST /api/config`
 - `POST /api/config/network`
+- `GET /api/wifi/scan`
 - `POST /api/config/mqtt`
 - `POST /api/config/alarm`
 - `POST /api/config/calibration`

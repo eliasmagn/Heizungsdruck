@@ -152,9 +152,25 @@ bool connectWithCreds(const char *ssid, const char *pass, uint32_t timeoutMs) {
   return WiFi.status() == WL_CONNECTED;
 }
 
+wifi_power_t txPowerFromDbm(float dbm) {
+  if (dbm <= 2.0f) return WIFI_POWER_2dBm;
+  if (dbm <= 5.0f) return WIFI_POWER_5dBm;
+  if (dbm <= 7.0f) return WIFI_POWER_7dBm;
+  if (dbm <= 8.5f) return WIFI_POWER_8_5dBm;
+  if (dbm <= 11.0f) return WIFI_POWER_11dBm;
+  if (dbm <= 13.0f) return WIFI_POWER_13dBm;
+  if (dbm <= 15.0f) return WIFI_POWER_15dBm;
+  if (dbm <= 17.0f) return WIFI_POWER_17dBm;
+  if (dbm <= 18.5f) return WIFI_POWER_18_5dBm;
+  return WIFI_POWER_19_5dBm;
+}
+
 void connectWifi() {
   WiFi.mode(WIFI_STA);
   WiFi.setHostname(gConfig.network.hostname.c_str());
+  WiFi.setTxPower(txPowerFromDbm(gConfig.network.wifiTxPowerDbm));
+  const wifi_protocol_t protocol = gConfig.network.wifi11bMode ? WIFI_PROTOCOL_11B : WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N;
+  WiFi.setProtocol(protocol);
   const String configuredSsid = gConfig.network.wifiSsid.c_str();
   const String configuredPass = gConfig.network.wifiPassword.c_str();
   const String secretsSsid = WIFI_SSID;

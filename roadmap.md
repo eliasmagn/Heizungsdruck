@@ -20,6 +20,8 @@
 - Erweiterte Selbstdiagnose und Telemetrie-Ratensteuerung
 - OTA-Update-UX in die Webapp integrieren (Backend via ArduinoOTA steht)
 - Lokale WireGuard-Laufzeitmetriken und bessere Online/Fehler-Visualisierung
+- ✅ Netzwerk-UX: WLAN-Scan + SSID-Dropdown integriert
+- ✅ Funkprofil: reduzierte TX-Leistung und 802.11b-only als persistente Einstellung integrieren
 
 
 ## Phase 3 (Update 2026-04-26)

@@ -48,6 +48,8 @@ std::string configToJson(const AppConfig &cfg) {
   doc["network"]["apSsid"] = cfg.network.apSsid;
   doc["network"]["apPassword"] = cfg.network.apPassword;
   doc["network"]["hostname"] = cfg.network.hostname;
+  doc["network"]["wifiTxPowerDbm"] = cfg.network.wifiTxPowerDbm;
+  doc["network"]["wifi11bMode"] = cfg.network.wifi11bMode;
 
   doc["wireguard"]["enabled"] = cfg.wireguard.enabled;
   doc["wireguard"]["localAddress"] = cfg.wireguard.localAddress;
@@ -134,6 +136,8 @@ bool configFromJson(const std::string &json, AppConfig &cfgOut, std::string &err
   setIfExists(n["apSsid"], cfgOut.network.apSsid);
   setIfExists(n["apPassword"], cfgOut.network.apPassword);
   setIfExists(n["hostname"], cfgOut.network.hostname);
+  setIfExists(n["wifiTxPowerDbm"], cfgOut.network.wifiTxPowerDbm);
+  setIfExists(n["wifi11bMode"], cfgOut.network.wifi11bMode);
 
   JsonVariantConst w = doc["wireguard"];
   setIfExists(w["enabled"], cfgOut.wireguard.enabled);

@@ -114,11 +114,21 @@
 
         <article class="card">
           <h2>Netzwerk</h2>
+          <div class="actions">
+            <button id="scanWifi">WLAN scannen</button>
+          </div>
+          <label>Gefundene Netzwerke
+            <select id="wifiSsidSelect">
+              <option value="">-- bitte scannen --</option>
+            </select>
+          </label>
           <label>WiFi SSID<input id="wifiSsid" type="text"></label>
           <label>WiFi Passwort<input id="wifiPassword" type="password"></label>
           <label>AP SSID<input id="apSsid" type="text"></label>
           <label>AP Passwort<input id="apPassword" type="password"></label>
           <label>Hostname<input id="hostname" type="text"></label>
+          <label>TX Leistung (dBm)<input id="wifiTxPowerDbm" type="number" min="2" max="20.5" step="0.5"></label>
+          <label class="inline-cb"><input id="wifi11bMode" type="checkbox"> Nur 802.11b (max ~11 Mbit/s)</label>
           <button id="saveNetwork">Netzwerk speichern</button>
         </article>
 

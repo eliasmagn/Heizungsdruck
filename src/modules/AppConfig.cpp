@@ -49,6 +49,10 @@ bool AppConfig::validate(std::string &error) const {
     error = "topicBase must not be empty";
     return false;
   }
+  if (network.wifiTxPowerDbm < 2.0f || network.wifiTxPowerDbm > 20.5f) {
+    error = "wifiTxPowerDbm must be in range 2.0..20.5";
+    return false;
+  }
   if (wireguard.enabled) {
     if (wireguard.localAddress.empty()) {
       error = "wireguard localAddress must not be empty when enabled";

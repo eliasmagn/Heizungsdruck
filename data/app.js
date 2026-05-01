@@ -3,6 +3,7 @@ const stateName = {0: 'UNKNOWN', 1: 'SENSOR_FAULT', 2: 'PRESSURE_LOW', 3: 'OK', 
 
 let configCache = null;
 let historyCache = [];
+let wifiNetworks = [];
 
 function toast(msg, isError = false) {
   const t = $('toast');
@@ -151,6 +152,8 @@ function fillConfig(cfg) {
   $('apSsid').value = cfg.network.apSsid || '';
   $('apPassword').value = cfg.network.apPassword || '';
   $('hostname').value = cfg.network.hostname || '';
+  $('wifiTxPowerDbm').value = cfg.network.wifiTxPowerDbm ?? 8.5;
+  $('wifi11bMode').checked = cfg.network.wifi11bMode !== false;
 
   $('mqttEnabled').checked = Boolean(cfg.mqtt.enabled);
   $('mqttHost').value = cfg.mqtt.host || '';
@@ -189,6 +192,22 @@ function fillConfig(cfg) {
 }
 
 async function refreshConfig() { fillConfig(await apiJson('/api/config')); }
+
+function renderWifiNetworks() {
+  const sel = $('wifiSsidSelect');
+  sel.innerHTML = '';
+  const first = document.createElement('option');
+  first.value = '';
+  first.textContent = wifiNetworks.length ? '-- Netzwerk wählen --' : '-- keine Netzwerke gefunden --';
+  sel.appendChild(first);
+  wifiNetworks.forEach((n) => {
+    const opt = document.createElement('option');
+    opt.value = n.ssid;
+    const sec = n.open ? 'offen' : 'gesichert';
+    opt.textContent = `${n.ssid} (${n.rssi} dBm, CH${n.channel}, ${sec})`;
+    sel.appendChild(opt);
+  });
+}
 
 $('refreshHistory').onclick = async () => {
   try { await refreshHistory(); toast('Verlauf geladen'); } catch (e) { toast(e.message, true); }
@@ -239,8 +258,19 @@ $('saveSensor').onclick = async () => {
   } catch (e) { toast(e.message, true); }
 };
 $('saveNetwork').onclick = async () => {
-  try { await apiText('/api/config/network', 'POST', {wifiSsid: $('wifiSsid').value, wifiPassword: $('wifiPassword').value, apSsid: $('apSsid').value, apPassword: $('apPassword').value, hostname: $('hostname').value}); toast('Netzwerk gespeichert'); }
+  try { await apiText('/api/config/network', 'POST', {wifiSsid: $('wifiSsid').value, wifiPassword: $('wifiPassword').value, apSsid: $('apSsid').value, apPassword: $('apPassword').value, hostname: $('hostname').value, wifiTxPowerDbm: Number($('wifiTxPowerDbm').value || 8.5), wifi11bMode: $('wifi11bMode').checked}); toast('Netzwerk gespeichert'); }
   catch (e) { toast(e.message, true); }
+};
+$('scanWifi').onclick = async () => {
+  try {
+    const payload = await apiJson('/api/wifi/scan');
+    wifiNetworks = (payload.networks || []).filter((n) => n.ssid);
+    renderWifiNetworks();
+    toast(`${wifiNetworks.length} Netzwerke gefunden`);
+  } catch (e) { toast(e.message, true); }
+};
+$('wifiSsidSelect').onchange = () => {
+  if ($('wifiSsidSelect').value) $('wifiSsid').value = $('wifiSsidSelect').value;
 };
 $('saveMqtt').onclick = async () => {
   try { await apiText('/api/config/mqtt', 'POST', {enabled: $('mqttEnabled').checked, host: $('mqttHost').value, port: Number($('mqttPort').value || 1883), username: $('mqttUser').value, password: $('mqttPassword').value, topicBase: $('mqttTopicBase').value, publishIntervalMs: Number($('mqttPublishInterval').value || 10000)}); toast('MQTT gespeichert'); }
@@ -277,6 +307,8 @@ $('saveAllConfig').onclick = async () => {
     configCache.network.apSsid = $('apSsid').value;
     configCache.network.apPassword = $('apPassword').value;
     configCache.network.hostname = $('hostname').value;
+    configCache.network.wifiTxPowerDbm = Number($('wifiTxPowerDbm').value || 8.5);
+    configCache.network.wifi11bMode = $('wifi11bMode').checked;
     configCache.mqtt.enabled = $('mqttEnabled').checked;
     configCache.mqtt.host = $('mqttHost').value;
     configCache.mqtt.port = Number($('mqttPort').value || 1883);
