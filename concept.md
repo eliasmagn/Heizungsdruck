@@ -32,6 +32,7 @@ Für die Zielsetzung gilt explizit: **eigene Firmware + eigene Webapp mit Platfo
 - Diagnose: `/api/diag`
 - Konfiguration: `/api/config`, `/api/config/export`, `/api/config/import`
 - Domain-Settings: `/api/config/sensor|network|mqtt|alarm|wireguard`
+- WLAN-Discovery: `/api/wifi/scan` für Netzwerkauswahl in der UI
 - Kalibrierung: `/api/config/calibration`, `/api/calibration/capture`, `/api/calibration/clear`
 - Aktionen: `/api/test/telegram`, `/api/test/webhook`, `/api/wireguard/status|enable|disable`, `/api/reboot`
 
@@ -57,3 +58,4 @@ Für die Zielsetzung gilt explizit: **eigene Firmware + eigene Webapp mit Platfo
 - WireGuard wird lokal auf dem ESP32 betrieben; Tunnelparameter werden via Build-Defaults vorbefüllt und persistent gespeichert.
 
 - Diagnose-Workflow unterstützt jetzt neben Teilupdates auch atomare Gesamtkonfigurations-Saves via `POST /api/config`.
+- Netzwerk-Workflow bietet WLAN-Scan sowie ein einstellbares Low-Power-WLAN-Profil (TX-Leistung + 802.11b-only).

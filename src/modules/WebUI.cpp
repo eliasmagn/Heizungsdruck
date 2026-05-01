@@ -171,9 +171,28 @@ void WebUI::setupRoutes() {
     if (!doc["apSsid"].isNull()) candidate.network.apSsid = doc["apSsid"].as<const char *>();
     if (!doc["apPassword"].isNull()) candidate.network.apPassword = doc["apPassword"].as<const char *>();
     if (!doc["hostname"].isNull()) candidate.network.hostname = doc["hostname"].as<const char *>();
+    if (!doc["wifiTxPowerDbm"].isNull()) candidate.network.wifiTxPowerDbm = doc["wifiTxPowerDbm"].as<float>();
+    if (!doc["wifi11bMode"].isNull()) candidate.network.wifi11bMode = doc["wifi11bMode"].as<bool>();
     String outErr;
     if (!saveUpdatedConfig(candidate, outErr)) return server_.send(400, "text/plain", outErr);
     server_.send(200, "text/plain", "network saved");
+  });
+
+  server_.on("/api/wifi/scan", HTTP_GET, [this]() {
+    const int found = WiFi.scanNetworks(false, true);
+    JsonDocument doc;
+    JsonArray arr = doc["networks"].to<JsonArray>();
+    for (int i = 0; i < found; ++i) {
+      JsonObject item = arr.add<JsonObject>();
+      item["ssid"] = WiFi.SSID(i);
+      item["rssi"] = WiFi.RSSI(i);
+      item["channel"] = WiFi.channel(i);
+      item["open"] = (WiFi.encryptionType(i) == WIFI_AUTH_OPEN);
+    }
+    WiFi.scanDelete();
+    String out;
+    serializeJson(doc, out);
+    server_.send(200, "application/json", out);
   });
 
   server_.on("/api/config/sensor", HTTP_POST, [this]() {
