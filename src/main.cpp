@@ -2,6 +2,12 @@
 #include <ArduinoOTA.h>
 #include <WiFi.h>
 #include <esp_system.h>
+#if __has_include(<esp_wifi.h>)
+#include <esp_wifi.h>
+#define HAS_ESP_WIFI_PROTOCOL_API 1
+#else
+#define HAS_ESP_WIFI_PROTOCOL_API 0
+#endif
 
 #include "config/ProjectConfig.h"
 #include "modules/AppConfig.h"
@@ -152,6 +158,22 @@ bool connectWithCreds(const char *ssid, const char *pass, uint32_t timeoutMs) {
   return WiFi.status() == WL_CONNECTED;
 }
 
+bool applyWifiProtocolProfile(bool only11b) {
+#if HAS_ESP_WIFI_PROTOCOL_API
+  // Arduino-ESP32 3.x no longer exposes WiFi.setProtocol(...); keep this fallback local.
+  const uint8_t protocol = only11b ? WIFI_PROTOCOL_11B : (WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N);
+  const esp_err_t protocolResult = esp_wifi_set_protocol(WIFI_IF_STA, protocol);
+  if (protocolResult != ESP_OK && gDebugVerbose) {
+    Serial.printf("WiFi: set protocol failed (%d)\n", static_cast<int>(protocolResult));
+  }
+  return protocolResult == ESP_OK;
+#else
+  (void)only11b;
+  if (gDebugVerbose) Serial.println("WiFi: protocol profile API unavailable in this framework version");
+  return false;
+#endif
+}
+
 wifi_power_t txPowerFromDbm(float dbm) {
   if (dbm <= 2.0f) return WIFI_POWER_2dBm;
   if (dbm <= 5.0f) return WIFI_POWER_5dBm;
@@ -169,8 +191,7 @@ void connectWifi() {
   WiFi.mode(WIFI_STA);
   WiFi.setHostname(gConfig.network.hostname.c_str());
   WiFi.setTxPower(txPowerFromDbm(gConfig.network.wifiTxPowerDbm));
-  const wifi_protocol_t protocol = gConfig.network.wifi11bMode ? WIFI_PROTOCOL_11B : WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N;
-  WiFi.setProtocol(protocol);
+  applyWifiProtocolProfile(gConfig.network.wifi11bMode);
   const String configuredSsid = gConfig.network.wifiSsid.c_str();
   const String configuredPass = gConfig.network.wifiPassword.c_str();
   const String secretsSsid = WIFI_SSID;

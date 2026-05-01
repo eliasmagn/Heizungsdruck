@@ -279,3 +279,7 @@ Manual checklist:
 - Single-UI-Architektur ist konsolidiert: nur LittleFS-SPA als Frontend.
 - Kalibrierung zeigt 21 Punkte (0.0..10.0 in 0.5 Schritten) und synchronisiert aktiv mit dem ESP (`laden`, `senden`, `capture`, `clear`).
 - Deployment bleibt zweistufig: Firmware mit `pio run -t upload`, Webapp-Dateien zusätzlich mit `pio run -t uploadfs`.
+
+- Build-Kompatibilität: Die Option `network.wifi11bMode` setzt das PHY-Protokoll via ESP-IDF (`esp_wifi_set_protocol`) statt über eine nicht mehr verfügbare Arduino-Wrapper-Methode.
+
+- Hinweis zur Codehygiene: ESP-IDF-Aufruf für WLAN-Protokoll ist in eine kleine Helper-Funktion gekapselt (Arduino-Flow bleibt in `connectWifi()` schlank).

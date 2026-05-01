@@ -33,3 +33,7 @@
 - ✅ Diagnose um atomaren Full-Config-Save über `POST /api/config` ergänzt
 
 - ✅ 2026-04-26: WireGuard lokal auf ESP32 umgesetzt (Config-Modell, Runtime-Manager, API/UI-Migration)
+
+- ✅ Build-Stabilisierung: WLAN-Protokollumschaltung auf ESP-IDF API (`esp_wifi_set_protocol`) angepasst; behebt ESP32-Arduino 3.x Compile-Fehler um `WiFi.setProtocol`/`wifi_protocol_t`.
+
+- ✅ Codehygiene: IDF-Fallback für WLAN-Protokoll in lokaler Helper-Funktion gekapselt, Arduino-Hauptfluss bleibt lesbar
