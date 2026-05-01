@@ -64,3 +64,7 @@
 
 - [x] 2026-04-26: Echter lokaler WireGuard-Manager (`WireGuardManager`) integriert; alte URL-Proxy-Steuerung entfernt
 - [x] 2026-05-01: WLAN-Scan im GUI + konfigurierbare WLAN-Sendeleistung/11b-Modus umgesetzt
+
+- [x] WLAN-Protokollumschaltung build-kompatibel für ESP32-Arduino 3.x umgesetzt (`esp_wifi_set_protocol` statt nicht verfügbarer `WiFi.setProtocol` API)
+
+- [x] IDF-Fallback für WLAN-Protokoll in separaten Helper gekapselt (Arduino-`connectWifi()` sauber gehalten)

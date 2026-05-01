@@ -59,3 +59,7 @@ Für die Zielsetzung gilt explizit: **eigene Firmware + eigene Webapp mit Platfo
 
 - Diagnose-Workflow unterstützt jetzt neben Teilupdates auch atomare Gesamtkonfigurations-Saves via `POST /api/config`.
 - Netzwerk-Workflow bietet WLAN-Scan sowie ein einstellbares Low-Power-WLAN-Profil (TX-Leistung + 802.11b-only).
+
+- WLAN-Protokollumschaltung nutzt direkt `esp_wifi_set_protocol(WIFI_IF_STA, ...)`, damit der Build mit `framework-arduinoespressif32 @ 3.20017.x` kompatibel bleibt.
+
+- IDF-spezifischer WLAN-Protokollaufruf ist bewusst in einer lokalen Helper-Funktion gekapselt, um den Arduino-Hauptpfad sauber zu halten.
