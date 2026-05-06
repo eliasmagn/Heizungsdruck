@@ -2,6 +2,7 @@
 
 #include <WiFiClient.h>
 #include <PubSubClient.h>
+#include <ArduinoJson.h>
 
 #include "AppConfig.h"
 #include "PressureTypes.h"
@@ -15,7 +16,7 @@ class MqttManager {
   void publishReading(const PressureReading &reading, PressureState state, bool wifiConnected, uint32_t uptimeSec);
   bool publishTestMessage(const String &note);
   bool connected() { return client_.connected(); }
-  String diagnosticsJson() const;
+  String diagnosticsJson();
 
  private:
   void reconnect(uint32_t nowMs);
