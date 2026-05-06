@@ -48,6 +48,8 @@
             <dt>Temperatur</dt><dd id="temperatureValue">--</dd>
             <dt>Uptime</dt><dd id="uptimeValue">--</dd>
           </dl>
+          <h3>Kanäle</h3>
+          <pre id="channelsLive" class="mono"></pre>
         </article>
       </div>
       <article class="card">
@@ -114,7 +116,10 @@
           <label>Temperatur aktiv<input id="tempEnabled" type="checkbox"></label>
           <label>OneWire Pin<input id="tempPin" type="number"></label>
           <label>Temperatur-Intervall ms<input id="tempInterval" type="number"></label>
-          <label>Analoge Kanäle JSON<input id="analogChannelsJson" type="text" placeholder="[{"id":"pressure_main","adcPin":34,"pressureSource":true}]"></label>
+          <label>Druckkanal
+            <select id="pressureSourceChannel"></select>
+          </label>
+          <label>Analoge Kanäle (JSON Array)<textarea id="analogChannelsJson" rows="5" class="mono" placeholder='[{"id":"pressure_main","adcPin":34,"pressureSource":true}]'></textarea></label>
           <button id="saveSensor">Sensor speichern</button>
         </article>
 

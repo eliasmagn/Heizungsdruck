@@ -94,3 +94,7 @@
 - [x] Sensorarchitektur auf mehrere analoge Kanäle vorbereitet
 - [x] Temperaturmessung (DS18B20) in Backend/MQTT/UI integriert
 - [x] HA Discovery um Temperatur/Spannung erweitert
+
+- [x] 2026-05-06: ADC-Sampling auf bevorzugten ESP-IDF-Continuous-DMA-Pfad umgestellt (Fallback auf analogRead bleibt aktiv).
+
+- [x] 2026-05-06: Sensor-Stack end-to-end vervollständigt (REST/UI + MQTT + HA Discovery inkl. channels/temperature/voltage).

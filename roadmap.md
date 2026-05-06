@@ -61,3 +61,7 @@
 - Multisensor-Basis (analoge Kanal-Liste)
 - DS18B20-Basissupport
 - MQTT/Discovery-Erweiterung um Temperatur+Spannung
+
+- 2026-05-06: Sensorpfad auf ADC-Continuous (DMA) mit kompatiblem Fallback auf klassisches `analogRead` umgestellt.
+
+- 2026-05-06: End-to-End Sensor-Stack abgeschlossen: neue Kanal-/Temperaturwerte von Erfassung bis MQTT/HA/UI durchgängig.

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <stdint.h>
+#include <map>
+#include <string>
 
 enum class PressureState : uint8_t {
   UNKNOWN = 0,
@@ -28,4 +30,6 @@ struct PressureReading {
   SensorFault fault{SensorFault::NONE};
   float temperatureC{0.0f};
   bool temperatureValid{false};
+  std::map<std::string, int> channelRaw;
+  std::map<std::string, int> channelFiltered;
 };

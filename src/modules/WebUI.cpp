@@ -46,6 +46,15 @@ String WebUI::statusJson() const {
   doc["valid"] = lastReading_.valid;
   doc["temperatureC"] = lastReading_.temperatureC;
   doc["temperatureValid"] = lastReading_.temperatureValid;
+  JsonObject channels = doc["channels"].to<JsonObject>();
+  for (const auto &[id, raw] : lastReading_.channelRaw) {
+    JsonObject c = channels[id.c_str()].to<JsonObject>();
+    c["rawAdc"] = raw;
+  }
+  for (const auto &[id, filtered] : lastReading_.channelFiltered) {
+    JsonObject c = channels[id.c_str()].to<JsonObject>();
+    c["filteredAdc"] = filtered;
+  }
   doc["fault"] = static_cast<int>(lastReading_.fault);
   doc["state"] = static_cast<int>(lastState_);
   doc["wifi"] = wifiConnected_;
