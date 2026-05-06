@@ -10,6 +10,7 @@ class MqttManager {
  public:
   MqttManager();
   void begin(const AppConfig &cfg);
+  void setWireGuardStateProvider(bool (*isOnlineFn)());
   void loop(uint32_t nowMs);
   void publishReading(const PressureReading &reading, PressureState state, bool wifiConnected, uint32_t uptimeSec);
   bool connected() { return client_.connected(); }
@@ -28,4 +29,5 @@ class MqttManager {
   String lastError_;
   String lastPublishTopic_;
   size_t lastPublishPayloadLen_{0};
+  bool (*wireGuardOnlineFn_)() = nullptr;
 };

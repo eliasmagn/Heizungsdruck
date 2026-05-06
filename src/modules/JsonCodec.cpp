@@ -42,6 +42,7 @@ std::string configToJson(const AppConfig &cfg) {
   doc["mqtt"]["clientId"] = cfg.mqtt.clientId;
   doc["mqtt"]["topicBase"] = cfg.mqtt.topicBase;
   doc["mqtt"]["publishIntervalMs"] = cfg.mqtt.publishIntervalMs;
+  doc["mqtt"]["requireWireguard"] = cfg.mqtt.requireWireguard;
 
   doc["network"]["wifiSsid"] = cfg.network.wifiSsid;
   doc["network"]["wifiPassword"] = cfg.network.wifiPassword;
@@ -130,6 +131,7 @@ bool configFromJson(const std::string &json, AppConfig &cfgOut, std::string &err
   setIfExists(m["clientId"], cfgOut.mqtt.clientId);
   setIfExists(m["topicBase"], cfgOut.mqtt.topicBase);
   setIfExists(m["publishIntervalMs"], cfgOut.mqtt.publishIntervalMs);
+  setIfExists(m["requireWireguard"], cfgOut.mqtt.requireWireguard);
 
   JsonVariantConst n = doc["network"];
   setIfExists(n["wifiSsid"], cfgOut.network.wifiSsid);

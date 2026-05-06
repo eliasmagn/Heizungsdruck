@@ -71,3 +71,5 @@ Für die Zielsetzung gilt explizit: **eigene Firmware + eigene Webapp mit Platfo
 - 2026-05-06: Telegram-Kommando /saveconfig ergänzt (persistiert Runtime-Änderungen).
 
 - 2026-05-06: MQTT-Publish-Diagnostik (inkl. Buffer-/Payloadsichtbarkeit) und Telegram-Diagnoseobjekt in `/api/diag` ergänzt.
+
+- 2026-05-06: Betriebsmodus ergänzt: MQTT kann optional strikt an WireGuard-Onlinezustand gekoppelt werden.

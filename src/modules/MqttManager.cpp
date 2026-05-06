@@ -7,6 +7,7 @@ constexpr uint16_t kMqttBufferSize = 1024;
 }
 
 MqttManager::MqttManager() : client_(wifiClient_) {}
+void MqttManager::setWireGuardStateProvider(bool (*isOnlineFn)()) { wireGuardOnlineFn_ = isOnlineFn; }
 
 void MqttManager::begin(const AppConfig &cfg) {
   cfg_ = cfg;
@@ -27,6 +28,14 @@ void MqttManager::begin(const AppConfig &cfg) {
 
 void MqttManager::reconnect(uint32_t nowMs) {
   if (!cfg_.mqtt.enabled) return;
+  if (cfg_.mqtt.requireWireguard && wireGuardOnlineFn_ != nullptr && !wireGuardOnlineFn_()) {
+    if (nowMs - lastReconnectTryMs_ >= 5000) {
+      lastReconnectTryMs_ = nowMs;
+      lastError_ = "wireguard required but offline";
+      Serial.println("[MQTT] reconnect skipped: requireWireguard=1 but tunnel offline");
+    }
+    return;
+  }
   if (client_.connected()) return;
   if (nowMs - lastReconnectTryMs_ < 5000) return;
   lastReconnectTryMs_ = nowMs;
@@ -72,6 +81,11 @@ void MqttManager::loop(uint32_t nowMs) {
 void MqttManager::publishReading(const PressureReading &reading, PressureState state, bool wifiConnected,
                                  uint32_t uptimeSec) {
   if (!cfg_.mqtt.enabled || !client_.connected()) return;
+  if (cfg_.mqtt.requireWireguard && wireGuardOnlineFn_ != nullptr && !wireGuardOnlineFn_()) {
+    lastError_ = "publish blocked: wireguard offline";
+    Serial.println("[MQTT] publish blocked: requireWireguard=1 but tunnel offline");
+    return;
+  }
 
   const uint32_t nowMs = millis();
   if (nowMs - lastPublishMs_ < cfg_.mqtt.publishIntervalMs) return;
@@ -117,6 +131,8 @@ String MqttManager::diagnosticsJson() const {
   doc["lastPublishTopic"] = lastPublishTopic_;
   doc["lastPublishPayloadLen"] = lastPublishPayloadLen_;
   doc["bufferSize"] = client_.getBufferSize();
+  doc["requireWireguard"] = cfg_.mqtt.requireWireguard;
+  doc["wireguardOnline"] = wireGuardOnlineFn_ != nullptr ? wireGuardOnlineFn_() : false;
   String out;
   serializeJson(doc, out);
   return out;

@@ -148,6 +148,8 @@ bool saveCfg(const AppConfig &cfg) {
   return true;
 }
 
+bool isWireGuardOnline() { return gWireGuard.status().online; }
+
 bool connectWithCreds(const char *ssid, const char *pass, uint32_t timeoutMs) {
   if (ssid == nullptr || strlen(ssid) == 0) return false;
   WiFi.begin(ssid, pass);
@@ -296,6 +298,7 @@ void setup() {
   gSensor->begin();
 
   gMqtt.begin(gConfig);
+  gMqtt.setWireGuardStateProvider(isWireGuardOnline);
   gAlarm.begin(gConfig);
   gAlarm.attachConfigSaver(saveCfg);
   gWeb.attachConfig(&gConfig, saveCfg);

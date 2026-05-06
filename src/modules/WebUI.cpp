@@ -248,6 +248,7 @@ void WebUI::setupRoutes() {
     if (!doc["password"].isNull()) candidate.mqtt.password = doc["password"].as<const char *>();
     if (!doc["topicBase"].isNull()) candidate.mqtt.topicBase = doc["topicBase"].as<const char *>();
     if (!doc["publishIntervalMs"].isNull()) candidate.mqtt.publishIntervalMs = doc["publishIntervalMs"].as<uint32_t>();
+    if (!doc["requireWireguard"].isNull()) candidate.mqtt.requireWireguard = doc["requireWireguard"].as<bool>();
     String outErr;
     if (!saveUpdatedConfig(candidate, outErr)) return server_.send(400, "text/plain", outErr);
     server_.send(200, "text/plain", "mqtt saved");

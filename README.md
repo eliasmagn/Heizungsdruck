@@ -40,10 +40,11 @@ AP-Passwort wird bei Bedarf automatisch erzeugt und gespeichert.
 ## MQTT konfigurieren und testen
 1. In **Einstellungen → MQTT** aktivieren.
 2. Host/Port/User/Pass/Topic-Base setzen und speichern.
-3. Diagnose prüfen:
+3. Optional: **„MQTT nur über WireGuard-Tunnel“** aktivieren, wenn Publish strikt nur über den Tunnel laufen soll.
+4. Diagnose prüfen:
    - Serial-Log zeigt Connect/Reconnect/Publish inkl. Topic, Payload-Länge und Fehlerzustand.
    - `/api/diag` enthält `mqttDiag` (connected/state/last error/buffer info).
-4. Broker-Topics prüfen:
+5. Broker-Topics prüfen:
    - `<topicBase>/status`
    - `<topicBase>/telemetry`
    - `<topicBase>/state`
@@ -87,3 +88,6 @@ ArduinoOTA ist aktiv (`ArduinoOTA.begin()` in `setup()`).
 - Host-Tests: `pio test -e native`
 - Keine Secrets im Repo
 - Nicht-blockierende Loops bevorzugen
+Hinweis WireGuard:
+- Für reinen Tunnelbetrieb `requireWireguard=true` aktivieren und als MQTT-Host eine über den Tunnel erreichbare Adresse nutzen.
+- Bei aktivem `requireWireguard` blockiert die Firmware Connect/Publish solange der Tunnel offline ist (sichtbar in Serial + `/api/diag`).
