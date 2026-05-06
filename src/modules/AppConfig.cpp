@@ -1,6 +1,24 @@
 #include "AppConfig.h"
 
+#include <algorithm>
+
 namespace {
+std::string trim(const std::string &value) {
+  const auto first = value.find_first_not_of(" \t\r\n");
+  if (first == std::string::npos) return "";
+  const auto last = value.find_last_not_of(" \t\r\n");
+  return value.substr(first, last - first + 1);
+}
+
+bool isAllowedDeviceIdChar(char c) {
+  return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_';
+}
+
+std::string normalizeDeviceId(std::string deviceId) {
+  std::transform(deviceId.begin(), deviceId.end(), deviceId.begin(), [](unsigned char c) { return static_cast<char>(tolower(c)); });
+  return trim(deviceId);
+}
+
 void initCalibrationPoints(CalibrationConfig &calib) { calib.points.clear(); }
 }  // namespace
 
@@ -41,6 +59,29 @@ bool AppConfig::validate(std::string &error) const {
   }
   if (mqtt.topicBase.empty()) {
     error = "topicBase must not be empty";
+    return false;
+  }
+  const std::string normalizedId = normalizeDeviceId(deviceId);
+  if (normalizedId.empty()) {
+    error = "deviceId must not be empty";
+    return false;
+  }
+  if (normalizedId.size() > 32) {
+    error = "deviceId max length is 32";
+    return false;
+  }
+  for (const char c : normalizedId) {
+    if (!isAllowedDeviceIdChar(c)) {
+      error = "deviceId allows only [a-z0-9_-]";
+      return false;
+    }
+  }
+  if (network.hostname.empty()) {
+    error = "hostname must not be empty";
+    return false;
+  }
+  if (mqtt.clientId.empty()) {
+    error = "mqtt clientId must not be empty";
     return false;
   }
   if (network.wifiTxPowerDbm < 2.0f || network.wifiTxPowerDbm > 20.5f) {

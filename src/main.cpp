@@ -94,6 +94,26 @@ bool gDebugVerbose = false;
 DisplayState gDisplayState;
 portMUX_TYPE gDisplayMux = portMUX_INITIALIZER_UNLOCKED;
 
+String normalizedDeviceId(const String &in) {
+  String out;
+  for (size_t i = 0; i < in.length(); ++i) {
+    char c = static_cast<char>(tolower(in[i]));
+    if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_') out += c;
+  }
+  if (out.length() == 0) out = "kreis1";
+  return out;
+}
+
+void ensureDeviceIdentity(AppConfig &cfg) {
+  cfg.deviceId = normalizedDeviceId(cfg.deviceId.c_str()).c_str();
+  const String base = String("heizungsdruck-") + cfg.deviceId.c_str();
+  if (cfg.network.hostname.empty() || cfg.network.hostname == "heizungsdruck") cfg.network.hostname = base.c_str();
+  if (cfg.mqtt.clientId.empty() || cfg.mqtt.clientId == "heizungsdruck") cfg.mqtt.clientId = base.c_str();
+  if (cfg.mqtt.topicBase.empty() || cfg.mqtt.topicBase == "heizungsdruck") {
+    cfg.mqtt.topicBase = (String("heizungsdruck/") + cfg.deviceId.c_str()).c_str();
+  }
+}
+
 void displayTask(void *) {
   DisplayState local;
   for (;;) {
@@ -134,8 +154,10 @@ String generateApPassword() {
 }
 
 bool saveCfg(const AppConfig &cfg) {
-  if (!gStore.save(cfg)) return false;
-  gConfig = cfg;
+  AppConfig normalized = cfg;
+  ensureDeviceIdentity(normalized);
+  if (!gStore.save(normalized)) return false;
+  gConfig = normalized;
   if (gSensor) gSensor->updateConfig(gConfig);
   if (gStateMachine) gStateMachine->updateConfig(gConfig);
   gMqtt.begin(gConfig);
@@ -249,6 +271,7 @@ void setup() {
 
   gStore.begin();
   gConfig = gStore.load();
+  ensureDeviceIdentity(gConfig);
   if (gConfig.network.hostname.empty()) gConfig.network.hostname = DEVICE_HOSTNAME;
   if (gConfig.sensor.adcPin == 34) gConfig.sensor.adcPin = SENSOR_ADC_PIN_DEFAULT;
   if (gConfig.sensor.sampleCount == 9) gConfig.sensor.sampleCount = SENSOR_SAMPLE_COUNT_DEFAULT;

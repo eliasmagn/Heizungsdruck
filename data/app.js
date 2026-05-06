@@ -146,6 +146,7 @@ function fillConfig(cfg) {
   $('wifiPassword').value = cfg.network.wifiPassword || '';
   $('apSsid').value = cfg.network.apSsid || '';
   $('apPassword').value = cfg.network.apPassword || '';
+  $('deviceId').value = cfg.deviceId || 'kreis1';
   $('hostname').value = cfg.network.hostname || '';
   $('wifiTxPowerDbm').value = cfg.network.wifiTxPowerDbm ?? 8.5;
   $('wifi11bMode').checked = cfg.network.wifi11bMode !== false;
@@ -155,6 +156,7 @@ function fillConfig(cfg) {
   $('mqttPort').value = cfg.mqtt.port || 1883;
   $('mqttUser').value = cfg.mqtt.username || '';
   $('mqttPassword').value = cfg.mqtt.password || '';
+  $('mqttClientId').value = cfg.mqtt.clientId || '';
   $('mqttTopicBase').value = cfg.mqtt.topicBase || 'heizungsdruck';
   $('mqttPublishInterval').value = cfg.mqtt.publishIntervalMs || 10000;
   $('mqttRequireWireguard').checked = Boolean(cfg.mqtt.requireWireguard);
@@ -269,7 +271,7 @@ $('wifiSsidSelect').onchange = () => {
   if ($('wifiSsidSelect').value) $('wifiSsid').value = $('wifiSsidSelect').value;
 };
 $('saveMqtt').onclick = async () => {
-  try { await apiText('/api/config/mqtt', 'POST', {enabled: $('mqttEnabled').checked, host: $('mqttHost').value, port: Number($('mqttPort').value || 1883), username: $('mqttUser').value, password: $('mqttPassword').value, topicBase: $('mqttTopicBase').value, publishIntervalMs: Number($('mqttPublishInterval').value || 10000), requireWireguard: $('mqttRequireWireguard').checked}); toast('MQTT gespeichert'); }
+  try { await apiText('/api/config/mqtt', 'POST', {enabled: $('mqttEnabled').checked, host: $('mqttHost').value, port: Number($('mqttPort').value || 1883), username: $('mqttUser').value, password: $('mqttPassword').value, clientId: $('mqttClientId').value, topicBase: $('mqttTopicBase').value, deviceId: $('deviceId').value, publishIntervalMs: Number($('mqttPublishInterval').value || 10000), requireWireguard: $('mqttRequireWireguard').checked}); toast('MQTT gespeichert'); }
   catch (e) { toast(e.message, true); }
 };
 $('saveAlarm').onclick = async () => {
@@ -288,6 +290,14 @@ $('wgDisable').onclick = async () => { try { $('wgOutput').textContent = await a
 $('testTelegram').onclick = async () => { try { toast(await apiText('/api/test/telegram', 'POST', {})); } catch (e) { toast(e.message, true); } };
 $('testWebhook').onclick = async () => { try { toast(await apiText('/api/test/webhook', 'POST', {})); } catch (e) { toast(e.message, true); } };
 $('testMqtt').onclick = async () => { try { toast(await apiText('/api/test/mqtt', 'POST', {})); } catch (e) { toast(e.message, true); } };
+$('deviceId').addEventListener('change', () => {
+  const id = ($('deviceId').value || 'kreis1').toLowerCase().replace(/[^a-z0-9_-]/g, '');
+  $('deviceId').value = id || 'kreis1';
+  if (!$('hostname').value || $('hostname').value === 'heizungsdruck') $('hostname').value = `heizungsdruck-${$('deviceId').value}`;
+  if (!$('mqttClientId').value || $('mqttClientId').value === 'heizungsdruck') $('mqttClientId').value = `heizungsdruck-${$('deviceId').value}`;
+  if (!$('mqttTopicBase').value || $('mqttTopicBase').value === 'heizungsdruck') $('mqttTopicBase').value = `heizungsdruck/${$('deviceId').value}`;
+});
+
 $('rebootDevice').onclick = async () => { try { await apiText('/api/reboot', 'POST', {}); toast('Neustart ausgelöst'); } catch (e) { toast(e.message, true); } };
 $('refreshConfig').onclick = async () => { try { await refreshConfig(); toast('Config geladen'); } catch (e) { toast(e.message, true); } };
 $('saveAllConfig').onclick = async () => {
@@ -303,6 +313,7 @@ $('saveAllConfig').onclick = async () => {
     configCache.network.wifiPassword = $('wifiPassword').value;
     configCache.network.apSsid = $('apSsid').value;
     configCache.network.apPassword = $('apPassword').value;
+    configCache.deviceId = $('deviceId').value;
     configCache.network.hostname = $('hostname').value;
     configCache.network.wifiTxPowerDbm = Number($('wifiTxPowerDbm').value || 8.5);
     configCache.network.wifi11bMode = $('wifi11bMode').checked;
@@ -311,6 +322,7 @@ $('saveAllConfig').onclick = async () => {
     configCache.mqtt.port = Number($('mqttPort').value || 1883);
     configCache.mqtt.username = $('mqttUser').value;
     configCache.mqtt.password = $('mqttPassword').value;
+    configCache.mqtt.clientId = $('mqttClientId').value;
     configCache.mqtt.topicBase = $('mqttTopicBase').value;
     configCache.mqtt.publishIntervalMs = Number($('mqttPublishInterval').value || 10000);
     configCache.mqtt.requireWireguard = $('mqttRequireWireguard').checked;

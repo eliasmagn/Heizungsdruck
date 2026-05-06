@@ -63,6 +63,7 @@ std::string configToJson(const AppConfig &cfg) {
   doc["wireguard"]["allowedIp1"] = cfg.wireguard.allowedIp1;
   doc["wireguard"]["allowedIp2"] = cfg.wireguard.allowedIp2;
   doc["wireguard"]["keepAliveSeconds"] = cfg.wireguard.keepAliveSeconds;
+  doc["deviceId"] = cfg.deviceId;
 
   std::string out;
   serializeJson(doc, out);
@@ -154,6 +155,7 @@ bool configFromJson(const std::string &json, AppConfig &cfgOut, std::string &err
   setIfExists(w["allowedIp1"], cfgOut.wireguard.allowedIp1);
   setIfExists(w["allowedIp2"], cfgOut.wireguard.allowedIp2);
   setIfExists(w["keepAliveSeconds"], cfgOut.wireguard.keepAliveSeconds);
+  setIfExists(doc["deviceId"], cfgOut.deviceId);
 
   return cfgOut.validate(error);
 }

@@ -11,6 +11,7 @@ void MqttManager::setWireGuardStateProvider(bool (*isOnlineFn)()) { wireGuardOnl
 
 void MqttManager::begin(const AppConfig &cfg) {
   cfg_ = cfg;
+  discoveryPublished_ = false;
   client_.setServer(cfg_.mqtt.host.c_str(), cfg_.mqtt.port);
   client_.setBufferSize(kMqttBufferSize);
   Serial.printf("[MQTT] begin host=%s port=%u topicBase=%s buffer=%u enabled=%d\n", cfg_.mqtt.host.c_str(), cfg_.mqtt.port,
@@ -40,7 +41,7 @@ void MqttManager::reconnect(uint32_t nowMs) {
   lastReconnectTryMs_ = nowMs;
 
   const bool ok = client_.connect(cfg_.mqtt.clientId.c_str(), cfg_.mqtt.username.c_str(), cfg_.mqtt.password.c_str(),
-                                  (cfg_.mqtt.topicBase + "/status").c_str(), 1, true, "offline");
+                                  topicStatus().c_str(), 1, true, "offline");
   lastClientState_ = client_.state();
   if (!ok) {
     lastError_ = "connect failed";
@@ -49,12 +50,13 @@ void MqttManager::reconnect(uint32_t nowMs) {
     return;
   }
   Serial.printf("[MQTT] connected state=%d\n", lastClientState_);
-  const String statusTopic = cfg_.mqtt.topicBase + "/status";
+  const String statusTopic = topicStatus();
   const String restartTopic = cfg_.mqtt.topicBase + "/cmd/restart";
   const bool onlineOk = client_.publish(statusTopic.c_str(), "online", true);
   const bool subOk = client_.subscribe(restartTopic.c_str());
-  Serial.printf("[MQTT] publish online topic=%s ok=%d | subscribe %s ok=%d\n", statusTopic.c_str(), onlineOk,
-                restartTopic.c_str(), subOk);
+  publishHomeAssistantDiscovery();
+  Serial.printf("[MQTT] publish online topic=%s ok=%d | subscribe %s ok=%d discovery=%d\n", statusTopic.c_str(), onlineOk,
+                restartTopic.c_str(), subOk, discoveryPublished_);
 }
 
 String MqttManager::stateToString(PressureState s) const {
@@ -101,8 +103,8 @@ void MqttManager::publishReading(const PressureReading &reading, PressureState s
 
   String payload;
   serializeJson(doc, payload);
-  const String telemetryTopic = cfg_.mqtt.topicBase + "/telemetry";
-  const String stateTopic = cfg_.mqtt.topicBase + "/state";
+  const String telemetryTopic = topicTelemetry();
+  const String stateTopic = topicState();
   lastPublishTopic_ = telemetryTopic;
   lastPublishPayloadLen_ = payload.length();
   if (payload.length() >= client_.getBufferSize()) {
@@ -169,4 +171,70 @@ String MqttManager::diagnosticsJson() const {
   String out;
   serializeJson(doc, out);
   return out;
+}
+
+String MqttManager::topicTelemetry() const { return cfg_.mqtt.topicBase + "/telemetry"; }
+String MqttManager::topicState() const { return cfg_.mqtt.topicBase + "/state"; }
+String MqttManager::topicStatus() const { return cfg_.mqtt.topicBase + "/status"; }
+
+bool MqttManager::publishDiscoveryEntity(const String &component, const String &objectId, const String &name,
+                                         const JsonDocument &payload) {
+  String topic = "homeassistant/" + component + "/" + objectId + "/config";
+  JsonDocument doc;
+  doc.set(payload);
+  doc["name"] = name;
+  String out;
+  serializeJson(doc, out);
+  return client_.publish(topic.c_str(), out.c_str(), true);
+}
+
+void MqttManager::publishHomeAssistantDiscovery() {
+  const String cleanId = String("heizungsdruck_") + cfg_.deviceId.c_str();
+  const String deviceName = String("Heizungsdruck ") + cfg_.deviceId.c_str();
+
+  auto basePayload = [&](JsonDocument &doc, const String &uniq) {
+    doc["uniq_id"] = uniq;
+    doc["avty_t"] = topicStatus();
+    doc["pl_avail"] = "online";
+    doc["pl_not_avail"] = "offline";
+    JsonObject dev = doc["dev"].to<JsonObject>();
+    JsonArray ids = dev["ids"].to<JsonArray>();
+    ids.add(cleanId);
+    dev["name"] = deviceName;
+    dev["mf"] = "EliasMagn";
+    dev["mdl"] = "ESP32 Pressure Monitor";
+    dev["sw"] = "firmware";
+  };
+
+  bool ok = true;
+  JsonDocument pressure;
+  basePayload(pressure, cleanId + "_pressure");
+  pressure["stat_t"] = topicTelemetry(); pressure["val_tpl"] = "{{ value_json.pressureBar }}";
+  pressure["unit_of_meas"] = "bar"; pressure["dev_cla"] = "pressure"; pressure["stat_cla"] = "measurement";
+  ok &= publishDiscoveryEntity("sensor", cleanId + "_pressure", String(cfg_.deviceId.c_str()) + " Druck", pressure);
+
+  JsonDocument state;
+  basePayload(state, cleanId + "_state"); state["stat_t"] = topicState();
+  ok &= publishDiscoveryEntity("sensor", cleanId + "_state", String(cfg_.deviceId.c_str()) + " Status", state);
+
+  JsonDocument raw;
+  basePayload(raw, cleanId + "_rawadc"); raw["stat_t"] = topicTelemetry(); raw["val_tpl"] = "{{ value_json.rawAdc }}";
+  ok &= publishDiscoveryEntity("sensor", cleanId + "_rawadc", String(cfg_.deviceId.c_str()) + " ADC Raw", raw);
+
+  JsonDocument filt;
+  basePayload(filt, cleanId + "_filteredadc"); filt["stat_t"] = topicTelemetry(); filt["val_tpl"] = "{{ value_json.filteredAdc }}";
+  ok &= publishDiscoveryEntity("sensor", cleanId + "_filteredadc", String(cfg_.deviceId.c_str()) + " ADC Filtered", filt);
+
+  JsonDocument valid;
+  basePayload(valid, cleanId + "_valid"); valid["stat_t"] = topicTelemetry(); valid["val_tpl"] = "{{ value_json.valid }}";
+  valid["pl_on"] = true; valid["pl_off"] = false;
+  ok &= publishDiscoveryEntity("binary_sensor", cleanId + "_valid", String(cfg_.deviceId.c_str()) + " Valid", valid);
+
+  JsonDocument alarm;
+  basePayload(alarm, cleanId + "_alarm"); alarm["stat_t"] = topicState();
+  alarm["val_tpl"] = "{{ value in ['PRESSURE_LOW','PRESSURE_HIGH','SENSOR_FAULT'] }}";
+  alarm["pl_on"] = true; alarm["pl_off"] = false;
+  ok &= publishDiscoveryEntity("binary_sensor", cleanId + "_alarm", String(cfg_.deviceId.c_str()) + " Alarm", alarm);
+
+  discoveryPublished_ = ok;
 }

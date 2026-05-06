@@ -246,7 +246,9 @@ void WebUI::setupRoutes() {
     if (!doc["port"].isNull()) candidate.mqtt.port = doc["port"].as<uint16_t>();
     if (!doc["username"].isNull()) candidate.mqtt.username = doc["username"].as<const char *>();
     if (!doc["password"].isNull()) candidate.mqtt.password = doc["password"].as<const char *>();
+    if (!doc["clientId"].isNull()) candidate.mqtt.clientId = doc["clientId"].as<const char *>();
     if (!doc["topicBase"].isNull()) candidate.mqtt.topicBase = doc["topicBase"].as<const char *>();
+    if (!doc["deviceId"].isNull()) candidate.deviceId = doc["deviceId"].as<const char *>();
     if (!doc["publishIntervalMs"].isNull()) candidate.mqtt.publishIntervalMs = doc["publishIntervalMs"].as<uint32_t>();
     if (!doc["requireWireguard"].isNull()) candidate.mqtt.requireWireguard = doc["requireWireguard"].as<bool>();
     String outErr;

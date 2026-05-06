@@ -20,6 +20,12 @@ class MqttManager {
  private:
   void reconnect(uint32_t nowMs);
   String stateToString(PressureState s) const;
+  bool publishDiscoveryEntity(const String &component, const String &objectId, const String &name,
+                              const JsonDocument &payload);
+  void publishHomeAssistantDiscovery();
+  String topicState() const;
+  String topicTelemetry() const;
+  String topicStatus() const;
 
   AppConfig cfg_;
   WiFiClient wifiClient_;
@@ -33,5 +39,6 @@ class MqttManager {
   bool lastPublishOk_{false};
   uint32_t publishFailCount_{0};
   uint32_t publishOkCount_{0};
+  bool discoveryPublished_{false};
   bool (*wireGuardOnlineFn_)() = nullptr;
 };

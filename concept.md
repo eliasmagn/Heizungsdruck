@@ -79,3 +79,4 @@ Für die Zielsetzung gilt explizit: **eigene Firmware + eigene Webapp mit Platfo
 - 2026-05-06: WireGuard-Konfigurationsrobustheit erhöht: lokale Tunneladresse akzeptiert nun IP/CIDR-Eingaben.
 
 - 2026-05-06: Betriebsdiagnose erweitert um expliziten MQTT-Testpublishpfad zur Broker-Validierung.
+- 2026-05-06: MQTT-Architektur für parallele Geräte um deviceId/Discovery erweitert.

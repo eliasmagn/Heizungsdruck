@@ -54,3 +54,4 @@
 - 2026-05-06: WireGuard-Setup robuster: CIDR in localAddress wird toleriert (IP-Extraktion) und diagnostisch markiert.
 
 - 2026-05-06: MQTT-Fehlersuche erweitert: manueller Testpublish und Publish-Erfolgszähler in Diagnose.
+- 2026-05-06: Mehrgerätebetrieb (kreis1..kreis4) mit MQTT Discovery abgeschlossen.
