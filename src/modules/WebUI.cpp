@@ -365,6 +365,13 @@ void WebUI::setupRoutes() {
     server_.send(200, "text/plain", String("webhook ok: status=") + result.httpStatus + " " + result.detail);
   });
 
+  server_.on("/api/test/mqtt", HTTP_POST, [this]() {
+    if (mqttManager_ == nullptr) return server_.send(500, "text/plain", "mqtt manager unavailable");
+    const bool ok = mqttManager_->publishTestMessage("manual webui test");
+    if (!ok) return server_.send(502, "text/plain", String("mqtt test failed: ") + mqttManager_->diagnosticsJson());
+    server_.send(200, "text/plain", String("mqtt test ok: ") + mqttManager_->diagnosticsJson());
+  });
+
   server_.on("/api/wireguard/status", HTTP_GET, [this]() {
     if (wireguard_ == nullptr) return server_.send(500, "text/plain", "wireguard manager unavailable");
     const WireGuardStatus wg = wireguard_->status();

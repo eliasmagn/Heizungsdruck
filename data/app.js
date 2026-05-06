@@ -287,6 +287,7 @@ $('wgDisable').onclick = async () => { try { $('wgOutput').textContent = await a
 
 $('testTelegram').onclick = async () => { try { toast(await apiText('/api/test/telegram', 'POST', {})); } catch (e) { toast(e.message, true); } };
 $('testWebhook').onclick = async () => { try { toast(await apiText('/api/test/webhook', 'POST', {})); } catch (e) { toast(e.message, true); } };
+$('testMqtt').onclick = async () => { try { toast(await apiText('/api/test/mqtt', 'POST', {})); } catch (e) { toast(e.message, true); } };
 $('rebootDevice').onclick = async () => { try { await apiText('/api/reboot', 'POST', {}); toast('Neustart ausgelöst'); } catch (e) { toast(e.message, true); } };
 $('refreshConfig').onclick = async () => { try { await refreshConfig(); toast('Config geladen'); } catch (e) { toast(e.message, true); } };
 $('saveAllConfig').onclick = async () => {

@@ -86,3 +86,5 @@
 - [x] 2026-05-06: MQTT-WireGuard-Modus präzisiert: bevorzugen + Fallback statt hartes Blocking.
 
 - [x] 2026-05-06: WireGuard localAddress akzeptiert jetzt IP oder CIDR (z. B. /24), verhindert Startfehler bei CIDR-Eingabe.
+
+- [x] 2026-05-06: MQTT-Testpublish-Endpoint (`/api/test/mqtt`) + UI-Button ergänzt; MQTT-Diagnosezähler erweitert.

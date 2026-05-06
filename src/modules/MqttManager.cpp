@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 namespace {
-constexpr uint16_t kMqttBufferSize = 1024;
+constexpr uint16_t kMqttBufferSize = 2048;
 }
 
 MqttManager::MqttManager() : client_(wifiClient_) {}
@@ -113,12 +113,44 @@ void MqttManager::publishReading(const PressureReading &reading, PressureState s
   const bool stateOk = client_.publish(stateTopic.c_str(), stateToString(state).c_str(), true);
   if (!telOk || !stateOk) {
     lastError_ = "publish failed";
+    lastPublishOk_ = false;
+    publishFailCount_++;
     Serial.printf("[MQTT] publish failed telemetryOk=%d stateOk=%d topic=%s payloadLen=%u clientState=%d connected=%d\n",
                   telOk, stateOk, telemetryTopic.c_str(), payload.length(), client_.state(), client_.connected());
     return;
   }
+  lastPublishOk_ = true;
+  publishOkCount_++;
   Serial.printf("[MQTT] publish ok topic=%s payloadLen=%u stateTopic=%s\n", telemetryTopic.c_str(), payload.length(),
                 stateTopic.c_str());
+}
+
+bool MqttManager::publishTestMessage(const String &note) {
+  if (!cfg_.mqtt.enabled || !client_.connected()) {
+    lastError_ = "test publish skipped: mqtt disabled/disconnected";
+    return false;
+  }
+  JsonDocument doc;
+  doc["type"] = "manual_test";
+  doc["note"] = note;
+  doc["millis"] = millis();
+  String payload;
+  serializeJson(doc, payload);
+  const String topic = cfg_.mqtt.topicBase + "/telemetry_test";
+  lastPublishTopic_ = topic;
+  lastPublishPayloadLen_ = payload.length();
+  const bool ok = client_.publish(topic.c_str(), payload.c_str(), false);
+  lastPublishOk_ = ok;
+  if (ok) {
+    publishOkCount_++;
+    Serial.printf("[MQTT] test publish ok topic=%s payloadLen=%u\n", topic.c_str(), payload.length());
+  } else {
+    publishFailCount_++;
+    lastError_ = "test publish failed";
+    Serial.printf("[MQTT] test publish failed topic=%s payloadLen=%u state=%d\n", topic.c_str(), payload.length(),
+                  client_.state());
+  }
+  return ok;
 }
 
 String MqttManager::diagnosticsJson() const {
@@ -128,6 +160,9 @@ String MqttManager::diagnosticsJson() const {
   doc["lastError"] = lastError_;
   doc["lastPublishTopic"] = lastPublishTopic_;
   doc["lastPublishPayloadLen"] = lastPublishPayloadLen_;
+  doc["lastPublishOk"] = lastPublishOk_;
+  doc["publishOkCount"] = publishOkCount_;
+  doc["publishFailCount"] = publishFailCount_;
   doc["bufferSize"] = client_.getBufferSize();
   doc["requireWireguard"] = cfg_.mqtt.requireWireguard;
   doc["wireguardOnline"] = wireGuardOnlineFn_ != nullptr ? wireGuardOnlineFn_() : false;

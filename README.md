@@ -93,3 +93,4 @@ Hinweis WireGuard:
 - Standard ist **beide Wege möglich** (normales Routing + WireGuard, falls Tunnel aktiv).
 - Mit `requireWireguard=true` wird WireGuard für MQTT bevorzugt und der Tunnelstatus diagnostisch geloggt; wenn der Tunnel offline ist, bleibt Fallback-Routing aktiv.
 - Für echte Tunnel-Nutzung als MQTT-Host eine Adresse aus dem Tunnelnetz verwenden und `Allowed IPs` passend setzen.
+- Zusätzlicher Funktionstest: Im Diagnose-Tab **MQTT Test Publish** ausführen (publisht auf `<topicBase>/telemetry_test`).
