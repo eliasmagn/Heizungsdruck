@@ -82,3 +82,5 @@
 - [x] 2026-05-06: Kalibrierpunkte im UI jetzt echt löschbar (remove statt valid=false)
 
 - [x] 2026-05-06: MQTT optional auf WireGuard erzwungen (`requireWireguard`) inkl. Block-/Fehlerdiagnose.
+
+- [x] 2026-05-06: MQTT-WireGuard-Modus präzisiert: bevorzugen + Fallback statt hartes Blocking.

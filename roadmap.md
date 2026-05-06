@@ -48,3 +48,5 @@
 - 2026-05-06: Telegram-Diagnosezustand (`telegramDiag`) in /api/diag ergänzt.
 
 - 2026-05-06: Optionales MQTT-over-WireGuard-Gating (`requireWireguard`) umgesetzt.
+
+- 2026-05-06: MQTT-WireGuard-Betrieb auf Dual-Interface-Usecase angepasst (WG bevorzugt, Fallback aktiv).
