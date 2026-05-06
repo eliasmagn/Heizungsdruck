@@ -84,3 +84,7 @@ Für die Zielsetzung gilt explizit: **eigene Firmware + eigene Webapp mit Platfo
 
 ### Sensorik 2026-05
 Das System entwickelt sich von Einzel-ADC auf modulare Mehrkanal-Erfassung (ein Kanal als Druckquelle, weitere optional). Temperatur wird als eigener Sensortyp geführt (DS18B20 auf OneWire-Bus).
+
+- 2026-05-06: Sensorpipeline nutzt nun primär ESP-IDF ADC-Continuous (DMA), um CPU-Last bei Mehrkanalabtastung zu senken; nicht unterstützte Targets bleiben über den bestehenden `analogRead`-Fallback funktionsfähig.
+
+- 2026-05-06: API- und Telemetrieschicht folgen nun der neuen Sensorstruktur vollständig (`channels`, Temperaturparameter, Discovery pro Kanal).

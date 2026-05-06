@@ -59,6 +59,7 @@ function updateLive(status) {
   $('wifiPill').textContent = `WiFi: ${status.wifi ? 'ONLINE' : 'AP/OFFLINE'}`;
   $('mqttPill').textContent = `MQTT: ${status.mqtt ? 'ONLINE' : 'OFFLINE'}`;
   $('statePill').textContent = `State: ${state}`;
+  $('channelsLive').textContent = JSON.stringify(status.channels || {}, null, 2);
 }
 
 function drawHistory(entries) {
@@ -145,7 +146,17 @@ function fillConfig(cfg) {
   $('tempEnabled').checked = Boolean(cfg.sensor?.temperature?.enabled);
   $('tempPin').value = cfg.sensor?.temperature?.oneWirePin ?? 4;
   $('tempInterval').value = cfg.sensor?.temperature?.updateIntervalMs ?? 2000;
-  $('analogChannelsJson').value = JSON.stringify(cfg.sensor?.analogChannels || [{id:'pressure_main',adcPin:cfg.sensor.adcPin,pressureSource:true}]);
+  const channels = cfg.sensor?.analogChannels || [{id:'pressure_main',adcPin:cfg.sensor.adcPin,pressureSource:true}];
+  $('analogChannelsJson').value = JSON.stringify(channels, null, 2);
+  const sel = $('pressureSourceChannel');
+  sel.innerHTML = '';
+  channels.forEach((ch, idx) => {
+    const opt = document.createElement('option');
+    opt.value = String(idx);
+    opt.textContent = `${ch.id} (GPIO${ch.adcPin})`;
+    if (ch.pressureSource) opt.selected = true;
+    sel.appendChild(opt);
+  });
 
   $('wifiSsid').value = cfg.network.wifiSsid || '';
   $('wifiPassword').value = cfg.network.wifiPassword || '';
@@ -251,14 +262,18 @@ $('clearCalibration').onclick = async () => {
 
 $('saveSensor').onclick = async () => {
   try {
+    const channels = JSON.parse($('analogChannelsJson').value || '[]');
+    const pressureIdx = Number($('pressureSourceChannel').value || 0);
+    channels.forEach((c, i) => { c.pressureSource = i === pressureIdx; });
     await apiText('/api/config/sensor', 'POST', {
       adcPin: Number($('sensorAdcPin').value || 34), sampleCount: Number($('sensorSampleCount').value || 9),
       updateIntervalMs: Number($('sensorInterval').value || 100), disconnectAdc: Number($('sensorDisconnectAdc').value || 80),
       shortGndAdc: Number($('sensorShortGndAdc').value || 20), shortVccAdc: Number($('sensorShortVccAdc').value || 4070),
       maxJumpBar: Number($('sensorMaxJumpBar').value || 0.7),
-      analogChannels: JSON.parse($('analogChannelsJson').value || '[]'),
+      analogChannels: channels,
       temperature: { enabled: $('tempEnabled').checked, oneWirePin: Number($('tempPin').value || 4), updateIntervalMs: Number($('tempInterval').value || 2000) },
     });
+    await refreshConfig();
     toast('Sensor gespeichert');
   } catch (e) { toast(e.message, true); }
 };

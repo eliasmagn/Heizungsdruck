@@ -4,6 +4,16 @@
 #include <ArduinoJson.h>
 namespace {
 constexpr uint16_t kMqttBufferSize = 2048;
+String sanitizeId(const std::string &in) {
+  String out;
+  for (char c : in) {
+    const char lc = static_cast<char>(tolower(c));
+    if ((lc >= 'a' && lc <= 'z') || (lc >= '0' && lc <= '9') || lc == '_') out += lc;
+    else out += '_';
+  }
+  if (out.isEmpty()) out = "ch";
+  return out;
+}
 }
 
 MqttManager::MqttManager() : client_(wifiClient_) {}
@@ -99,6 +109,15 @@ void MqttManager::publishReading(const PressureReading &reading, PressureState s
   doc["voltage"] = reading.voltage;
   doc["temperatureC"] = reading.temperatureC;
   doc["temperatureValid"] = reading.temperatureValid;
+  JsonObject channels = doc["channels"].to<JsonObject>();
+  for (const auto &[id, raw] : reading.channelRaw) {
+    JsonObject c = channels[id.c_str()].to<JsonObject>();
+    c["rawAdc"] = raw;
+  }
+  for (const auto &[id, filtered] : reading.channelFiltered) {
+    JsonObject c = channels[id.c_str()].to<JsonObject>();
+    c["filteredAdc"] = filtered;
+  }
   doc["fault"] = static_cast<int>(reading.fault);
   doc["state"] = stateToString(state);
   doc["wifiConnected"] = wifiConnected;
@@ -244,6 +263,25 @@ void MqttManager::publishHomeAssistantDiscovery() {
   temp["dev_cla"] = "temperature";
   temp["stat_cla"] = "measurement";
   ok &= publishDiscoveryEntity("sensor", cleanId + "_temperature", String(cfg_.deviceId.c_str()) + " Temperatur", temp);
+
+  JsonDocument tempValid;
+  basePayload(tempValid, cleanId + "_temperature_valid");
+  tempValid["stat_t"] = topicTelemetry();
+  tempValid["val_tpl"] = "{{ value_json.temperatureValid }}";
+  tempValid["pl_on"] = true;
+  tempValid["pl_off"] = false;
+  ok &= publishDiscoveryEntity("binary_sensor", cleanId + "_temperature_valid",
+                               String(cfg_.deviceId.c_str()) + " Temperatur gültig", tempValid);
+
+  for (const auto &ch : cfg_.sensor.analogChannels) {
+    const String sid = sanitizeId(ch.id);
+    JsonDocument c;
+    basePayload(c, cleanId + "_adc_" + sid);
+    c["stat_t"] = topicTelemetry();
+    c["val_tpl"] = "{{ value_json.channels['" + String(ch.id.c_str()) + "'].filteredAdc }}";
+    c["stat_cla"] = "measurement";
+    ok &= publishDiscoveryEntity("sensor", cleanId + "_adc_" + sid, String(cfg_.deviceId.c_str()) + " ADC " + String(ch.id.c_str()), c);
+  }
 
   JsonDocument valid;
   basePayload(valid, cleanId + "_valid"); valid["stat_t"] = topicTelemetry(); valid["val_tpl"] = "{{ value_json.valid }}";

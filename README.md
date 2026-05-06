@@ -137,5 +137,25 @@ Verfügbarkeit läuft über `<topicBase>/status` (`online`/`offline`).
 - Mehrere analoge Kanäle über `sensor.analogChannels` (Liste mit `id`, `adcPin`, `pressureSource`).
 - Druckpfad bleibt kompatibel (`pressureBar`, `rawAdc`, `filteredAdc`, `state`).
 - DS18B20-Unterstützung über `sensor.temperature` (`enabled`, `oneWirePin`, `updateIntervalMs`).
-- ADC-Erfassung bewusst ohne ESP-IDF-Continuous-DMA: robuste Round-Robin-Sample-Batches pro Kanal mit Median/Trimmed-Mean.
+- ADC-Erfassung nutzt jetzt bevorzugt ESP-IDF Continuous ADC (DMA) pro Kanal; falls nicht verfügbar, wird automatisch auf analogRead-Batches mit robustem Filter zurückgefallen.
 - MQTT ergänzt um `voltage`, `temperatureC`, `temperatureValid`; HA Discovery ergänzt um Spannung/Temperatur-Entitäten.
+
+
+### Sensor-Telemetrie (MQTT)
+`<topicBase>/telemetry` enthält jetzt zusätzlich:
+- `voltage`, `temperatureC`, `temperatureValid`
+- `channels`-Objekt mit Kanal-ID als Schlüssel, je Kanal `rawAdc`/`filteredAdc`
+
+### Home Assistant Discovery (erweitert)
+Zusätzlich zu Druck/State/ADC/Valid/Alarm werden jetzt publiziert:
+- Spannung: `..._voltage`
+- Temperatur: `..._temperature`
+- Temperatur gültig (Binary): `..._temperature_valid`
+- Pro konfiguriertem Analogkanal ein zusätzlicher ADC-Sensor: `..._adc_<kanalId>` (gefilterter Wert)
+
+### Sensor-Konfiguration in der Web-UI
+Im Tab **Einstellungen → Sensor**:
+- `analogChannels` als JSON-Liste editierbar
+- Druckkanal explizit über Dropdown wählbar
+- Temperatur-Support per `enabled`, `oneWirePin`, `updateIntervalMs` konfigurierbar
+- Live-Tab zeigt zusätzlich das `channels`-Objekt aus `/api/status`
