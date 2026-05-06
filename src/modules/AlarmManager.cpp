@@ -28,7 +28,11 @@ void AlarmManager::attachConfigSaver(bool (*saveFn)(const AppConfig &)) { saveCo
 bool AlarmManager::isAlarmState(PressureState s) const { return s == PressureState::PRESSURE_LOW || s == PressureState::PRESSURE_HIGH || s == PressureState::SENSOR_FAULT; }
 
 AlarmDispatchResult AlarmManager::sendTelegramMessage(const String &text) const {
-  if (cfg_.alarm.telegramBotToken.empty() || cfg_.alarm.telegramChatId.empty()) return {false, 0, "telegram config missing"};
+  if (cfg_.alarm.telegramBotToken.empty() || cfg_.alarm.telegramChatId.empty()) {
+    Serial.println("[Alarm][Telegram] missing config: token/chat-id");
+    lastTelegramResult_ = {false, 0, "telegram config missing"};
+    return lastTelegramResult_;
+  }
   const String url = "https://api.telegram.org/bot" + String(cfg_.alarm.telegramBotToken.c_str()) + "/sendMessage";
   JsonDocument payload; payload["chat_id"] = cfg_.alarm.telegramChatId.c_str(); payload["text"] = text;
   String body; serializeJson(payload, body);
@@ -36,10 +40,17 @@ AlarmDispatchResult AlarmManager::sendTelegramMessage(const String &text) const 
     HTTPClient http; http.setTimeout(6000); http.begin(url); http.addHeader("Content-Type", "application/json");
     const int code = http.POST(body); String resp = http.getString(); http.end();
     Serial.printf("[Alarm][Telegram] attempt=%d status=%d response=%s\n", attempt, code, resp.c_str());
-    if (code >= 200 && code < 300) return {true, code, resp};
-    if (code > 0) return {false, code, resp};
+    if (code >= 200 && code < 300) {
+      lastTelegramResult_ = {true, code, resp};
+      return lastTelegramResult_;
+    }
+    if (code > 0) {
+      lastTelegramResult_ = {false, code, resp};
+      return lastTelegramResult_;
+    }
   }
-  return {false, -1, "network/TLS/API request failed"};
+  lastTelegramResult_ = {false, -1, "network/TLS/API request failed"};
+  return lastTelegramResult_;
 }
 
 AlarmDispatchResult AlarmManager::sendWebhookTest(const PressureReading &reading, PressureState state, const String &event) const {

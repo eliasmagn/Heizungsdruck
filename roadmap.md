@@ -43,3 +43,6 @@
 - 2026-05-02: Telegram-Command-Polling mit Runtime-Kommandos ergänzt.
 
 - 2026-05-06: Telegram /saveconfig live gesetzt (Runtime->persistent).
+
+- 2026-05-06: MQTT-Diagnosepfad mit Publish-Validierung und Web-Diagnose (`mqttDiag`) ergänzt.
+- 2026-05-06: Telegram-Diagnosezustand (`telegramDiag`) in /api/diag ergänzt.

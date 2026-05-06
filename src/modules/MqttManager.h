@@ -13,6 +13,7 @@ class MqttManager {
   void loop(uint32_t nowMs);
   void publishReading(const PressureReading &reading, PressureState state, bool wifiConnected, uint32_t uptimeSec);
   bool connected() { return client_.connected(); }
+  String diagnosticsJson() const;
 
  private:
   void reconnect(uint32_t nowMs);
@@ -23,4 +24,8 @@ class MqttManager {
   PubSubClient client_;
   uint32_t lastReconnectTryMs_{0};
   uint32_t lastPublishMs_{0};
+  int lastClientState_{0};
+  String lastError_;
+  String lastPublishTopic_;
+  size_t lastPublishPayloadLen_{0};
 };

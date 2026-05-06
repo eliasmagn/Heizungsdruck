@@ -302,6 +302,7 @@ void setup() {
   gWeb.attachHistory(&gHistory);
   gWeb.attachWireGuardManager(&gWireGuard);
   gWeb.attachAlarmManager(&gAlarm);
+  gWeb.attachMqttManager(&gMqtt);
   gWireGuard.begin(gConfig.wireguard);
   gWeb.begin();
 }

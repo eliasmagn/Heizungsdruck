@@ -77,3 +77,6 @@
 - [x] Telegram-Kommandos via getUpdates implementiert und dokumentiert
 
 - [x] Telegram-Kommando /saveconfig ergänzt und an Config-Speicher gekoppelt
+
+- [x] 2026-05-06: MQTT-Diagnostik erweitert (Publish-Rückgaben, Buffergröße, Fehler-/State-Logging, /api/diag mqttDiag)
+- [x] 2026-05-06: Kalibrierpunkte im UI jetzt echt löschbar (remove statt valid=false)

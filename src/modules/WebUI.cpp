@@ -35,6 +35,7 @@ void WebUI::attachHistory(PressureHistory *history) { history_ = history; }
 void WebUI::attachWireGuardManager(WireGuardManager *wireguard) { wireguard_ = wireguard; }
 
 void WebUI::attachAlarmManager(AlarmManager *alarmManager) { alarmManager_ = alarmManager; }
+void WebUI::attachMqttManager(MqttManager *mqttManager) { mqttManager_ = mqttManager; }
 
 String WebUI::statusJson() const {
   JsonDocument doc;
@@ -91,6 +92,17 @@ String WebUI::diagnosticsJson() const {
   doc["wifiRssi"] = WiFi.RSSI();
   doc["wifiIp"] = WiFi.localIP().toString();
   doc["apIp"] = WiFi.softAPIP().toString();
+  if (mqttManager_ != nullptr) {
+    JsonDocument mqttDoc;
+    if (!deserializeJson(mqttDoc, mqttManager_->diagnosticsJson())) doc["mqttDiag"] = mqttDoc.as<JsonVariantConst>();
+  }
+  if (alarmManager_ != nullptr) {
+    const AlarmDispatchResult tg = alarmManager_->lastTelegramResult();
+    JsonObject t = doc["telegramDiag"].to<JsonObject>();
+    t["ok"] = tg.ok;
+    t["httpStatus"] = tg.httpStatus;
+    t["detail"] = tg.detail;
+  }
   if (wireguard_ != nullptr) {
     const WireGuardStatus wg = wireguard_->status();
     JsonObject w = doc["wireguard"].to<JsonObject>();

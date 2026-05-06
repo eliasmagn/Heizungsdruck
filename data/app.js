@@ -124,8 +124,7 @@ function renderCalibrationRows() {
   rows.querySelectorAll('button[data-action="clear"]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const idx = Number(btn.dataset.i);
-      configCache.calib.points[idx].adc = 0;
-      configCache.calib.points[idx].valid = false;
+      configCache.calib.points.splice(idx, 1);
       renderCalibrationRows();
     });
   });
