@@ -20,11 +20,23 @@ std::string normalizeDeviceId(std::string deviceId) {
 }
 
 void initCalibrationPoints(CalibrationConfig &calib) { calib.points.clear(); }
+
+void ensureAnalogChannels(SensorConfig &sensor) {
+  if (sensor.analogChannels.empty()) {
+    AnalogChannelConfig ch;
+    ch.id = "pressure_main";
+    ch.adcPin = sensor.adcPin;
+    ch.pressureSource = true;
+    sensor.analogChannels.push_back(ch);
+  }
+}
+
 }  // namespace
 
 AppConfig defaultConfig() {
   AppConfig cfg{};
   initCalibrationPoints(cfg.calib);
+  ensureAnalogChannels(cfg.sensor);
   return cfg;
 }
 
@@ -37,6 +49,7 @@ bool AppConfig::validate(std::string &error) const {
     error = "updateIntervalMs must be in range 20..10000";
     return false;
   }
+  if (sensor.analogChannels.empty()) { error = "at least one analog channel required"; return false; }
   if (calib.adcLow >= calib.adcHigh) {
     error = "adcLow must be < adcHigh";
     return false;
@@ -119,6 +132,11 @@ bool AppConfig::validate(std::string &error) const {
     return false;
   }
   int validPointCount = 0;
+  bool hasPressureSource=false;
+  for (const auto &ch : sensor.analogChannels) {
+    if (ch.pressureSource) hasPressureSource=true;
+  }
+  if (!hasPressureSource) { error = "one analog channel must be pressureSource"; return false; }
   for (const auto &p : calib.points) {
     if (!p.valid) continue;
     if (p.adc < 0 || p.adc > sensor.adcMax) {

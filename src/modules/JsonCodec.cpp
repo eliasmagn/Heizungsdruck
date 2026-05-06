@@ -12,6 +12,16 @@ std::string configToJson(const AppConfig &cfg) {
   doc["sensor"]["shortGndAdc"] = cfg.sensor.shortGndAdc;
   doc["sensor"]["shortVccAdc"] = cfg.sensor.shortVccAdc;
   doc["sensor"]["maxJumpBar"] = cfg.sensor.maxJumpBar;
+  JsonArray channels = doc["sensor"]["analogChannels"].to<JsonArray>();
+  for (const auto &ch : cfg.sensor.analogChannels) {
+    JsonObject c = channels.add<JsonObject>();
+    c["id"] = ch.id;
+    c["adcPin"] = ch.adcPin;
+    c["pressureSource"] = ch.pressureSource;
+  }
+  doc["sensor"]["temperature"]["enabled"] = cfg.sensor.temperature.enabled;
+  doc["sensor"]["temperature"]["oneWirePin"] = cfg.sensor.temperature.oneWirePin;
+  doc["sensor"]["temperature"]["updateIntervalMs"] = cfg.sensor.temperature.updateIntervalMs;
 
   doc["calib"]["adcLow"] = cfg.calib.adcLow;
   doc["calib"]["adcHigh"] = cfg.calib.adcHigh;
@@ -94,6 +104,21 @@ bool configFromJson(const std::string &json, AppConfig &cfgOut, std::string &err
   setIfExists(s["shortGndAdc"], cfgOut.sensor.shortGndAdc);
   setIfExists(s["shortVccAdc"], cfgOut.sensor.shortVccAdc);
   setIfExists(s["maxJumpBar"], cfgOut.sensor.maxJumpBar);
+  JsonArrayConst channels = s["analogChannels"].as<JsonArrayConst>();
+  if (!channels.isNull()) {
+    cfgOut.sensor.analogChannels.clear();
+    for (JsonObjectConst ch : channels) {
+      AnalogChannelConfig c;
+      setIfExists(ch["id"], c.id);
+      setIfExists(ch["adcPin"], c.adcPin);
+      setIfExists(ch["pressureSource"], c.pressureSource);
+      cfgOut.sensor.analogChannels.push_back(c);
+    }
+  }
+  JsonVariantConst t = s["temperature"];
+  setIfExists(t["enabled"], cfgOut.sensor.temperature.enabled);
+  setIfExists(t["oneWirePin"], cfgOut.sensor.temperature.oneWirePin);
+  setIfExists(t["updateIntervalMs"], cfgOut.sensor.temperature.updateIntervalMs);
 
   JsonVariantConst c = doc["calib"];
   setIfExists(c["adcLow"], cfgOut.calib.adcLow);

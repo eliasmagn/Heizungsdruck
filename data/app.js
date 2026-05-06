@@ -50,6 +50,7 @@ function updateLive(status) {
   $('adcRawValue').textContent = String(status.rawAdc ?? '--');
   $('voltageValue').textContent = `${Number(status.voltage || 0).toFixed(3)} V`;
   $('uptimeValue').textContent = `${Math.floor(Number(status.uptimeSec || 0) / 60)} min`;
+  $('temperatureValue').textContent = status.temperatureValid ? `${Number(status.temperatureC || 0).toFixed(2)} °C` : '--';
   $('calibLiveAdc').textContent = String(status.filteredAdc ?? '--');
 
   $('pressureFill').style.width = `${Math.max(0, Math.min(100, (bar / 3) * 100))}%`;
@@ -141,6 +142,10 @@ function fillConfig(cfg) {
   $('sensorShortGndAdc').value = cfg.sensor.shortGndAdc;
   $('sensorShortVccAdc').value = cfg.sensor.shortVccAdc;
   $('sensorMaxJumpBar').value = cfg.sensor.maxJumpBar;
+  $('tempEnabled').checked = Boolean(cfg.sensor?.temperature?.enabled);
+  $('tempPin').value = cfg.sensor?.temperature?.oneWirePin ?? 4;
+  $('tempInterval').value = cfg.sensor?.temperature?.updateIntervalMs ?? 2000;
+  $('analogChannelsJson').value = JSON.stringify(cfg.sensor?.analogChannels || [{id:'pressure_main',adcPin:cfg.sensor.adcPin,pressureSource:true}]);
 
   $('wifiSsid').value = cfg.network.wifiSsid || '';
   $('wifiPassword').value = cfg.network.wifiPassword || '';
@@ -251,6 +256,8 @@ $('saveSensor').onclick = async () => {
       updateIntervalMs: Number($('sensorInterval').value || 100), disconnectAdc: Number($('sensorDisconnectAdc').value || 80),
       shortGndAdc: Number($('sensorShortGndAdc').value || 20), shortVccAdc: Number($('sensorShortVccAdc').value || 4070),
       maxJumpBar: Number($('sensorMaxJumpBar').value || 0.7),
+      analogChannels: JSON.parse($('analogChannelsJson').value || '[]'),
+      temperature: { enabled: $('tempEnabled').checked, oneWirePin: Number($('tempPin').value || 4), updateIntervalMs: Number($('tempInterval').value || 2000) },
     });
     toast('Sensor gespeichert');
   } catch (e) { toast(e.message, true); }

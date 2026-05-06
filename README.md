@@ -131,3 +131,11 @@ Verfügbarkeit läuft über `<topicBase>/status` (`online`/`offline`).
 3. Im Broker prüfen, ob Discovery-Topics retained vorhanden sind.
 4. In Home Assistant unter MQTT-Integration neue Geräte prüfen.
 5. Testweise `/api/test/mqtt` auslösen und `telemetry_test` je Gerät prüfen.
+
+
+## Sensor-Stack Ausbau (Mai 2026)
+- Mehrere analoge Kanäle über `sensor.analogChannels` (Liste mit `id`, `adcPin`, `pressureSource`).
+- Druckpfad bleibt kompatibel (`pressureBar`, `rawAdc`, `filteredAdc`, `state`).
+- DS18B20-Unterstützung über `sensor.temperature` (`enabled`, `oneWirePin`, `updateIntervalMs`).
+- ADC-Erfassung bewusst ohne ESP-IDF-Continuous-DMA: robuste Round-Robin-Sample-Batches pro Kanal mit Median/Trimmed-Mean.
+- MQTT ergänzt um `voltage`, `temperatureC`, `temperatureValid`; HA Discovery ergänzt um Spannung/Temperatur-Entitäten.

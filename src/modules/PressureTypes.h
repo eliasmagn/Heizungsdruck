@@ -26,4 +26,6 @@ struct PressureReading {
   float pressureBar{0.0f};
   bool valid{false};
   SensorFault fault{SensorFault::NONE};
+  float temperatureC{0.0f};
+  bool temperatureValid{false};
 };

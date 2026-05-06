@@ -44,6 +44,8 @@ String WebUI::statusJson() const {
   doc["filteredAdc"] = lastReading_.filteredAdc;
   doc["voltage"] = lastReading_.voltage;
   doc["valid"] = lastReading_.valid;
+  doc["temperatureC"] = lastReading_.temperatureC;
+  doc["temperatureValid"] = lastReading_.temperatureValid;
   doc["fault"] = static_cast<int>(lastReading_.fault);
   doc["state"] = static_cast<int>(lastState_);
   doc["wifi"] = wifiConnected_;
@@ -220,6 +222,23 @@ void WebUI::setupRoutes() {
     if (!doc["shortGndAdc"].isNull()) candidate.sensor.shortGndAdc = doc["shortGndAdc"].as<int>();
     if (!doc["shortVccAdc"].isNull()) candidate.sensor.shortVccAdc = doc["shortVccAdc"].as<int>();
     if (!doc["maxJumpBar"].isNull()) candidate.sensor.maxJumpBar = doc["maxJumpBar"].as<float>();
+    JsonArrayConst channels = doc["analogChannels"].as<JsonArrayConst>();
+    if (!channels.isNull()) {
+      candidate.sensor.analogChannels.clear();
+      for (JsonObjectConst ch : channels) {
+        AnalogChannelConfig c;
+        if (!ch["id"].isNull()) c.id = ch["id"].as<const char*>();
+        if (!ch["adcPin"].isNull()) c.adcPin = ch["adcPin"].as<uint8_t>();
+        if (!ch["pressureSource"].isNull()) c.pressureSource = ch["pressureSource"].as<bool>();
+        candidate.sensor.analogChannels.push_back(c);
+      }
+    }
+    JsonVariantConst t = doc["temperature"];
+    if (!t.isNull()) {
+      if (!t["enabled"].isNull()) candidate.sensor.temperature.enabled = t["enabled"].as<bool>();
+      if (!t["oneWirePin"].isNull()) candidate.sensor.temperature.oneWirePin = t["oneWirePin"].as<uint8_t>();
+      if (!t["updateIntervalMs"].isNull()) candidate.sensor.temperature.updateIntervalMs = t["updateIntervalMs"].as<uint32_t>();
+    }
     String outErr;
     if (!saveUpdatedConfig(candidate, outErr)) return server_.send(400, "text/plain", outErr);
     server_.send(200, "text/plain", "sensor saved");

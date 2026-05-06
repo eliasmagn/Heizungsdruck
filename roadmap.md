@@ -55,3 +55,9 @@
 
 - 2026-05-06: MQTT-Fehlersuche erweitert: manueller Testpublish und Publish-Erfolgszähler in Diagnose.
 - 2026-05-06: Mehrgerätebetrieb (kreis1..kreis4) mit MQTT Discovery abgeschlossen.
+
+
+## Nächster Meilenstein abgeschlossen
+- Multisensor-Basis (analoge Kanal-Liste)
+- DS18B20-Basissupport
+- MQTT/Discovery-Erweiterung um Temperatur+Spannung
