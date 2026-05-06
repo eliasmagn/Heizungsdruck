@@ -43,3 +43,14 @@
 - 2026-05-02: Telegram-Command-Polling mit Runtime-Kommandos ergänzt.
 
 - 2026-05-06: Telegram /saveconfig live gesetzt (Runtime->persistent).
+
+- 2026-05-06: MQTT-Diagnosepfad mit Publish-Validierung und Web-Diagnose (`mqttDiag`) ergänzt.
+- 2026-05-06: Telegram-Diagnosezustand (`telegramDiag`) in /api/diag ergänzt.
+
+- 2026-05-06: Optionales MQTT-over-WireGuard-Gating (`requireWireguard`) umgesetzt.
+
+- 2026-05-06: MQTT-WireGuard-Betrieb auf Dual-Interface-Usecase angepasst (WG bevorzugt, Fallback aktiv).
+
+- 2026-05-06: WireGuard-Setup robuster: CIDR in localAddress wird toleriert (IP-Extraktion) und diagnostisch markiert.
+
+- 2026-05-06: MQTT-Fehlersuche erweitert: manueller Testpublish und Publish-Erfolgszähler in Diagnose.

@@ -35,6 +35,7 @@ void WebUI::attachHistory(PressureHistory *history) { history_ = history; }
 void WebUI::attachWireGuardManager(WireGuardManager *wireguard) { wireguard_ = wireguard; }
 
 void WebUI::attachAlarmManager(AlarmManager *alarmManager) { alarmManager_ = alarmManager; }
+void WebUI::attachMqttManager(MqttManager *mqttManager) { mqttManager_ = mqttManager; }
 
 String WebUI::statusJson() const {
   JsonDocument doc;
@@ -91,6 +92,17 @@ String WebUI::diagnosticsJson() const {
   doc["wifiRssi"] = WiFi.RSSI();
   doc["wifiIp"] = WiFi.localIP().toString();
   doc["apIp"] = WiFi.softAPIP().toString();
+  if (mqttManager_ != nullptr) {
+    JsonDocument mqttDoc;
+    if (!deserializeJson(mqttDoc, mqttManager_->diagnosticsJson())) doc["mqttDiag"] = mqttDoc.as<JsonVariantConst>();
+  }
+  if (alarmManager_ != nullptr) {
+    const AlarmDispatchResult tg = alarmManager_->lastTelegramResult();
+    JsonObject t = doc["telegramDiag"].to<JsonObject>();
+    t["ok"] = tg.ok;
+    t["httpStatus"] = tg.httpStatus;
+    t["detail"] = tg.detail;
+  }
   if (wireguard_ != nullptr) {
     const WireGuardStatus wg = wireguard_->status();
     JsonObject w = doc["wireguard"].to<JsonObject>();
@@ -236,6 +248,7 @@ void WebUI::setupRoutes() {
     if (!doc["password"].isNull()) candidate.mqtt.password = doc["password"].as<const char *>();
     if (!doc["topicBase"].isNull()) candidate.mqtt.topicBase = doc["topicBase"].as<const char *>();
     if (!doc["publishIntervalMs"].isNull()) candidate.mqtt.publishIntervalMs = doc["publishIntervalMs"].as<uint32_t>();
+    if (!doc["requireWireguard"].isNull()) candidate.mqtt.requireWireguard = doc["requireWireguard"].as<bool>();
     String outErr;
     if (!saveUpdatedConfig(candidate, outErr)) return server_.send(400, "text/plain", outErr);
     server_.send(200, "text/plain", "mqtt saved");
@@ -350,6 +363,13 @@ void WebUI::setupRoutes() {
     const auto result = alarmManager_->sendWebhookTest(lastReading_, lastState_, "test");
     if (!result.ok) return server_.send(502, "text/plain", String("webhook failed: status=") + result.httpStatus + " " + result.detail);
     server_.send(200, "text/plain", String("webhook ok: status=") + result.httpStatus + " " + result.detail);
+  });
+
+  server_.on("/api/test/mqtt", HTTP_POST, [this]() {
+    if (mqttManager_ == nullptr) return server_.send(500, "text/plain", "mqtt manager unavailable");
+    const bool ok = mqttManager_->publishTestMessage("manual webui test");
+    if (!ok) return server_.send(502, "text/plain", String("mqtt test failed: ") + mqttManager_->diagnosticsJson());
+    server_.send(200, "text/plain", String("mqtt test ok: ") + mqttManager_->diagnosticsJson());
   });
 
   server_.on("/api/wireguard/status", HTTP_GET, [this]() {

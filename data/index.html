@@ -142,6 +142,7 @@
           <label>Passwort<input id="mqttPassword" type="password"></label>
           <label>Topic Base<input id="mqttTopicBase" type="text"></label>
           <label>Publish Intervall ms<input id="mqttPublishInterval" type="number"></label>
+          <label class="inline-cb"><input id="mqttRequireWireguard" type="checkbox"> WireGuard für MQTT bevorzugen (Fallback aktiv)</label>
           <button id="saveMqtt">MQTT speichern</button>
         </article>
 
@@ -192,6 +193,7 @@
           <div class="actions">
             <button id="testTelegram">Telegram Test</button>
             <button id="testWebhook">Webhook Test</button>
+            <button id="testMqtt">MQTT Test Publish</button>
             <button id="rebootDevice">Neustart</button>
             <button id="refreshConfig">Config neu laden</button>
             <button id="saveAllConfig">Config komplett speichern</button>

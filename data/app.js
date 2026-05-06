@@ -124,8 +124,7 @@ function renderCalibrationRows() {
   rows.querySelectorAll('button[data-action="clear"]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const idx = Number(btn.dataset.i);
-      configCache.calib.points[idx].adc = 0;
-      configCache.calib.points[idx].valid = false;
+      configCache.calib.points.splice(idx, 1);
       renderCalibrationRows();
     });
   });
@@ -158,6 +157,7 @@ function fillConfig(cfg) {
   $('mqttPassword').value = cfg.mqtt.password || '';
   $('mqttTopicBase').value = cfg.mqtt.topicBase || 'heizungsdruck';
   $('mqttPublishInterval').value = cfg.mqtt.publishIntervalMs || 10000;
+  $('mqttRequireWireguard').checked = Boolean(cfg.mqtt.requireWireguard);
 
   $('alarmLow').value = cfg.alarm.lowBar;
   $('alarmHigh').value = cfg.alarm.highBar;
@@ -269,7 +269,7 @@ $('wifiSsidSelect').onchange = () => {
   if ($('wifiSsidSelect').value) $('wifiSsid').value = $('wifiSsidSelect').value;
 };
 $('saveMqtt').onclick = async () => {
-  try { await apiText('/api/config/mqtt', 'POST', {enabled: $('mqttEnabled').checked, host: $('mqttHost').value, port: Number($('mqttPort').value || 1883), username: $('mqttUser').value, password: $('mqttPassword').value, topicBase: $('mqttTopicBase').value, publishIntervalMs: Number($('mqttPublishInterval').value || 10000)}); toast('MQTT gespeichert'); }
+  try { await apiText('/api/config/mqtt', 'POST', {enabled: $('mqttEnabled').checked, host: $('mqttHost').value, port: Number($('mqttPort').value || 1883), username: $('mqttUser').value, password: $('mqttPassword').value, topicBase: $('mqttTopicBase').value, publishIntervalMs: Number($('mqttPublishInterval').value || 10000), requireWireguard: $('mqttRequireWireguard').checked}); toast('MQTT gespeichert'); }
   catch (e) { toast(e.message, true); }
 };
 $('saveAlarm').onclick = async () => {
@@ -287,6 +287,7 @@ $('wgDisable').onclick = async () => { try { $('wgOutput').textContent = await a
 
 $('testTelegram').onclick = async () => { try { toast(await apiText('/api/test/telegram', 'POST', {})); } catch (e) { toast(e.message, true); } };
 $('testWebhook').onclick = async () => { try { toast(await apiText('/api/test/webhook', 'POST', {})); } catch (e) { toast(e.message, true); } };
+$('testMqtt').onclick = async () => { try { toast(await apiText('/api/test/mqtt', 'POST', {})); } catch (e) { toast(e.message, true); } };
 $('rebootDevice').onclick = async () => { try { await apiText('/api/reboot', 'POST', {}); toast('Neustart ausgelöst'); } catch (e) { toast(e.message, true); } };
 $('refreshConfig').onclick = async () => { try { await refreshConfig(); toast('Config geladen'); } catch (e) { toast(e.message, true); } };
 $('saveAllConfig').onclick = async () => {
@@ -312,6 +313,7 @@ $('saveAllConfig').onclick = async () => {
     configCache.mqtt.password = $('mqttPassword').value;
     configCache.mqtt.topicBase = $('mqttTopicBase').value;
     configCache.mqtt.publishIntervalMs = Number($('mqttPublishInterval').value || 10000);
+    configCache.mqtt.requireWireguard = $('mqttRequireWireguard').checked;
     configCache.alarm.lowBar = Number($('alarmLow').value || 1);
     configCache.alarm.highBar = Number($('alarmHigh').value || 2.2);
     configCache.alarm.hysteresisBar = Number($('alarmHysteresis').value || 0.1);

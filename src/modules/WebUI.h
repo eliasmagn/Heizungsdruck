@@ -4,6 +4,7 @@
 
 #include "AlarmManager.h"
 #include "AppConfig.h"
+#include "MqttManager.h"
 #include "PressureHistory.h"
 #include "PressureTypes.h"
 #include "WireGuardManager.h"
@@ -21,6 +22,7 @@ class WebUI {
   void attachHistory(PressureHistory *history);
   void attachWireGuardManager(WireGuardManager *wireguard);
   void attachAlarmManager(AlarmManager *alarmManager);
+  void attachMqttManager(MqttManager *mqttManager);
 
  private:
   String statusJson() const;
@@ -42,4 +44,5 @@ class WebUI {
   PressureHistory *history_{nullptr};
   WireGuardManager *wireguard_{nullptr};
   AlarmManager *alarmManager_{nullptr};
+  MqttManager *mqttManager_{nullptr};
 };
