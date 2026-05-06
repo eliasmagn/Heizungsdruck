@@ -2,6 +2,7 @@
 
 #include <WebServer.h>
 
+#include "AlarmManager.h"
 #include "AppConfig.h"
 #include "PressureHistory.h"
 #include "PressureTypes.h"
@@ -19,6 +20,7 @@ class WebUI {
   void attachConfig(AppConfig *cfg, bool (*saveFn)(const AppConfig &));
   void attachHistory(PressureHistory *history);
   void attachWireGuardManager(WireGuardManager *wireguard);
+  void attachAlarmManager(AlarmManager *alarmManager);
 
  private:
   String statusJson() const;
@@ -39,4 +41,5 @@ class WebUI {
   bool (*saveConfig_)(const AppConfig &) = nullptr;
   PressureHistory *history_{nullptr};
   WireGuardManager *wireguard_{nullptr};
+  AlarmManager *alarmManager_{nullptr};
 };

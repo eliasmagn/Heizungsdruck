@@ -63,3 +63,9 @@ Für die Zielsetzung gilt explizit: **eigene Firmware + eigene Webapp mit Platfo
 - WLAN-Protokollumschaltung nutzt direkt `esp_wifi_set_protocol(WIFI_IF_STA, ...)`, damit der Build mit `framework-arduinoespressif32 @ 3.20017.x` kompatibel bleibt.
 
 - IDF-spezifischer WLAN-Protokollaufruf ist bewusst in einer lokalen Helper-Funktion gekapselt, um den Arduino-Hauptpfad sauber zu halten.
+
+- 2026-05-01: Kalibrierung auf freie max.20 Punkte umgestellt, Telegram-Pfad zentralisiert, SPA-only bestätigt.
+
+- 2026-05-02: Telegram-Bot-Kommandos (/start, /getpres, /setoffset, /setcalpoint) ergänzt.
+
+- 2026-05-06: Telegram-Kommando /saveconfig ergänzt (persistiert Runtime-Änderungen).

@@ -1,7 +1,6 @@
 #include "WebUI.h"
 
 #include <ArduinoJson.h>
-#include <HTTPClient.h>
 #include <LittleFS.h>
 #include <WiFi.h>
 
@@ -34,6 +33,8 @@ void WebUI::attachConfig(AppConfig *cfg, bool (*saveFn)(const AppConfig &)) {
 void WebUI::attachHistory(PressureHistory *history) { history_ = history; }
 
 void WebUI::attachWireGuardManager(WireGuardManager *wireguard) { wireguard_ = wireguard; }
+
+void WebUI::attachAlarmManager(AlarmManager *alarmManager) { alarmManager_ = alarmManager; }
 
 String WebUI::statusJson() const {
   JsonDocument doc;
@@ -299,13 +300,14 @@ void WebUI::setupRoutes() {
     if (!cv["offsetBar"].isNull()) candidate.calib.offsetBar = cv["offsetBar"].as<float>();
     JsonArrayConst points = cv["points"].as<JsonArrayConst>();
     if (!points.isNull()) {
-      size_t idx = 0;
+      candidate.calib.points.clear();
       for (JsonObjectConst point : points) {
-        if (idx >= candidate.calib.points.size()) break;
-        if (!point["bar"].isNull()) candidate.calib.points[idx].bar = point["bar"].as<float>();
-        if (!point["adc"].isNull()) candidate.calib.points[idx].adc = point["adc"].as<int>();
-        if (!point["valid"].isNull()) candidate.calib.points[idx].valid = point["valid"].as<bool>();
-        ++idx;
+        if (candidate.calib.points.size() >= CalibrationConfig::kMaxPointCount) break;
+        CalibrationConfig::Point p;
+        if (!point["bar"].isNull()) p.bar = point["bar"].as<float>();
+        if (!point["adc"].isNull()) p.adc = point["adc"].as<int>();
+        if (!point["valid"].isNull()) p.valid = point["valid"].as<bool>();
+        candidate.calib.points.push_back(p);
       }
     }
     String outErr;
@@ -320,13 +322,8 @@ void WebUI::setupRoutes() {
     if (deserializeJson(doc, server_.arg("plain"))) return server_.send(400, "text/plain", "invalid json");
     const float bar = doc["bar"].as<float>();
     if (bar < 0.0f || bar > 10.0f) return server_.send(400, "text/plain", "bar must be 0..10");
-    const int idx = static_cast<int>(bar * 2.0f + 0.5f);
-    if (idx < 0 || idx >= static_cast<int>(candidate.calib.points.size())) {
-      return server_.send(400, "text/plain", "bar index out of range");
-    }
-    candidate.calib.points[idx].bar = static_cast<float>(idx) * 0.5f;
-    candidate.calib.points[idx].adc = lastReading_.filteredAdc;
-    candidate.calib.points[idx].valid = true;
+    if (candidate.calib.points.size() >= CalibrationConfig::kMaxPointCount) return server_.send(400, "text/plain", "max 20 calibration points");
+    candidate.calib.points.push_back({bar, lastReading_.filteredAdc, true});
     String outErr;
     if (!saveUpdatedConfig(candidate, outErr)) return server_.send(400, "text/plain", outErr);
     server_.send(200, "text/plain", "captured");
@@ -335,61 +332,24 @@ void WebUI::setupRoutes() {
   server_.on("/api/calibration/clear", HTTP_POST, [this]() {
     if (!cfg_) return server_.send(500, "text/plain", "config unavailable");
     AppConfig candidate = *cfg_;
-    for (size_t i = 0; i < candidate.calib.points.size(); ++i) {
-      candidate.calib.points[i].bar = static_cast<float>(i) * 0.5f;
-      candidate.calib.points[i].adc = 0;
-      candidate.calib.points[i].valid = false;
-    }
+    candidate.calib.points.clear();
     String outErr;
     if (!saveUpdatedConfig(candidate, outErr)) return server_.send(400, "text/plain", outErr);
     server_.send(200, "text/plain", "cleared");
   });
 
   server_.on("/api/test/telegram", HTTP_POST, [this]() {
-    if (!cfg_) return server_.send(500, "text/plain", "config unavailable");
-    if (cfg_->alarm.telegramBotToken.empty() || cfg_->alarm.telegramChatId.empty()) {
-      return server_.send(400, "text/plain", "telegram config missing");
-    }
-    HTTPClient http;
-    const String url = "https://api.telegram.org/bot" + String(cfg_->alarm.telegramBotToken.c_str()) + "/sendMessage";
-    JsonDocument payload;
-    payload["chat_id"] = cfg_->alarm.telegramChatId.c_str();
-    payload["text"] = "Heizungsdruck test alarm.";
-    String body;
-    serializeJson(payload, body);
-    http.begin(url);
-    http.addHeader("Content-Type", "application/json");
-    const int code = http.POST(body);
-    String resp = http.getString();
-    http.end();
-    if (code < 200 || code >= 300) {
-      return server_.send(502, "text/plain", String("telegram failed: ") + code + " " + resp);
-    }
-    server_.send(200, "text/plain", "telegram test sent");
+    if (!cfg_ || alarmManager_ == nullptr) return server_.send(500, "text/plain", "alarm manager unavailable");
+    const auto result = alarmManager_->sendTelegramMessage("Heizungsdruck test alarm.");
+    if (!result.ok) return server_.send(502, "text/plain", String("telegram failed: status=") + result.httpStatus + " " + result.detail);
+    server_.send(200, "text/plain", String("telegram ok: status=") + result.httpStatus + " " + result.detail);
   });
 
   server_.on("/api/test/webhook", HTTP_POST, [this]() {
-    if (!cfg_) return server_.send(500, "text/plain", "config unavailable");
-    if (cfg_->alarm.emailWebhookUrl.empty()) {
-      return server_.send(400, "text/plain", "webhook url missing");
-    }
-    HTTPClient http;
-    http.begin(cfg_->alarm.emailWebhookUrl.c_str());
-    http.addHeader("Content-Type", "application/json");
-    JsonDocument payload;
-    payload["device"] = cfg_->network.hostname.c_str();
-    payload["pressureBar"] = lastReading_.pressureBar;
-    payload["state"] = static_cast<int>(lastState_);
-    payload["kind"] = "test";
-    String body;
-    serializeJson(payload, body);
-    const int code = http.POST(body);
-    String resp = http.getString();
-    http.end();
-    if (code < 200 || code >= 300) {
-      return server_.send(502, "text/plain", String("webhook failed: ") + code + " " + resp);
-    }
-    server_.send(200, "text/plain", "webhook test sent");
+    if (!cfg_ || alarmManager_ == nullptr) return server_.send(500, "text/plain", "alarm manager unavailable");
+    const auto result = alarmManager_->sendWebhookTest(lastReading_, lastState_, "test");
+    if (!result.ok) return server_.send(502, "text/plain", String("webhook failed: status=") + result.httpStatus + " " + result.detail);
+    server_.send(200, "text/plain", String("webhook ok: status=") + result.httpStatus + " " + result.detail);
   });
 
   server_.on("/api/wireguard/status", HTTP_GET, [this]() {

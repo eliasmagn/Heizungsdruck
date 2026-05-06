@@ -93,13 +93,7 @@ async function refreshHistory() {
 }
 
 function normalizeCalibrationPoints(points = []) {
-  const out = [];
-  for (let i = 0; i <= 20; i += 1) {
-    const bar = Number((i * 0.5).toFixed(1));
-    const existing = points[i] || {};
-    out.push({bar, adc: Number(existing.adc || 0), valid: Boolean(existing.valid)});
-  }
-  return out;
+  return (points || []).slice(0, 20).map((p) => ({bar: Number(p.bar || 0), adc: Number(p.adc || 0), valid: Boolean(p.valid)}));
 }
 
 function renderCalibrationRows() {
@@ -108,7 +102,7 @@ function renderCalibrationRows() {
   configCache.calib.points.forEach((point, idx) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${point.bar.toFixed(1)}</td>
+      <td><input data-i="${idx}" data-k="bar" type="number" step="0.1" value="${point.bar}"></td>
       <td><input data-i="${idx}" data-k="adc" type="number" value="${point.adc}"></td>
       <td><input data-i="${idx}" data-k="valid" type="checkbox" ${point.valid ? 'checked' : ''}></td>
       <td><button type="button" data-i="${idx}" data-action="clear">Löschen</button></td>`;
@@ -120,8 +114,10 @@ function renderCalibrationRows() {
       const idx = Number(input.dataset.i);
       if (input.dataset.k === 'valid') {
         configCache.calib.points[idx].valid = input.checked;
-      } else {
+      } else if (input.dataset.k === 'adc') {
         configCache.calib.points[idx].adc = Number(input.value || 0);
+      } else {
+        configCache.calib.points[idx].bar = Number(input.value || 0);
       }
     });
   });
@@ -372,3 +368,10 @@ async function pollStatus() {
   setInterval(refreshHistory, 5000);
   setInterval(refreshDiag, 4000);
 })();
+
+
+$("addCalibrationPoint").onclick = () => {
+  if (!configCache || configCache.calib.points.length >= 20) return toast("Maximal 20 Punkte", true);
+  configCache.calib.points.push({bar: 0, adc: 0, valid: false});
+  renderCalibrationRows();
+};

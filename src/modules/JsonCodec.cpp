@@ -19,11 +19,11 @@ std::string configToJson(const AppConfig &cfg) {
   doc["calib"]["barHigh"] = cfg.calib.barHigh;
   doc["calib"]["offsetBar"] = cfg.calib.offsetBar;
   JsonArray points = doc["calib"]["points"].to<JsonArray>();
-  for (const auto &p : cfg.calib.points) {
+  for (const auto &point : cfg.calib.points) {
     JsonObject item = points.add<JsonObject>();
-    item["bar"] = p.bar;
-    item["adc"] = p.adc;
-    item["valid"] = p.valid;
+    item["bar"] = point.bar;
+    item["adc"] = point.adc;
+    item["valid"] = point.valid;
   }
 
   doc["alarm"]["lowBar"] = cfg.alarm.lowBar;
@@ -101,13 +101,14 @@ bool configFromJson(const std::string &json, AppConfig &cfgOut, std::string &err
   setIfExists(c["offsetBar"], cfgOut.calib.offsetBar);
   JsonArrayConst points = c["points"].as<JsonArrayConst>();
   if (!points.isNull()) {
-    size_t idx = 0;
+    cfgOut.calib.points.clear();
     for (JsonObjectConst point : points) {
-      if (idx >= cfgOut.calib.points.size()) break;
-      setIfExists(point["bar"], cfgOut.calib.points[idx].bar);
-      setIfExists(point["adc"], cfgOut.calib.points[idx].adc);
-      setIfExists(point["valid"], cfgOut.calib.points[idx].valid);
-      ++idx;
+      if (cfgOut.calib.points.size() >= CalibrationConfig::kMaxPointCount) break;
+      CalibrationConfig::Point p;
+      setIfExists(point["bar"], p.bar);
+      setIfExists(point["adc"], p.adc);
+      setIfExists(point["valid"], p.valid);
+      cfgOut.calib.points.push_back(p);
     }
   }
 

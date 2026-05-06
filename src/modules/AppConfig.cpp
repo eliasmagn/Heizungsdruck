@@ -1,13 +1,7 @@
 #include "AppConfig.h"
 
 namespace {
-void initCalibrationPoints(CalibrationConfig &calib) {
-  for (size_t i = 0; i < calib.points.size(); ++i) {
-    calib.points[i].bar = static_cast<float>(i) * 0.5f;
-    calib.points[i].adc = 0;
-    calib.points[i].valid = false;
-  }
-}
+void initCalibrationPoints(CalibrationConfig &calib) { calib.points.clear(); }
 }  // namespace
 
 AppConfig defaultConfig() {
@@ -79,19 +73,17 @@ bool AppConfig::validate(std::string &error) const {
       return false;
     }
   }
+  if (calib.points.size() > CalibrationConfig::kMaxPointCount) {
+    error = "too many calibration points";
+    return false;
+  }
   int validPointCount = 0;
-  int lastAdc = -1;
   for (const auto &p : calib.points) {
     if (!p.valid) continue;
     if (p.adc < 0 || p.adc > sensor.adcMax) {
       error = "calibration point adc out of range";
       return false;
     }
-    if (lastAdc >= 0 && p.adc < lastAdc) {
-      error = "calibration points must be monotonic by bar index";
-      return false;
-    }
-    lastAdc = p.adc;
     ++validPointCount;
   }
   if (validPointCount == 1) {
