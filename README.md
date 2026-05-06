@@ -94,3 +94,40 @@ Hinweis WireGuard:
 - Mit `requireWireguard=true` wird WireGuard für MQTT bevorzugt und der Tunnelstatus diagnostisch geloggt; wenn der Tunnel offline ist, bleibt Fallback-Routing aktiv.
 - Für echte Tunnel-Nutzung als MQTT-Host eine Adresse aus dem Tunnelnetz verwenden und `Allowed IPs` passend setzen.
 - Zusätzlicher Funktionstest: Im Diagnose-Tab **MQTT Test Publish** ausführen (publisht auf `<topicBase>/telemetry_test`).
+
+## Mehrgerätebetrieb (4 Heizkreise)
+Empfohlen ist **ein Gerät je Heizkreis** mit eigener Identität:
+
+| Heizkreis | deviceId | hostname | topicBase |
+|----------|----------|----------|-----------|
+| HK1 | kreis1 | heizungsdruck-kreis1 | heizungsdruck/kreis1 |
+| HK2 | kreis2 | heizungsdruck-kreis2 | heizungsdruck/kreis2 |
+| HK3 | kreis3 | heizungsdruck-kreis3 | heizungsdruck/kreis3 |
+| HK4 | kreis4 | heizungsdruck-kreis4 | heizungsdruck/kreis4 |
+
+`deviceId` ist jetzt zentral. Wenn `hostname`, `mqtt.clientId` oder `mqtt.topicBase` leer bzw. auf Legacy-Default stehen, werden sie automatisch aus `deviceId` abgeleitet.
+
+Standard-Topics pro Gerät:
+- `<topicBase>/telemetry`
+- `<topicBase>/state`
+- `<topicBase>/status`
+- `<topicBase>/telemetry_test`
+- `<topicBase>/cmd/restart`
+
+### Home Assistant MQTT Discovery
+Beim erfolgreichen MQTT-Connect veröffentlicht das Gerät retained Discovery-Configs unter:
+- `homeassistant/sensor/heizungsdruck_<deviceId>_pressure/config`
+- `homeassistant/sensor/heizungsdruck_<deviceId>_state/config`
+- `homeassistant/sensor/heizungsdruck_<deviceId>_rawadc/config`
+- `homeassistant/sensor/heizungsdruck_<deviceId>_filteredadc/config`
+- `homeassistant/binary_sensor/heizungsdruck_<deviceId>_valid/config`
+- `homeassistant/binary_sensor/heizungsdruck_<deviceId>_alarm/config`
+
+Verfügbarkeit läuft über `<topicBase>/status` (`online`/`offline`).
+
+### Discovery testen
+1. Auf jedem ESP32 eigene `deviceId` setzen (`kreis1`…`kreis4`) und speichern.
+2. MQTT neu verbinden (Neustart oder Broker reconnect).
+3. Im Broker prüfen, ob Discovery-Topics retained vorhanden sind.
+4. In Home Assistant unter MQTT-Integration neue Geräte prüfen.
+5. Testweise `/api/test/mqtt` auslösen und `telemetry_test` je Gerät prüfen.

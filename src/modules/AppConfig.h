@@ -36,5 +36,14 @@ struct MqttConfig { bool enabled{false}; std::string host{"192.168.1.50"}; uint1
 struct NetworkConfig { std::string wifiSsid; std::string wifiPassword; std::string apSsid{"Heizungsdruck-Setup"}; std::string apPassword; std::string hostname{"heizungsdruck"}; float wifiTxPowerDbm{8.5f}; bool wifi11bMode{true}; };
 struct WireGuardConfig { bool enabled{false}; std::string localAddress; std::string netmask{"255.255.255.0"}; std::string privateKey; std::string peerEndpoint; uint16_t peerPort{0}; std::string peerPublicKey; std::string presharedKey; std::string allowedIp1; std::string allowedIp2; uint16_t keepAliveSeconds{0}; };
 
-struct AppConfig { SensorConfig sensor; CalibrationConfig calib; AlarmConfig alarm; MqttConfig mqtt; NetworkConfig network; WireGuardConfig wireguard; bool validate(std::string &error) const; };
+struct AppConfig {
+  SensorConfig sensor;
+  CalibrationConfig calib;
+  AlarmConfig alarm;
+  MqttConfig mqtt;
+  NetworkConfig network;
+  WireGuardConfig wireguard;
+  std::string deviceId{"kreis1"};
+  bool validate(std::string &error) const;
+};
 AppConfig defaultConfig();
