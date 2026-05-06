@@ -47,13 +47,13 @@ String WebUI::statusJson() const {
   doc["temperatureC"] = lastReading_.temperatureC;
   doc["temperatureValid"] = lastReading_.temperatureValid;
   JsonObject channels = doc["channels"].to<JsonObject>();
-  for (const auto &[id, raw] : lastReading_.channelRaw) {
-    JsonObject c = channels[id.c_str()].to<JsonObject>();
-    c["rawAdc"] = raw;
+  for (std::map<std::string, int>::const_iterator it = lastReading_.channelRaw.begin(); it != lastReading_.channelRaw.end(); ++it) {
+    JsonObject c = channels[it->first.c_str()].to<JsonObject>();
+    c["rawAdc"] = it->second;
   }
-  for (const auto &[id, filtered] : lastReading_.channelFiltered) {
-    JsonObject c = channels[id.c_str()].to<JsonObject>();
-    c["filteredAdc"] = filtered;
+  for (std::map<std::string, int>::const_iterator it = lastReading_.channelFiltered.begin(); it != lastReading_.channelFiltered.end(); ++it) {
+    JsonObject c = channels[it->first.c_str()].to<JsonObject>();
+    c["filteredAdc"] = it->second;
   }
   doc["fault"] = static_cast<int>(lastReading_.fault);
   doc["state"] = static_cast<int>(lastState_);
@@ -366,7 +366,11 @@ void WebUI::setupRoutes() {
     const float bar = doc["bar"].as<float>();
     if (bar < 0.0f || bar > 10.0f) return server_.send(400, "text/plain", "bar must be 0..10");
     if (candidate.calib.points.size() >= CalibrationConfig::kMaxPointCount) return server_.send(400, "text/plain", "max 20 calibration points");
-    candidate.calib.points.push_back({bar, lastReading_.filteredAdc, true});
+    CalibrationConfig::Point point;
+    point.bar = bar;
+    point.adc = lastReading_.filteredAdc;
+    point.valid = true;
+    candidate.calib.points.push_back(point);
     String outErr;
     if (!saveUpdatedConfig(candidate, outErr)) return server_.send(400, "text/plain", outErr);
     server_.send(200, "text/plain", "captured");

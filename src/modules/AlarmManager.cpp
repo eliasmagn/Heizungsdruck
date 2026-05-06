@@ -30,7 +30,7 @@ bool AlarmManager::isAlarmState(PressureState s) const { return s == PressureSta
 AlarmDispatchResult AlarmManager::sendTelegramMessage(const String &text) const {
   if (cfg_.alarm.telegramBotToken.empty() || cfg_.alarm.telegramChatId.empty()) {
     Serial.println("[Alarm][Telegram] missing config: token/chat-id");
-    lastTelegramResult_ = {false, 0, "telegram config missing"};
+    lastTelegramResult_ = AlarmDispatchResult(false, 0, "telegram config missing");
     return lastTelegramResult_;
   }
   const String url = "https://api.telegram.org/bot" + String(cfg_.alarm.telegramBotToken.c_str()) + "/sendMessage";
@@ -41,26 +41,26 @@ AlarmDispatchResult AlarmManager::sendTelegramMessage(const String &text) const 
     const int code = http.POST(body); String resp = http.getString(); http.end();
     Serial.printf("[Alarm][Telegram] attempt=%d status=%d response=%s\n", attempt, code, resp.c_str());
     if (code >= 200 && code < 300) {
-      lastTelegramResult_ = {true, code, resp};
+      lastTelegramResult_ = AlarmDispatchResult(true, code, resp);
       return lastTelegramResult_;
     }
     if (code > 0) {
-      lastTelegramResult_ = {false, code, resp};
+      lastTelegramResult_ = AlarmDispatchResult(false, code, resp);
       return lastTelegramResult_;
     }
   }
-  lastTelegramResult_ = {false, -1, "network/TLS/API request failed"};
+  lastTelegramResult_ = AlarmDispatchResult(false, -1, "network/TLS/API request failed");
   return lastTelegramResult_;
 }
 
 AlarmDispatchResult AlarmManager::sendWebhookTest(const PressureReading &reading, PressureState state, const String &event) const {
-  if (cfg_.alarm.emailWebhookUrl.empty()) return {false, 0, "webhook url missing"};
+  if (cfg_.alarm.emailWebhookUrl.empty()) return AlarmDispatchResult(false, 0, "webhook url missing");
   HTTPClient http; http.setTimeout(6000); http.begin(cfg_.alarm.emailWebhookUrl.c_str()); http.addHeader("Content-Type", "application/json");
   JsonDocument payload; payload["event"] = event; payload["state"] = stateName(state); payload["pressureBar"] = reading.pressureBar; payload["rawAdc"] = reading.rawAdc; payload["valid"] = reading.valid;
   String body; serializeJson(payload, body);
   const int code = http.POST(body); String resp = http.getString(); http.end();
   Serial.printf("[Alarm][Webhook] status=%d response=%s\n", code, resp.c_str());
-  return {code >= 200 && code < 300, code, resp};
+  return AlarmDispatchResult(code >= 200 && code < 300, code, resp);
 }
 
 void AlarmManager::handleTelegramCommand(const String &cmd) {
@@ -82,8 +82,12 @@ void AlarmManager::handleTelegramCommand(const String &cmd) {
     float bar = 0.0f;
     int adc = 0;
     if (sscanf(cmd.c_str(), "/setcalpoint %f %d", &bar, &adc) == 2) {
-      if (cfg_.calib.points.size() < CalibrationConfig::kMaxPointCount) cfg_.calib.points.push_back({bar, adc, true});
-      else cfg_.calib.points.back() = {bar, adc, true};
+      CalibrationConfig::Point point;
+      point.bar = bar;
+      point.adc = adc;
+      point.valid = true;
+      if (cfg_.calib.points.size() < CalibrationConfig::kMaxPointCount) cfg_.calib.points.push_back(point);
+      else cfg_.calib.points.back() = point;
       sendTelegramMessage("Kalibrierpunkt gesetzt (RAM): bar=" + String(bar, 2) + " adc=" + String(adc) + " | mit /saveconfig persistent speichern");
       return;
     }

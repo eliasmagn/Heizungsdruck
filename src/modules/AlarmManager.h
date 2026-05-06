@@ -6,7 +6,13 @@
 #include "AppConfig.h"
 #include "PressureTypes.h"
 
-struct AlarmDispatchResult { bool ok{false}; int httpStatus{0}; String detail; };
+struct AlarmDispatchResult {
+  bool ok;
+  int httpStatus;
+  String detail;
+  AlarmDispatchResult() : ok(false), httpStatus(0), detail("") {}
+  AlarmDispatchResult(bool okIn, int statusIn, const String &detailIn) : ok(okIn), httpStatus(statusIn), detail(detailIn) {}
+};
 
 class AlarmManager {
  public:

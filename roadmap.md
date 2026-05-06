@@ -65,3 +65,5 @@
 - 2026-05-06: Sensorpfad auf ADC-Continuous (DMA) mit kompatiblem Fallback auf klassisches `analogRead` umgestellt.
 
 - 2026-05-06: End-to-End Sensor-Stack abgeschlossen: neue Kanal-/Temperaturwerte von Erfassung bis MQTT/HA/UI durchgängig.
+
+- 2026-05-06: Build-Fixes für PlatformIO/ESP32-Arduino: C++11-Kompatibilität (kein lambda-auto/std::clamp/structured bindings), MQTT String/JsonDocument-Konsistenz, AlarmDispatchResult- und Kalibrierpunkt-Zuweisungen gehärtet.

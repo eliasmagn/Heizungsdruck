@@ -88,3 +88,5 @@ Das System entwickelt sich von Einzel-ADC auf modulare Mehrkanal-Erfassung (ein 
 - 2026-05-06: Sensorpipeline nutzt nun primär ESP-IDF ADC-Continuous (DMA), um CPU-Last bei Mehrkanalabtastung zu senken; nicht unterstützte Targets bleiben über den bestehenden `analogRead`-Fallback funktionsfähig.
 
 - 2026-05-06: API- und Telemetrieschicht folgen nun der neuen Sensorstruktur vollständig (`channels`, Temperaturparameter, Discovery pro Kanal).
+
+- 2026-05-06: Build-Fixes für PlatformIO/ESP32-Arduino: C++11-Kompatibilität (kein lambda-auto/std::clamp/structured bindings), MQTT String/JsonDocument-Konsistenz, AlarmDispatchResult- und Kalibrierpunkt-Zuweisungen gehärtet.

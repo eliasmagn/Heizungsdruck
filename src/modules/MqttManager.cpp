@@ -61,7 +61,7 @@ void MqttManager::reconnect(uint32_t nowMs) {
   }
   Serial.printf("[MQTT] connected state=%d\n", lastClientState_);
   const String statusTopic = topicStatus();
-  const String restartTopic = cfg_.mqtt.topicBase + "/cmd/restart";
+  const String restartTopic = String(cfg_.mqtt.topicBase.c_str()) + "/cmd/restart";
   const bool onlineOk = client_.publish(statusTopic.c_str(), "online", true);
   const bool subOk = client_.subscribe(restartTopic.c_str());
   publishHomeAssistantDiscovery();
@@ -110,13 +110,13 @@ void MqttManager::publishReading(const PressureReading &reading, PressureState s
   doc["temperatureC"] = reading.temperatureC;
   doc["temperatureValid"] = reading.temperatureValid;
   JsonObject channels = doc["channels"].to<JsonObject>();
-  for (const auto &[id, raw] : reading.channelRaw) {
-    JsonObject c = channels[id.c_str()].to<JsonObject>();
-    c["rawAdc"] = raw;
+  for (std::map<std::string, int>::const_iterator it = reading.channelRaw.begin(); it != reading.channelRaw.end(); ++it) {
+    JsonObject c = channels[it->first.c_str()].to<JsonObject>();
+    c["rawAdc"] = it->second;
   }
-  for (const auto &[id, filtered] : reading.channelFiltered) {
-    JsonObject c = channels[id.c_str()].to<JsonObject>();
-    c["filteredAdc"] = filtered;
+  for (std::map<std::string, int>::const_iterator it = reading.channelFiltered.begin(); it != reading.channelFiltered.end(); ++it) {
+    JsonObject c = channels[it->first.c_str()].to<JsonObject>();
+    c["filteredAdc"] = it->second;
   }
   doc["fault"] = static_cast<int>(reading.fault);
   doc["state"] = stateToString(state);
@@ -160,7 +160,7 @@ bool MqttManager::publishTestMessage(const String &note) {
   doc["millis"] = millis();
   String payload;
   serializeJson(doc, payload);
-  const String topic = cfg_.mqtt.topicBase + "/telemetry_test";
+  const String topic = String(cfg_.mqtt.topicBase.c_str()) + "/telemetry_test";
   lastPublishTopic_ = topic;
   lastPublishPayloadLen_ = payload.length();
   const bool ok = client_.publish(topic.c_str(), payload.c_str(), false);
@@ -177,7 +177,7 @@ bool MqttManager::publishTestMessage(const String &note) {
   return ok;
 }
 
-String MqttManager::diagnosticsJson() const {
+String MqttManager::diagnosticsJson() {
   JsonDocument doc;
   doc["connected"] = client_.connected();
   doc["clientState"] = client_.state();
@@ -195,9 +195,9 @@ String MqttManager::diagnosticsJson() const {
   return out;
 }
 
-String MqttManager::topicTelemetry() const { return cfg_.mqtt.topicBase + "/telemetry"; }
-String MqttManager::topicState() const { return cfg_.mqtt.topicBase + "/state"; }
-String MqttManager::topicStatus() const { return cfg_.mqtt.topicBase + "/status"; }
+String MqttManager::topicTelemetry() const { return String(cfg_.mqtt.topicBase.c_str()) + "/telemetry"; }
+String MqttManager::topicState() const { return String(cfg_.mqtt.topicBase.c_str()) + "/state"; }
+String MqttManager::topicStatus() const { return String(cfg_.mqtt.topicBase.c_str()) + "/status"; }
 
 bool MqttManager::publishDiscoveryEntity(const String &component, const String &objectId, const String &name,
                                          const JsonDocument &payload) {

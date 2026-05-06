@@ -159,3 +159,5 @@ Im Tab **Einstellungen → Sensor**:
 - Druckkanal explizit über Dropdown wählbar
 - Temperatur-Support per `enabled`, `oneWirePin`, `updateIntervalMs` konfigurierbar
 - Live-Tab zeigt zusätzlich das `channels`-Objekt aus `/api/status`
+
+- 2026-05-06: Build-Fixes für PlatformIO/ESP32-Arduino: C++11-Kompatibilität (kein lambda-auto/std::clamp/structured bindings), MQTT String/JsonDocument-Konsistenz, AlarmDispatchResult- und Kalibrierpunkt-Zuweisungen gehärtet.

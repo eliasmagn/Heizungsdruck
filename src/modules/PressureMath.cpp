@@ -21,7 +21,7 @@ float PressureMath::adcToBar(int adc) const {
   std::vector<CalibrationConfig::Point> points;
   for (const auto &p : cfg_.calib.points) if (p.valid) points.push_back(p);
   if (points.size() >= 2) {
-    std::sort(points.begin(), points.end(), [](const auto &a, const auto &b) { return a.adc < b.adc; });
+    std::sort(points.begin(), points.end(), [](const CalibrationConfig::Point &a, const CalibrationConfig::Point &b) { return a.adc < b.adc; });
     const auto *lo = &points.front();
     const auto *hi = &points.back();
     for (size_t i = 1; i < points.size(); ++i) {
@@ -30,7 +30,9 @@ float PressureMath::adcToBar(int adc) const {
     if (hi->adc != lo->adc) {
       const float norm = static_cast<float>(adc - lo->adc) / static_cast<float>(hi->adc - lo->adc);
       float bar = lo->bar + norm * (hi->bar - lo->bar) + cfg_.calib.offsetBar;
-      return std::clamp(bar, -0.5f, 15.0f);
+      if (bar < -0.5f) bar = -0.5f;
+      if (bar > 15.0f) bar = 15.0f;
+      return bar;
     }
   }
 
@@ -39,7 +41,10 @@ float PressureMath::adcToBar(int adc) const {
   const float spanBar = c.barHigh - c.barLow;
   if (spanAdc <= 1.0f) return 0.0f;
   float norm = static_cast<float>(adc - c.adcLow) / spanAdc;
-  return std::clamp(c.barLow + norm * spanBar + c.offsetBar, -0.5f, 15.0f);
+  float bar = c.barLow + norm * spanBar + c.offsetBar;
+  if (bar < -0.5f) bar = -0.5f;
+  if (bar > 15.0f) bar = 15.0f;
+  return bar;
 }
 
 float PressureMath::adcToVoltage(int adc) const {
