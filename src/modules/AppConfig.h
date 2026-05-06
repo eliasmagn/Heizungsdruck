@@ -4,6 +4,18 @@
 #include <string>
 #include <vector>
 
+struct AnalogChannelConfig {
+  std::string id{"pressure_main"};
+  uint8_t adcPin{34};
+  bool pressureSource{false};
+};
+
+struct TemperatureConfig {
+  bool enabled{false};
+  uint8_t oneWirePin{4};
+  uint32_t updateIntervalMs{2000};
+};
+
 struct SensorConfig {
   uint8_t adcPin{34};
   uint16_t sampleCount{9};
@@ -14,6 +26,8 @@ struct SensorConfig {
   int shortGndAdc{20};
   int shortVccAdc{4070};
   float maxJumpBar{0.7f};
+  std::vector<AnalogChannelConfig> analogChannels;
+  TemperatureConfig temperature;
 };
 
 struct CalibrationConfig {

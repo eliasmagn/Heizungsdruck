@@ -45,6 +45,7 @@
             <dt>ADC gefiltert</dt><dd id="adcValue">--</dd>
             <dt>ADC roh</dt><dd id="adcRawValue">--</dd>
             <dt>Spannung</dt><dd id="voltageValue">--</dd>
+            <dt>Temperatur</dt><dd id="temperatureValue">--</dd>
             <dt>Uptime</dt><dd id="uptimeValue">--</dd>
           </dl>
         </article>
@@ -110,6 +111,10 @@
           <label>Short GND ADC<input id="sensorShortGndAdc" type="number"></label>
           <label>Short VCC ADC<input id="sensorShortVccAdc" type="number"></label>
           <label>Max Jump bar<input id="sensorMaxJumpBar" type="number" step="0.01"></label>
+          <label>Temperatur aktiv<input id="tempEnabled" type="checkbox"></label>
+          <label>OneWire Pin<input id="tempPin" type="number"></label>
+          <label>Temperatur-Intervall ms<input id="tempInterval" type="number"></label>
+          <label>Analoge Kanäle JSON<input id="analogChannelsJson" type="text" placeholder="[{"id":"pressure_main","adcPin":34,"pressureSource":true}]"></label>
           <button id="saveSensor">Sensor speichern</button>
         </article>
 

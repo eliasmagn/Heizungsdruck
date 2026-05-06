@@ -96,6 +96,9 @@ void MqttManager::publishReading(const PressureReading &reading, PressureState s
   doc["rawAdc"] = reading.rawAdc;
   doc["filteredAdc"] = reading.filteredAdc;
   doc["valid"] = reading.valid;
+  doc["voltage"] = reading.voltage;
+  doc["temperatureC"] = reading.temperatureC;
+  doc["temperatureValid"] = reading.temperatureValid;
   doc["fault"] = static_cast<int>(reading.fault);
   doc["state"] = stateToString(state);
   doc["wifiConnected"] = wifiConnected;
@@ -224,6 +227,23 @@ void MqttManager::publishHomeAssistantDiscovery() {
   JsonDocument filt;
   basePayload(filt, cleanId + "_filteredadc"); filt["stat_t"] = topicTelemetry(); filt["val_tpl"] = "{{ value_json.filteredAdc }}";
   ok &= publishDiscoveryEntity("sensor", cleanId + "_filteredadc", String(cfg_.deviceId.c_str()) + " ADC Filtered", filt);
+
+  JsonDocument volt;
+  basePayload(volt, cleanId + "_voltage");
+  volt["stat_t"] = topicTelemetry();
+  volt["val_tpl"] = "{{ value_json.voltage }}";
+  volt["unit_of_meas"] = "V";
+  volt["dev_cla"] = "voltage";
+  ok &= publishDiscoveryEntity("sensor", cleanId + "_voltage", String(cfg_.deviceId.c_str()) + " Spannung", volt);
+
+  JsonDocument temp;
+  basePayload(temp, cleanId + "_temperature");
+  temp["stat_t"] = topicTelemetry();
+  temp["val_tpl"] = "{{ value_json.temperatureC }}";
+  temp["unit_of_meas"] = "°C";
+  temp["dev_cla"] = "temperature";
+  temp["stat_cla"] = "measurement";
+  ok &= publishDiscoveryEntity("sensor", cleanId + "_temperature", String(cfg_.deviceId.c_str()) + " Temperatur", temp);
 
   JsonDocument valid;
   basePayload(valid, cleanId + "_valid"); valid["stat_t"] = topicTelemetry(); valid["val_tpl"] = "{{ value_json.valid }}";

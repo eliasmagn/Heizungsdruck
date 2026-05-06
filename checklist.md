@@ -90,3 +90,7 @@
 - [x] 2026-05-06: MQTT-Testpublish-Endpoint (`/api/test/mqtt`) + UI-Button ergänzt; MQTT-Diagnosezähler erweitert.
 - [x] 2026-05-06: Mehrgeräte-MQTT-Identität mit deviceId + abgeleiteten Defaults (hostname/clientId/topicBase) ergänzt.
 - [x] 2026-05-06: Home-Assistant MQTT Discovery (retained, eindeutige unique_id pro Gerät/Entity) ergänzt.
+
+- [x] Sensorarchitektur auf mehrere analoge Kanäle vorbereitet
+- [x] Temperaturmessung (DS18B20) in Backend/MQTT/UI integriert
+- [x] HA Discovery um Temperatur/Spannung erweitert

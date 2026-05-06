@@ -80,3 +80,7 @@ Für die Zielsetzung gilt explizit: **eigene Firmware + eigene Webapp mit Platfo
 
 - 2026-05-06: Betriebsdiagnose erweitert um expliziten MQTT-Testpublishpfad zur Broker-Validierung.
 - 2026-05-06: MQTT-Architektur für parallele Geräte um deviceId/Discovery erweitert.
+
+
+### Sensorik 2026-05
+Das System entwickelt sich von Einzel-ADC auf modulare Mehrkanal-Erfassung (ein Kanal als Druckquelle, weitere optional). Temperatur wird als eigener Sensortyp geführt (DS18B20 auf OneWire-Bus).
