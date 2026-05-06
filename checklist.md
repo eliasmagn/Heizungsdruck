@@ -68,3 +68,12 @@
 - [x] WLAN-Protokollumschaltung build-kompatibel für ESP32-Arduino 3.x umgesetzt (`esp_wifi_set_protocol` statt nicht verfügbarer `WiFi.setProtocol` API)
 
 - [x] IDF-Fallback für WLAN-Protokoll in separaten Helper gekapselt (Arduino-`connectWifi()` sauber gehalten)
+
+- [x] Telegram-Versand zentralisiert (AlarmManager + Diagnose-Tests)
+- [x] Kalibrierung auf freie max.20 Punkte umgestellt
+- [x] README auf reale Bedienung gekürzt/vereinheitlicht
+- [x] OTA-Nutzung dokumentiert
+
+- [x] Telegram-Kommandos via getUpdates implementiert und dokumentiert
+
+- [x] Telegram-Kommando /saveconfig ergänzt und an Config-Speicher gekoppelt

@@ -297,9 +297,11 @@ void setup() {
 
   gMqtt.begin(gConfig);
   gAlarm.begin(gConfig);
+  gAlarm.attachConfigSaver(saveCfg);
   gWeb.attachConfig(&gConfig, saveCfg);
   gWeb.attachHistory(&gHistory);
   gWeb.attachWireGuardManager(&gWireGuard);
+  gWeb.attachAlarmManager(&gAlarm);
   gWireGuard.begin(gConfig.wireguard);
   gWeb.begin();
 }

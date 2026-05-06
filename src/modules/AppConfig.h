@@ -1,8 +1,8 @@
 #pragma once
 
-#include <array>
 #include <stdint.h>
 #include <string>
+#include <vector>
 
 struct SensorConfig {
   uint8_t adcPin{34};
@@ -22,69 +22,19 @@ struct CalibrationConfig {
   float barLow{0.0f};
   float barHigh{10.0f};
   float offsetBar{0.0f};
-  static constexpr size_t kPointCount = 21;
+  static constexpr size_t kMaxPointCount = 20;
   struct Point {
     float bar{0.0f};
     int adc{0};
     bool valid{false};
   };
-  std::array<Point, kPointCount> points{};
+  std::vector<Point> points;
 };
 
-struct AlarmConfig {
-  float lowBar{1.0f};
-  float highBar{2.2f};
-  float hysteresisBar{0.1f};
-  uint16_t repeatMinutes{30};
-  std::string telegramBotToken;
-  std::string telegramChatId;
-  std::string emailWebhookUrl;
-};
+struct AlarmConfig { float lowBar{1.0f}; float highBar{2.2f}; float hysteresisBar{0.1f}; uint16_t repeatMinutes{30}; std::string telegramBotToken; std::string telegramChatId; std::string emailWebhookUrl; };
+struct MqttConfig { bool enabled{false}; std::string host{"192.168.1.50"}; uint16_t port{1883}; std::string username; std::string password; std::string clientId{"heizungsdruck"}; std::string topicBase{"heizungsdruck"}; uint32_t publishIntervalMs{10000}; };
+struct NetworkConfig { std::string wifiSsid; std::string wifiPassword; std::string apSsid{"Heizungsdruck-Setup"}; std::string apPassword; std::string hostname{"heizungsdruck"}; float wifiTxPowerDbm{8.5f}; bool wifi11bMode{true}; };
+struct WireGuardConfig { bool enabled{false}; std::string localAddress; std::string netmask{"255.255.255.0"}; std::string privateKey; std::string peerEndpoint; uint16_t peerPort{0}; std::string peerPublicKey; std::string presharedKey; std::string allowedIp1; std::string allowedIp2; uint16_t keepAliveSeconds{0}; };
 
-struct MqttConfig {
-  bool enabled{false};
-  std::string host{"192.168.1.50"};
-  uint16_t port{1883};
-  std::string username;
-  std::string password;
-  std::string clientId{"heizungsdruck"};
-  std::string topicBase{"heizungsdruck"};
-  uint32_t publishIntervalMs{10000};
-};
-
-struct NetworkConfig {
-  std::string wifiSsid;
-  std::string wifiPassword;
-  std::string apSsid{"Heizungsdruck-Setup"};
-  std::string apPassword;
-  std::string hostname{"heizungsdruck"};
-  float wifiTxPowerDbm{8.5f};
-  bool wifi11bMode{true};
-};
-
-struct WireGuardConfig {
-  bool enabled{false};
-  std::string localAddress;
-  std::string netmask{"255.255.255.0"};
-  std::string privateKey;
-  std::string peerEndpoint;
-  uint16_t peerPort{0};
-  std::string peerPublicKey;
-  std::string presharedKey;
-  std::string allowedIp1;
-  std::string allowedIp2;
-  uint16_t keepAliveSeconds{0};
-};
-
-struct AppConfig {
-  SensorConfig sensor;
-  CalibrationConfig calib;
-  AlarmConfig alarm;
-  MqttConfig mqtt;
-  NetworkConfig network;
-  WireGuardConfig wireguard;
-
-  bool validate(std::string &error) const;
-};
-
+struct AppConfig { SensorConfig sensor; CalibrationConfig calib; AlarmConfig alarm; MqttConfig mqtt; NetworkConfig network; WireGuardConfig wireguard; bool validate(std::string &error) const; };
 AppConfig defaultConfig();

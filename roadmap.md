@@ -37,3 +37,9 @@
 - ✅ Build-Stabilisierung: WLAN-Protokollumschaltung auf ESP-IDF API (`esp_wifi_set_protocol`) angepasst; behebt ESP32-Arduino 3.x Compile-Fehler um `WiFi.setProtocol`/`wifi_protocol_t`.
 
 - ✅ Codehygiene: IDF-Fallback für WLAN-Protokoll in lokaler Helper-Funktion gekapselt, Arduino-Hauptfluss bleibt lesbar
+
+- 2026-05-01: Stabilisierung abgeschlossen: Alarmdiagnose, freie Kalibrierpunkte, OTA-Doku, SPA-only Betrieb.
+
+- 2026-05-02: Telegram-Command-Polling mit Runtime-Kommandos ergänzt.
+
+- 2026-05-06: Telegram /saveconfig live gesetzt (Runtime->persistent).

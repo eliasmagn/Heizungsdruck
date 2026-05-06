@@ -78,6 +78,7 @@
             <button id="loadCalibration">Vom ESP laden</button>
             <button id="saveCalibration">An ESP senden</button>
             <button id="clearCalibration">Alle löschen</button>
+            <button id="addCalibrationPoint">Leeren Punkt hinzufügen</button>
           </div>
         </article>
         <article class="card">
@@ -90,7 +91,7 @@
         </article>
       </div>
       <article class="card">
-        <h2>Kalibrierpunkte (0.0 bis 10.0 bar)</h2>
+        <h2>Kalibrierpunkte (frei, max. 20)</h2>
         <table>
           <thead><tr><th>bar</th><th>adc</th><th>valid</th><th>Aktion</th></tr></thead>
           <tbody id="calibrationRows"></tbody>
@@ -183,7 +184,7 @@
     <section id="diag" class="tab">
       <div class="grid two">
         <article class="card">
-          <h2>Systemdiagnose</h2>
+          <h2>Systemdiagnose</h2><p>OTA ist per ArduinoOTA aktiv. Hostname = Netzwerk-Hostname.</p>
           <pre id="diagOutput" class="mono"></pre>
         </article>
         <article class="card">
