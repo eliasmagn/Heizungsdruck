@@ -11,6 +11,18 @@ WireGuard gWireGuard;
 bool parseIp(const std::string &raw, IPAddress &out) {
   return out.fromString(raw.c_str());
 }
+
+bool parseCidrAddress(const std::string &raw, std::string &ipOut, uint8_t &prefixOut) {
+  const size_t slashPos = raw.find('/');
+  if (slashPos == std::string::npos) return false;
+  ipOut = raw.substr(0, slashPos);
+  const std::string prefixRaw = raw.substr(slashPos + 1);
+  if (prefixRaw.empty()) return false;
+  const int prefix = atoi(prefixRaw.c_str());
+  if (prefix < 0 || prefix > 32) return false;
+  prefixOut = static_cast<uint8_t>(prefix);
+  return true;
+}
 }  // namespace
 
 void WireGuardManager::begin(const WireGuardConfig &cfg) {
@@ -104,10 +116,17 @@ bool WireGuardManager::applyConfig(const WireGuardConfig &cfg) {
     return false;
   }
 
+  std::string localAddressRaw = cfg.localAddress;
+  std::string localAddressIpOnly;
+  uint8_t cidrPrefix = 0;
+  if (parseCidrAddress(cfg.localAddress, localAddressIpOnly, cidrPrefix)) {
+    localAddressRaw = localAddressIpOnly;
+  }
+
   IPAddress localAddress;
-  if (!parseIp(cfg.localAddress, localAddress)) {
+  if (!parseIp(localAddressRaw, localAddress)) {
     configured_ = false;
-    lastError_ = "localAddress invalid";
+    lastError_ = "localAddress invalid (use IP or CIDR, e.g. 10.66.0.2 or 10.66.0.2/24)";
     return false;
   }
 
@@ -120,9 +139,13 @@ bool WireGuardManager::applyConfig(const WireGuardConfig &cfg) {
     return false;
   }
 
-  localAddress_ = cfg.localAddress;
+  localAddress_ = localAddressRaw;
   peerEndpoint_ = cfg.peerEndpoint;
   peerPort_ = cfg.peerPort;
-  lastError_.clear();
+  if (cidrPrefix > 0) {
+    lastError_ = "localAddress CIDR suffix accepted; routing depends on peer AllowedIPs";
+  } else {
+    lastError_.clear();
+  }
   return true;
 }

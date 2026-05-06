@@ -50,3 +50,5 @@
 - 2026-05-06: Optionales MQTT-over-WireGuard-Gating (`requireWireguard`) umgesetzt.
 
 - 2026-05-06: MQTT-WireGuard-Betrieb auf Dual-Interface-Usecase angepasst (WG bevorzugt, Fallback aktiv).
+
+- 2026-05-06: WireGuard-Setup robuster: CIDR in localAddress wird toleriert (IP-Extraktion) und diagnostisch markiert.

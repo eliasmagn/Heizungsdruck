@@ -82,6 +82,7 @@ ArduinoOTA ist aktiv (`ArduinoOTA.begin()` in `setup()`).
 - MQTT connected, aber keine Daten am Broker → Serial-Logs auf Publish-Fehler/Buffer prüfen, `/api/diag` → `mqttDiag`
 - Telegram fehlgeschlagen → Token/Chat-ID prüfen, HTTP-Status + Detailtext in UI/Serial auswerten
 - WLAN-Probleme → AP-Modus nutzen und Netzwerkkonfig im UI korrigieren
+- WireGuard kommt nicht hoch bei `/24`-Eingabe: `localAddress` darf jetzt auch als CIDR (`10.66.0.2/24`) eingegeben werden; intern wird die IP extrahiert und der Hinweis im Diagnosefeld gesetzt.
 
 ## Entwicklungshinweise
 - Build: `pio run`

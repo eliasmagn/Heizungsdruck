@@ -84,3 +84,5 @@
 - [x] 2026-05-06: MQTT optional auf WireGuard erzwungen (`requireWireguard`) inkl. Block-/Fehlerdiagnose.
 
 - [x] 2026-05-06: MQTT-WireGuard-Modus präzisiert: bevorzugen + Fallback statt hartes Blocking.
+
+- [x] 2026-05-06: WireGuard localAddress akzeptiert jetzt IP oder CIDR (z. B. /24), verhindert Startfehler bei CIDR-Eingabe.

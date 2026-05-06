@@ -75,3 +75,5 @@ Für die Zielsetzung gilt explizit: **eigene Firmware + eigene Webapp mit Platfo
 - 2026-05-06: Betriebsmodus ergänzt: MQTT kann optional strikt an WireGuard-Onlinezustand gekoppelt werden.
 
 - 2026-05-06: Netzwerkprinzip präzisiert: MQTT bleibt dual-stack-fähig; WireGuard-Pfad wird bevorzugt/diagnostiziert, Fallback bleibt verfügbar.
+
+- 2026-05-06: WireGuard-Konfigurationsrobustheit erhöht: lokale Tunneladresse akzeptiert nun IP/CIDR-Eingaben.
