@@ -105,6 +105,12 @@ void MqttManager::publishReading(const PressureReading &reading, PressureState s
   doc["pressureBar"] = reading.pressureBar;
   doc["rawAdc"] = reading.rawAdc;
   doc["filteredAdc"] = reading.filteredAdc;
+  doc["compensatedAdc"] = reading.compensatedAdc;
+  doc["noiseRawAdc"] = reading.noiseRawAdc;
+  doc["noiseFilteredAdc"] = reading.noiseFilteredAdc;
+  doc["hasNoiseRef"] = reading.hasNoiseRef;
+  doc["pressureBarCompensated"] = reading.pressureBarCompensated;
+  doc["pressureBarCompensatedValid"] = reading.pressureBarCompensatedValid;
   doc["valid"] = reading.valid;
   doc["voltage"] = reading.voltage;
   doc["temperatureC"] = reading.temperatureC;
@@ -125,6 +131,10 @@ void MqttManager::publishReading(const PressureReading &reading, PressureState s
   for (std::map<std::string, int>::const_iterator it = reading.channelFiltered.begin(); it != reading.channelFiltered.end(); ++it) {
     JsonObject c = channels[it->first.c_str()].to<JsonObject>();
     c["filteredAdc"] = it->second;
+  }
+  for (std::map<std::string, int>::const_iterator it = reading.channelCompensated.begin(); it != reading.channelCompensated.end(); ++it) {
+    JsonObject c = channels[it->first.c_str()].to<JsonObject>();
+    c["compensatedAdc"] = it->second;
   }
   doc["fault"] = static_cast<int>(reading.fault);
   doc["state"] = stateToString(state);
@@ -255,6 +265,18 @@ void MqttManager::publishHomeAssistantDiscovery() {
   basePayload(filt, cleanId + "_filteredadc"); filt["stat_t"] = topicTelemetry(); filt["val_tpl"] = "{{ value_json.filteredAdc }}";
   ok &= publishDiscoveryEntity("sensor", cleanId + "_filteredadc", String(cfg_.deviceId.c_str()) + " ADC Filtered", filt);
 
+
+  JsonDocument noiseRaw;
+  basePayload(noiseRaw, cleanId + "_noise_rawadc"); noiseRaw["stat_t"] = topicTelemetry(); noiseRaw["val_tpl"] = "{{ value_json.noiseRawAdc }}";
+  ok &= publishDiscoveryEntity("sensor", cleanId + "_noise_rawadc", String(cfg_.deviceId.c_str()) + " Noise ADC Raw", noiseRaw);
+
+  JsonDocument noiseFilt;
+  basePayload(noiseFilt, cleanId + "_noise_filteredadc"); noiseFilt["stat_t"] = topicTelemetry(); noiseFilt["val_tpl"] = "{{ value_json.noiseFilteredAdc }}";
+  ok &= publishDiscoveryEntity("sensor", cleanId + "_noise_filteredadc", String(cfg_.deviceId.c_str()) + " Noise ADC Filtered", noiseFilt);
+
+  JsonDocument comp;
+  basePayload(comp, cleanId + "_compensated_adc"); comp["stat_t"] = topicTelemetry(); comp["val_tpl"] = "{{ value_json.compensatedAdc }}";
+  ok &= publishDiscoveryEntity("sensor", cleanId + "_compensated_adc", String(cfg_.deviceId.c_str()) + " ADC Compensated", comp);
   JsonDocument volt;
   basePayload(volt, cleanId + "_voltage");
   volt["stat_t"] = topicTelemetry();

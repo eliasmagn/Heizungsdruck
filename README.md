@@ -168,3 +168,23 @@ Im Tab **Einstellungen → Sensor**:
   - optional mitgeführt: `temperatureDrift1h`, `temperatureDrift24h`
 - Umsetzung ist bewusst leichtgewichtig: Snapshot-Ringpuffer im RAM (5-Minuten-Intervall), keine Rohdaten-Vollhistorie über 24h.
 - MQTT liefert damit Druck + Temperatur + einfache Drifts; komplexe Leckanalyse bleibt bewusst extern (Home Assistant/PC).
+
+
+## Plattformprofile (aktualisiert)
+- `esp32_standard`: Vollprofil mit Multi-ADC, optional WireGuard, Discovery, WebUI.
+- `esp8266_slim`: Schlankprofil ohne WireGuard/ADC-Continuous; ein interner ADC, daher Multi-ADC nur mit externer Hardware.
+
+## Temperaturpfad
+- Standard ist `temperature.mode = ntc`.
+- Optional: `ds18b20` oder `none`.
+- NTC nutzt Beta-Modell (R25/Beta/Serienwiderstand/Offset).
+
+## Globaler `noise_ref`
+- Ein optionaler globaler Analogkanal mit Rolle `noise_ref` wird als einfache Baseline geführt.
+- Telemetrie enthält weiterhin Roh- und Filterwerte; kompensierte Werte sind nur Zusatzdiagnostik.
+
+## Drift lokal vs. extern
+- Lokal nur einfache Driftwerte (`pressureDrift1h`, `pressureDrift24h`, optional Temperaturdrift).
+- Komplexe Leck-/Langzeitanalyse bewusst in HA/PC/DB.
+
+- 2026-05-07 Nachschärfung: Sensor-API akzeptiert jetzt `temperature.mode` + vollständige NTC-Parameter in `/api/config/sensor`; Status zeigt `noise*`/`compensatedAdc` explizit.

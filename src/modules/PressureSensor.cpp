@@ -1,13 +1,15 @@
 #include "PressureSensor.h"
 
 #include <Arduino.h>
+#include "../platform_caps.h"
+#include <math.h>
 
 #if __has_include("driver/adc.h") && __has_include("esp_adc/adc_continuous.h")
 #include "driver/adc.h"
 #include "esp_adc/adc_continuous.h"
 #include "esp_err.h"
 #include "soc/soc_caps.h"
-#define HAS_ADC_DMA 1
+#define HAS_ADC_DMA HAS_ADC_CONTINUOUS
 #else
 #define HAS_ADC_DMA 0
 #endif
@@ -86,6 +88,16 @@ std::vector<int> readAdcSamplesDma(uint8_t pin, uint16_t sampleCount) {
 #endif
 }  // namespace
 
+
+static float readNtcC(const std::vector<int> &samples, const NtcConfig &ntc, int adcMax) {
+  if (samples.empty()) return 0.0f;
+  const int adc = samples[samples.size()/2];
+  if (adc <= 0 || adc >= adcMax) return 0.0f;
+  const float rNtc = ntc.seriesResistorOhm * (static_cast<float>(adc) / static_cast<float>(adcMax - adc));
+  const float t0 = ntc.nominalTempC + 273.15f;
+  const float invT = (1.0f / t0) + (logf(rNtc / ntc.nominalResistorOhm) / ntc.beta);
+  return (1.0f / invT) - 273.15f + ntc.offsetC;
+}
 PressureSensor::PressureSensor(const AppConfig &cfg) : cfg_(cfg), math_(cfg) {}
 
 void PressureSensor::begin() {
@@ -129,7 +141,9 @@ PressureReading PressureSensor::sample(uint32_t nowMs) {
   channelLastRaw_.clear();
   channelLastFiltered_.clear();
   uint8_t pressurePin = cfg_.sensor.adcPin;
-  for (const auto &ch : cfg_.sensor.analogChannels) if (ch.pressureSource) { pressurePin = ch.adcPin; break; }
+  std::string pressureChannelId = "pressure_main";
+  String noiseId="";
+  for (const auto &ch : cfg_.sensor.analogChannels) { if (ch.pressureSource || ch.role==AnalogChannelRole::PRESSURE) { pressurePin = ch.adcPin; pressureChannelId = ch.id; } if (ch.role==AnalogChannelRole::NOISE_REF) noiseId = ch.id.c_str(); }
   for (const auto &ch : cfg_.sensor.analogChannels) {
     std::vector<int> samples; samples.reserve(cfg_.sensor.sampleCount);
     #if HAS_ADC_DMA
@@ -149,17 +163,37 @@ PressureReading PressureSensor::sample(uint32_t nowMs) {
   r.filteredAdc = math_.robustFilter(pressureSamples);
   r.voltage = math_.adcToVoltage(r.filteredAdc);
   r.pressureBar = math_.adcToBar(r.filteredAdc);
+  r.compensatedAdc = r.filteredAdc;
   r.valid = true;
   if (cfg_.sensor.temperature.enabled && nowMs - lastTempReadMs_ >= cfg_.sensor.temperature.updateIntervalMs) {
-    dallas_.requestTemperatures();
-    float t = dallas_.getTempCByIndex(0);
     lastTempReadMs_ = nowMs;
-    if (t > -100.0f && t < 150.0f) { lastTempC_ = t; lastTempValid_ = true; } else { lastTempValid_ = false; }
+    if (cfg_.sensor.temperature.mode == TemperatureMode::DS18B20) {
+      dallas_.requestTemperatures();
+      float t = dallas_.getTempCByIndex(0);
+      if (t > -100.0f && t < 150.0f) { lastTempC_ = t; lastTempValid_ = true; } else { lastTempValid_ = false; }
+    } else if (cfg_.sensor.temperature.mode == TemperatureMode::NTC) {
+      std::vector<int> ntcSamples; ntcSamples.reserve(cfg_.sensor.sampleCount);
+      for (uint16_t i=0;i<cfg_.sensor.sampleCount;++i) ntcSamples.push_back(analogRead(cfg_.sensor.temperature.ntc.adcPin));
+      lastTempC_ = readNtcC(ntcSamples, cfg_.sensor.temperature.ntc, cfg_.sensor.adcMax);
+      lastTempValid_ = (lastTempC_ > -50.0f && lastTempC_ < 150.0f);
+    } else { lastTempValid_ = false; }
   }
   r.temperatureC = lastTempC_;
   r.temperatureValid = lastTempValid_;
   r.channelRaw = channelLastRaw_;
   r.channelFiltered = channelLastFiltered_;
+  if (noiseId.length()>0 && channelLastRaw_.count(noiseId.c_str())) {
+    r.hasNoiseRef = true;
+    r.noiseRawAdc = channelLastRaw_[noiseId.c_str()];
+    r.noiseFilteredAdc = channelLastFiltered_[noiseId.c_str()];
+    for (const auto &it: channelLastFiltered_) {
+      int comp = it.second - r.noiseFilteredAdc;
+      r.channelCompensated[it.first] = comp;
+      if (it.first == pressureChannelId) r.compensatedAdc = comp;
+    }
+  }
+  r.pressureBarCompensated = math_.adcToBar(r.compensatedAdc);
+  r.pressureBarCompensatedValid = r.hasNoiseRef;
 
   SensorFault fault = SensorFault::NONE;
   if (classifyFault(r, fault)) {

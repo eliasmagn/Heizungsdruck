@@ -4,16 +4,34 @@
 #include <string>
 #include <vector>
 
+enum class AnalogChannelRole : uint8_t { PRESSURE = 0, NOISE_REF = 1, AUX = 2, TEMPERATURE_NTC = 3 };
+
 struct AnalogChannelConfig {
   std::string id{"pressure_main"};
   uint8_t adcPin{34};
+  AnalogChannelRole role{AnalogChannelRole::AUX};
   bool pressureSource{false};
+  bool useGlobalNoiseRef{true};
+};
+
+enum class TemperatureMode : uint8_t { NONE = 0, NTC = 1, DS18B20 = 2 };
+
+struct NtcConfig {
+  uint8_t adcPin{35};
+  float seriesResistorOhm{10000.0f};
+  float nominalResistorOhm{10000.0f};
+  float beta{3950.0f};
+  float nominalTempC{25.0f};
+  float offsetC{0.0f};
+  std::string sensorId{"ntc_main"};
 };
 
 struct TemperatureConfig {
-  bool enabled{false};
+  bool enabled{true};
+  TemperatureMode mode{TemperatureMode::NTC};
   uint8_t oneWirePin{4};
   uint32_t updateIntervalMs{2000};
+  NtcConfig ntc;
 };
 
 struct SensorConfig {

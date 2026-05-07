@@ -26,6 +26,8 @@ struct PressureReading {
   int filteredAdc{0};
   float voltage{0.0f};
   float pressureBar{0.0f};
+  float pressureBarCompensated{0.0f};
+  bool pressureBarCompensatedValid{false};
   bool valid{false};
   SensorFault fault{SensorFault::NONE};
   float temperatureC{0.0f};
@@ -39,5 +41,10 @@ struct PressureReading {
   bool temperatureDrift1hValid{false};
   bool temperatureDrift24hValid{false};
   std::map<std::string, int> channelRaw;
+  int compensatedAdc{0};
+  int noiseRawAdc{0};
+  int noiseFilteredAdc{0};
+  bool hasNoiseRef{false};
   std::map<std::string, int> channelFiltered;
+  std::map<std::string, int> channelCompensated;
 };

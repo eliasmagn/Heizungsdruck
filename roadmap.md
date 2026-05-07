@@ -69,3 +69,7 @@
 - 2026-05-06: Build-Fixes für PlatformIO/ESP32-Arduino: C++11-Kompatibilität (kein lambda-auto/std::clamp/structured bindings), MQTT String/JsonDocument-Konsistenz, AlarmDispatchResult- und Kalibrierpunkt-Zuweisungen gehärtet.
 
 - 2026-05-07: Lokale Drift-Basis abgeschlossen (1h/24h für Druck + optionale Temperaturdrift) als bewusst schlanke Vorstufe für externe HA/PC-Analyse.
+
+- 2026-05-07: Plattform-Capabilities zentralisiert, NTC-Standardpfad und globalen noise_ref-Diagnosepfad umgesetzt.
+
+- 2026-05-07: Follow-up abgeschlossen: WebUI-Konfigurationspfad (Temp-Modi/NTC) und noise_ref-Kompensationszuordnung stabilisiert.
