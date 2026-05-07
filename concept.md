@@ -90,3 +90,5 @@ Das System entwickelt sich von Einzel-ADC auf modulare Mehrkanal-Erfassung (ein 
 - 2026-05-06: API- und Telemetrieschicht folgen nun der neuen Sensorstruktur vollständig (`channels`, Temperaturparameter, Discovery pro Kanal).
 
 - 2026-05-06: Build-Fixes für PlatformIO/ESP32-Arduino: C++11-Kompatibilität (kein lambda-auto/std::clamp/structured bindings), MQTT String/JsonDocument-Konsistenz, AlarmDispatchResult- und Kalibrierpunkt-Zuweisungen gehärtet.
+
+- 2026-05-07: Lokale Minimal-Erweiterung um Driftwerte (1h/24h) für Druck, optional Temperatur. Architektur bleibt lean: 5-Minuten-Snapshots im RAM, keine komplexe Leak-Klassifikation auf dem ESP.

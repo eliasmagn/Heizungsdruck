@@ -100,3 +100,5 @@
 - [x] 2026-05-06: Sensor-Stack end-to-end vervollständigt (REST/UI + MQTT + HA Discovery inkl. channels/temperature/voltage).
 
 - 2026-05-06: Build-Fixes für PlatformIO/ESP32-Arduino: C++11-Kompatibilität (kein lambda-auto/std::clamp/structured bindings), MQTT String/JsonDocument-Konsistenz, AlarmDispatchResult- und Kalibrierpunkt-Zuweisungen gehärtet.
+
+- [x] 2026-05-07: Schlanke Driftwerte ergänzt (`pressureDrift1h`, `pressureDrift24h`, optional Temperaturdrift) inkl. MQTT/Discovery/WebUI/README ohne Leak-Score-Logik.

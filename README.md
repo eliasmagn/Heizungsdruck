@@ -161,3 +161,10 @@ Im Tab **Einstellungen → Sensor**:
 - Live-Tab zeigt zusätzlich das `channels`-Objekt aus `/api/status`
 
 - 2026-05-06: Build-Fixes für PlatformIO/ESP32-Arduino: C++11-Kompatibilität (kein lambda-auto/std::clamp/structured bindings), MQTT String/JsonDocument-Konsistenz, AlarmDispatchResult- und Kalibrierpunkt-Zuweisungen gehärtet.
+
+## Lokale Driftwerte (schlank, ohne Leak-Engine)
+- Firmware berechnet jetzt zusätzlich einfache Driftwerte direkt auf dem ESP32:
+  - `pressureDrift1h`, `pressureDrift24h`
+  - optional mitgeführt: `temperatureDrift1h`, `temperatureDrift24h`
+- Umsetzung ist bewusst leichtgewichtig: Snapshot-Ringpuffer im RAM (5-Minuten-Intervall), keine Rohdaten-Vollhistorie über 24h.
+- MQTT liefert damit Druck + Temperatur + einfache Drifts; komplexe Leckanalyse bleibt bewusst extern (Home Assistant/PC).

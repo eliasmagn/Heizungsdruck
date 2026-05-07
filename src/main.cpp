@@ -340,6 +340,7 @@ void loop() {
     gLastSampleMs = now;
     gLastReading = gSensor->sample(now);
     gLastState = gStateMachine->update(gLastReading);
+    gHistory.applyDrift(gLastReading, now);
     gHistory.add(gLastReading, gLastState);
   }
 

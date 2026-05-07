@@ -46,6 +46,14 @@ String WebUI::statusJson() const {
   doc["valid"] = lastReading_.valid;
   doc["temperatureC"] = lastReading_.temperatureC;
   doc["temperatureValid"] = lastReading_.temperatureValid;
+  doc["pressureDrift1h"] = lastReading_.pressureDrift1h;
+  doc["pressureDrift24h"] = lastReading_.pressureDrift24h;
+  doc["pressureDrift1hValid"] = lastReading_.pressureDrift1hValid;
+  doc["pressureDrift24hValid"] = lastReading_.pressureDrift24hValid;
+  doc["temperatureDrift1h"] = lastReading_.temperatureDrift1h;
+  doc["temperatureDrift24h"] = lastReading_.temperatureDrift24h;
+  doc["temperatureDrift1hValid"] = lastReading_.temperatureDrift1hValid;
+  doc["temperatureDrift24hValid"] = lastReading_.temperatureDrift24hValid;
   JsonObject channels = doc["channels"].to<JsonObject>();
   for (std::map<std::string, int>::const_iterator it = lastReading_.channelRaw.begin(); it != lastReading_.channelRaw.end(); ++it) {
     JsonObject c = channels[it->first.c_str()].to<JsonObject>();

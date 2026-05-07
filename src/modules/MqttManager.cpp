@@ -109,6 +109,14 @@ void MqttManager::publishReading(const PressureReading &reading, PressureState s
   doc["voltage"] = reading.voltage;
   doc["temperatureC"] = reading.temperatureC;
   doc["temperatureValid"] = reading.temperatureValid;
+  doc["pressureDrift1h"] = reading.pressureDrift1h;
+  doc["pressureDrift24h"] = reading.pressureDrift24h;
+  doc["pressureDrift1hValid"] = reading.pressureDrift1hValid;
+  doc["pressureDrift24hValid"] = reading.pressureDrift24hValid;
+  doc["temperatureDrift1h"] = reading.temperatureDrift1h;
+  doc["temperatureDrift24h"] = reading.temperatureDrift24h;
+  doc["temperatureDrift1hValid"] = reading.temperatureDrift1hValid;
+  doc["temperatureDrift24hValid"] = reading.temperatureDrift24hValid;
   JsonObject channels = doc["channels"].to<JsonObject>();
   for (std::map<std::string, int>::const_iterator it = reading.channelRaw.begin(); it != reading.channelRaw.end(); ++it) {
     JsonObject c = channels[it->first.c_str()].to<JsonObject>();
@@ -263,6 +271,41 @@ void MqttManager::publishHomeAssistantDiscovery() {
   temp["dev_cla"] = "temperature";
   temp["stat_cla"] = "measurement";
   ok &= publishDiscoveryEntity("sensor", cleanId + "_temperature", String(cfg_.deviceId.c_str()) + " Temperatur", temp);
+
+
+  JsonDocument drift1h;
+  basePayload(drift1h, cleanId + "_pressure_drift_1h");
+  drift1h["stat_t"] = topicTelemetry();
+  drift1h["val_tpl"] = "{{ value_json.pressureDrift1h }}";
+  drift1h["unit_of_meas"] = "bar";
+  drift1h["stat_cla"] = "measurement";
+  ok &= publishDiscoveryEntity("sensor", cleanId + "_pressure_drift_1h", String(cfg_.deviceId.c_str()) + " Druckdrift 1h", drift1h);
+
+  JsonDocument drift24h;
+  basePayload(drift24h, cleanId + "_pressure_drift_24h");
+  drift24h["stat_t"] = topicTelemetry();
+  drift24h["val_tpl"] = "{{ value_json.pressureDrift24h }}";
+  drift24h["unit_of_meas"] = "bar";
+  drift24h["stat_cla"] = "measurement";
+  ok &= publishDiscoveryEntity("sensor", cleanId + "_pressure_drift_24h", String(cfg_.deviceId.c_str()) + " Druckdrift 24h", drift24h);
+
+  JsonDocument tempDrift1h;
+  basePayload(tempDrift1h, cleanId + "_temperature_drift_1h");
+  tempDrift1h["stat_t"] = topicTelemetry();
+  tempDrift1h["val_tpl"] = "{{ value_json.temperatureDrift1h }}";
+  tempDrift1h["unit_of_meas"] = "°C";
+  tempDrift1h["dev_cla"] = "temperature";
+  tempDrift1h["stat_cla"] = "measurement";
+  ok &= publishDiscoveryEntity("sensor", cleanId + "_temperature_drift_1h", String(cfg_.deviceId.c_str()) + " Temperaturdrift 1h", tempDrift1h);
+
+  JsonDocument tempDrift24h;
+  basePayload(tempDrift24h, cleanId + "_temperature_drift_24h");
+  tempDrift24h["stat_t"] = topicTelemetry();
+  tempDrift24h["val_tpl"] = "{{ value_json.temperatureDrift24h }}";
+  tempDrift24h["unit_of_meas"] = "°C";
+  tempDrift24h["dev_cla"] = "temperature";
+  tempDrift24h["stat_cla"] = "measurement";
+  ok &= publishDiscoveryEntity("sensor", cleanId + "_temperature_drift_24h", String(cfg_.deviceId.c_str()) + " Temperaturdrift 24h", tempDrift24h);
 
   JsonDocument tempValid;
   basePayload(tempValid, cleanId + "_temperature_valid");
