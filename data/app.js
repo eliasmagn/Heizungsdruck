@@ -51,6 +51,8 @@ function updateLive(status) {
   $('voltageValue').textContent = `${Number(status.voltage || 0).toFixed(3)} V`;
   $('uptimeValue').textContent = `${Math.floor(Number(status.uptimeSec || 0) / 60)} min`;
   $('temperatureValue').textContent = status.temperatureValid ? `${Number(status.temperatureC || 0).toFixed(2)} °C` : '--';
+  $('pressureDrift1hValue').textContent = status.pressureDrift1hValid ? `${Number(status.pressureDrift1h || 0).toFixed(4)} bar` : '--';
+  $('pressureDrift24hValue').textContent = status.pressureDrift24hValid ? `${Number(status.pressureDrift24h || 0).toFixed(4)} bar` : '--';
   $('calibLiveAdc').textContent = String(status.filteredAdc ?? '--');
 
   $('pressureFill').style.width = `${Math.max(0, Math.min(100, (bar / 3) * 100))}%`;

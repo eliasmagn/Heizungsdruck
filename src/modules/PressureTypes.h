@@ -30,6 +30,14 @@ struct PressureReading {
   SensorFault fault{SensorFault::NONE};
   float temperatureC{0.0f};
   bool temperatureValid{false};
+  float pressureDrift1h{0.0f};
+  float pressureDrift24h{0.0f};
+  bool pressureDrift1hValid{false};
+  bool pressureDrift24hValid{false};
+  float temperatureDrift1h{0.0f};
+  float temperatureDrift24h{0.0f};
+  bool temperatureDrift1hValid{false};
+  bool temperatureDrift24hValid{false};
   std::map<std::string, int> channelRaw;
   std::map<std::string, int> channelFiltered;
 };
