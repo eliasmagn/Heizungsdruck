@@ -102,3 +102,11 @@
 - 2026-05-06: Build-Fixes für PlatformIO/ESP32-Arduino: C++11-Kompatibilität (kein lambda-auto/std::clamp/structured bindings), MQTT String/JsonDocument-Konsistenz, AlarmDispatchResult- und Kalibrierpunkt-Zuweisungen gehärtet.
 
 - [x] 2026-05-07: Schlanke Driftwerte ergänzt (`pressureDrift1h`, `pressureDrift24h`, optional Temperaturdrift) inkl. MQTT/Discovery/WebUI/README ohne Leak-Score-Logik.
+
+- [x] Plattformprofile um `esp8266_slim` und `esp32_standard` geschärft.
+- [x] NTC als Standardmodus ergänzt, DS18B20 optional belassen.
+- [x] Globaler `noise_ref`-Baselinepfad + Roh/kompensierte MQTT-Werte ergänzt.
+- [x] Einfache Driftwerte 1h/24h im lokalen Pfad bestätigt.
+
+- [x] 2026-05-07 Follow-up: WebUI Sensor-Config für `temperature.mode`/NTC vollständig ergänzt.
+- [x] 2026-05-07 Follow-up: Kompensationspfad an expliziten Druckkanal gebunden (kein impliziter ADC-Gleichheitsmatch).

@@ -27,6 +27,7 @@ void ensureAnalogChannels(SensorConfig &sensor) {
     ch.id = "pressure_main";
     ch.adcPin = sensor.adcPin;
     ch.pressureSource = true;
+    ch.role = AnalogChannelRole::PRESSURE;
     sensor.analogChannels.push_back(ch);
   }
 }
@@ -50,6 +51,14 @@ bool AppConfig::validate(std::string &error) const {
     return false;
   }
   if (sensor.analogChannels.empty()) { error = "at least one analog channel required"; return false; }
+
+  if (sensor.temperature.enabled && sensor.temperature.mode == TemperatureMode::NTC) {
+    if (sensor.temperature.ntc.seriesResistorOhm <= 0.0f || sensor.temperature.ntc.nominalResistorOhm <= 0.0f ||
+        sensor.temperature.ntc.beta <= 0.0f) {
+      error = "NTC parameters must be > 0";
+      return false;
+    }
+  }
   if (calib.adcLow >= calib.adcHigh) {
     error = "adcLow must be < adcHigh";
     return false;

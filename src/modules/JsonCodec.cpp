@@ -18,10 +18,20 @@ std::string configToJson(const AppConfig &cfg) {
     c["id"] = ch.id;
     c["adcPin"] = ch.adcPin;
     c["pressureSource"] = ch.pressureSource;
+    c["role"] = static_cast<int>(ch.role);
+    c["useGlobalNoiseRef"] = ch.useGlobalNoiseRef;
   }
   doc["sensor"]["temperature"]["enabled"] = cfg.sensor.temperature.enabled;
+  doc["sensor"]["temperature"]["mode"] = static_cast<int>(cfg.sensor.temperature.mode);
   doc["sensor"]["temperature"]["oneWirePin"] = cfg.sensor.temperature.oneWirePin;
   doc["sensor"]["temperature"]["updateIntervalMs"] = cfg.sensor.temperature.updateIntervalMs;
+  doc["sensor"]["temperature"]["ntc"]["adcPin"] = cfg.sensor.temperature.ntc.adcPin;
+  doc["sensor"]["temperature"]["ntc"]["seriesResistorOhm"] = cfg.sensor.temperature.ntc.seriesResistorOhm;
+  doc["sensor"]["temperature"]["ntc"]["nominalResistorOhm"] = cfg.sensor.temperature.ntc.nominalResistorOhm;
+  doc["sensor"]["temperature"]["ntc"]["beta"] = cfg.sensor.temperature.ntc.beta;
+  doc["sensor"]["temperature"]["ntc"]["nominalTempC"] = cfg.sensor.temperature.ntc.nominalTempC;
+  doc["sensor"]["temperature"]["ntc"]["offsetC"] = cfg.sensor.temperature.ntc.offsetC;
+  doc["sensor"]["temperature"]["ntc"]["sensorId"] = cfg.sensor.temperature.ntc.sensorId;
 
   doc["calib"]["adcLow"] = cfg.calib.adcLow;
   doc["calib"]["adcHigh"] = cfg.calib.adcHigh;
@@ -112,13 +122,28 @@ bool configFromJson(const std::string &json, AppConfig &cfgOut, std::string &err
       setIfExists(ch["id"], c.id);
       setIfExists(ch["adcPin"], c.adcPin);
       setIfExists(ch["pressureSource"], c.pressureSource);
+      int role = static_cast<int>(c.role);
+      setIfExists(ch["role"], role);
+      c.role = static_cast<AnalogChannelRole>(role);
+      setIfExists(ch["useGlobalNoiseRef"], c.useGlobalNoiseRef);
       cfgOut.sensor.analogChannels.push_back(c);
     }
   }
   JsonVariantConst t = s["temperature"];
   setIfExists(t["enabled"], cfgOut.sensor.temperature.enabled);
+  int tmode = static_cast<int>(cfgOut.sensor.temperature.mode);
+  setIfExists(t["mode"], tmode);
+  cfgOut.sensor.temperature.mode = static_cast<TemperatureMode>(tmode);
   setIfExists(t["oneWirePin"], cfgOut.sensor.temperature.oneWirePin);
   setIfExists(t["updateIntervalMs"], cfgOut.sensor.temperature.updateIntervalMs);
+  JsonVariantConst ntc = t["ntc"];
+  setIfExists(ntc["adcPin"], cfgOut.sensor.temperature.ntc.adcPin);
+  setIfExists(ntc["seriesResistorOhm"], cfgOut.sensor.temperature.ntc.seriesResistorOhm);
+  setIfExists(ntc["nominalResistorOhm"], cfgOut.sensor.temperature.ntc.nominalResistorOhm);
+  setIfExists(ntc["beta"], cfgOut.sensor.temperature.ntc.beta);
+  setIfExists(ntc["nominalTempC"], cfgOut.sensor.temperature.ntc.nominalTempC);
+  setIfExists(ntc["offsetC"], cfgOut.sensor.temperature.ntc.offsetC);
+  setIfExists(ntc["sensorId"], cfgOut.sensor.temperature.ntc.sensorId);
 
   JsonVariantConst c = doc["calib"];
   setIfExists(c["adcLow"], cfgOut.calib.adcLow);

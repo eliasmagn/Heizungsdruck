@@ -92,3 +92,7 @@ Das System entwickelt sich von Einzel-ADC auf modulare Mehrkanal-Erfassung (ein 
 - 2026-05-06: Build-Fixes für PlatformIO/ESP32-Arduino: C++11-Kompatibilität (kein lambda-auto/std::clamp/structured bindings), MQTT String/JsonDocument-Konsistenz, AlarmDispatchResult- und Kalibrierpunkt-Zuweisungen gehärtet.
 
 - 2026-05-07: Lokale Minimal-Erweiterung um Driftwerte (1h/24h) für Druck, optional Temperatur. Architektur bleibt lean: 5-Minuten-Snapshots im RAM, keine komplexe Leak-Klassifikation auf dem ESP.
+
+- 2026-05-07 Ergänzung: ESP-seitig nur schlanke lokale Signalaufbereitung (Messung, Filter, Kalibrierung, einfache Drift, kompakte Telemetrie); komplexe Langzeitanalyse bleibt extern.
+
+- 2026-05-07 Follow-up: Konfigurationskonsistenz zwischen JSON-Codec, WebUI-Sensor-Endpoint und Laufzeit-Sensorpfad hergestellt (Temp-Modi + NTC + noise_ref Zuordnung).

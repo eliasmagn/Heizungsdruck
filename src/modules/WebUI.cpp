@@ -42,6 +42,10 @@ String WebUI::statusJson() const {
   doc["pressureBar"] = lastReading_.pressureBar;
   doc["rawAdc"] = lastReading_.rawAdc;
   doc["filteredAdc"] = lastReading_.filteredAdc;
+  doc["compensatedAdc"] = lastReading_.compensatedAdc;
+  doc["noiseRawAdc"] = lastReading_.noiseRawAdc;
+  doc["noiseFilteredAdc"] = lastReading_.noiseFilteredAdc;
+  doc["hasNoiseRef"] = lastReading_.hasNoiseRef;
   doc["voltage"] = lastReading_.voltage;
   doc["valid"] = lastReading_.valid;
   doc["temperatureC"] = lastReading_.temperatureC;
@@ -62,6 +66,10 @@ String WebUI::statusJson() const {
   for (std::map<std::string, int>::const_iterator it = lastReading_.channelFiltered.begin(); it != lastReading_.channelFiltered.end(); ++it) {
     JsonObject c = channels[it->first.c_str()].to<JsonObject>();
     c["filteredAdc"] = it->second;
+  }
+  for (std::map<std::string, int>::const_iterator it = lastReading_.channelCompensated.begin(); it != lastReading_.channelCompensated.end(); ++it) {
+    JsonObject c = channels[it->first.c_str()].to<JsonObject>();
+    c["compensatedAdc"] = it->second;
   }
   doc["fault"] = static_cast<int>(lastReading_.fault);
   doc["state"] = static_cast<int>(lastState_);
@@ -247,14 +255,26 @@ void WebUI::setupRoutes() {
         if (!ch["id"].isNull()) c.id = ch["id"].as<const char*>();
         if (!ch["adcPin"].isNull()) c.adcPin = ch["adcPin"].as<uint8_t>();
         if (!ch["pressureSource"].isNull()) c.pressureSource = ch["pressureSource"].as<bool>();
+        if (!ch["role"].isNull()) c.role = static_cast<AnalogChannelRole>(ch["role"].as<int>());
+        if (!ch["useGlobalNoiseRef"].isNull()) c.useGlobalNoiseRef = ch["useGlobalNoiseRef"].as<bool>();
         candidate.sensor.analogChannels.push_back(c);
       }
     }
     JsonVariantConst t = doc["temperature"];
     if (!t.isNull()) {
       if (!t["enabled"].isNull()) candidate.sensor.temperature.enabled = t["enabled"].as<bool>();
+      if (!t["mode"].isNull()) candidate.sensor.temperature.mode = static_cast<TemperatureMode>(t["mode"].as<int>());
       if (!t["oneWirePin"].isNull()) candidate.sensor.temperature.oneWirePin = t["oneWirePin"].as<uint8_t>();
       if (!t["updateIntervalMs"].isNull()) candidate.sensor.temperature.updateIntervalMs = t["updateIntervalMs"].as<uint32_t>();
+      JsonVariantConst ntc = t["ntc"];
+      if (!ntc.isNull()) {
+        if (!ntc["adcPin"].isNull()) candidate.sensor.temperature.ntc.adcPin = ntc["adcPin"].as<uint8_t>();
+        if (!ntc["seriesResistorOhm"].isNull()) candidate.sensor.temperature.ntc.seriesResistorOhm = ntc["seriesResistorOhm"].as<float>();
+        if (!ntc["nominalResistorOhm"].isNull()) candidate.sensor.temperature.ntc.nominalResistorOhm = ntc["nominalResistorOhm"].as<float>();
+        if (!ntc["beta"].isNull()) candidate.sensor.temperature.ntc.beta = ntc["beta"].as<float>();
+        if (!ntc["nominalTempC"].isNull()) candidate.sensor.temperature.ntc.nominalTempC = ntc["nominalTempC"].as<float>();
+        if (!ntc["offsetC"].isNull()) candidate.sensor.temperature.ntc.offsetC = ntc["offsetC"].as<float>();
+      }
     }
     String outErr;
     if (!saveUpdatedConfig(candidate, outErr)) return server_.send(400, "text/plain", outErr);
