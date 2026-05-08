@@ -26,8 +26,6 @@ struct PressureReading {
   int filteredAdc{0};
   float voltage{0.0f};
   float pressureBar{0.0f};
-  float pressureBarCompensated{0.0f};
-  bool pressureBarCompensatedValid{false};
   bool valid{false};
   SensorFault fault{SensorFault::NONE};
   float temperatureC{0.0f};

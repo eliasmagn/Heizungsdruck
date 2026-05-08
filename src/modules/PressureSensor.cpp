@@ -192,8 +192,6 @@ PressureReading PressureSensor::sample(uint32_t nowMs) {
       if (it.first == pressureChannelId) r.compensatedAdc = comp;
     }
   }
-  r.pressureBarCompensated = math_.adcToBar(r.compensatedAdc);
-  r.pressureBarCompensatedValid = r.hasNoiseRef;
 
   SensorFault fault = SensorFault::NONE;
   if (classifyFault(r, fault)) {
