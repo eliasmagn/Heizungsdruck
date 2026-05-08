@@ -78,3 +78,8 @@
 - 2026-05-08: Slim-Profil finalisiert (Task/critical/WiFi-ESP32 APIs entkoppelt), Druckwert-Linie auf pressureBar konsolidiert.
 
 - 2026-05-08: Plattformkonsistenz final: Slim ohne Full-WebUI/Display, Capability-Gates bis Objektpfad durchgezogen, Discovery-Modell profilabhängig.
+
+## 2026-05-08 Fortschritt
+- Async-Webserver als gemeinsame Basis eingeführt.
+- ESP32-Profil behält LittleFS-SPA + volle API.
+- ESP8266-slim bewusst als reduzierte Async-API-Schicht dokumentiert/umgesetzt.

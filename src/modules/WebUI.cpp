@@ -2,6 +2,7 @@
 
 #include <ArduinoJson.h>
 #include <LittleFS.h>
+#include <functional>
 #if defined(ESP8266)
 #include <ESP8266WiFi.h>
 #else
@@ -10,7 +11,7 @@
 
 #include "JsonCodec.h"
 
-#if HAS_FULL_WEBUI
+#if HAS_ASYNC_WEBUI
 WebUI::WebUI(uint16_t port) : server_(port) {}
 
 void WebUI::begin() {
@@ -19,7 +20,7 @@ void WebUI::begin() {
   server_.begin();
 }
 
-void WebUI::loop() { server_.handleClient(); }
+void WebUI::loop() { handleDeferredActions(); }
 
 void WebUI::updateLiveData(const PressureReading &reading, PressureState state, bool wifiConnected, bool mqttConnected,
                            uint32_t uptimeSec) {
@@ -176,41 +177,43 @@ bool WebUI::saveUpdatedConfig(const AppConfig &candidate, String &errorOut) {
 }
 
 void WebUI::setupRoutes() {
-  auto serveSpaIndex = [this]() {
-    if (!LittleFS.exists("/index.html")) return server_.send(500, "text/plain", "LittleFS index.html missing");
-    auto file = LittleFS.open("/index.html", "r");
-    if (!file) return server_.send(500, "text/plain", "LittleFS index.html open failed");
-    server_.streamFile(file, "text/html");
-    file.close();
+#if HAS_FULL_WEBUI
+  auto serveSpaIndex = [](AsyncWebServerRequest *request) {
+    if (!LittleFS.exists("/index.html")) return request->send(500, "text/plain", "LittleFS index.html missing");
+    request->send(LittleFS, "/index.html", "text/html");
   };
+  server_.on("/", HTTP_GET, [serveSpaIndex](AsyncWebServerRequest *request) { serveSpaIndex(request); });
+  server_.serveStatic("/app.js", LittleFS, "/app.js").setCacheControl("max-age=60");
+  server_.serveStatic("/style.css", LittleFS, "/style.css").setCacheControl("max-age=60");
+  server_.serveStatic("/assets", LittleFS, "/assets").setCacheControl("max-age=86400");
+#else
+  server_.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "text/plain", "Heizungsdruck slim async API profile");
+  });
+#endif
 
-  server_.on("/", HTTP_GET, serveSpaIndex);
-  server_.serveStatic("/app.js", LittleFS, "/app.js", "max-age=60");
-  server_.serveStatic("/style.css", LittleFS, "/style.css", "max-age=60");
-  server_.serveStatic("/assets", LittleFS, "/assets", "max-age=86400");
+  server_.on("/api/status", HTTP_GET, [this](AsyncWebServerRequest *request) { request->send(200, "application/json", statusJson()); });
+  server_.on("/api/history", HTTP_GET, [this](AsyncWebServerRequest *request) { request->send(200, "application/json", historyJson()); });
+  server_.on("/api/diag", HTTP_GET, [this](AsyncWebServerRequest *request) { request->send(200, "application/json", diagnosticsJson()); });
+  server_.on("/api/config", HTTP_GET, [this](AsyncWebServerRequest *request) { request->send(200, "application/json", configJson()); });
+  server_.on("/api/config/export", HTTP_GET, [this](AsyncWebServerRequest *request) { request->send(200, "application/json", configJson()); });
 
-  server_.on("/api/status", HTTP_GET, [this]() { server_.send(200, "application/json", statusJson()); });
-  server_.on("/api/history", HTTP_GET, [this]() { server_.send(200, "application/json", historyJson()); });
-  server_.on("/api/diag", HTTP_GET, [this]() { server_.send(200, "application/json", diagnosticsJson()); });
-  server_.on("/api/config", HTTP_GET, [this]() { server_.send(200, "application/json", configJson()); });
-  server_.on("/api/config/export", HTTP_GET, [this]() { server_.send(200, "application/json", configJson()); });
-
-  server_.on("/api/config", HTTP_POST, [this]() {
+  server_.on("/api/config", HTTP_POST, [this](AsyncWebServerRequest *request) {
     AppConfig candidate = cfg_ ? *cfg_ : defaultConfig();
     std::string err;
-    if (!configFromJson(server_.arg("plain").c_str(), candidate, err)) {
-      return server_.send(400, "text/plain", String("invalid json/config: ") + err.c_str());
+    if (!configFromJson(request->arg("plain").c_str(), candidate, err)) {
+      return request->send(400, "text/plain", String("invalid json/config: ") + err.c_str());
     }
     String outErr;
-    if (!saveUpdatedConfig(candidate, outErr)) return server_.send(400, "text/plain", outErr);
-    server_.send(200, "text/plain", "saved");
+    if (!saveUpdatedConfig(candidate, outErr)) return request->send(400, "text/plain", outErr);
+    request->send(200, "text/plain", "saved");
   });
 
-  server_.on("/api/config/network", HTTP_POST, [this]() {
-    if (!cfg_) return server_.send(500, "text/plain", "config unavailable");
+  server_.on("/api/config/network", HTTP_POST, [this](AsyncWebServerRequest *request) {
+    if (!cfg_) return request->send(500, "text/plain", "config unavailable");
     AppConfig candidate = *cfg_;
     JsonDocument doc;
-    if (deserializeJson(doc, server_.arg("plain"))) return server_.send(400, "text/plain", "invalid json");
+    if (deserializeJson(doc, request->arg("plain"))) return request->send(400, "text/plain", "invalid json");
     if (!doc["wifiSsid"].isNull()) candidate.network.wifiSsid = doc["wifiSsid"].as<const char *>();
     if (!doc["wifiPassword"].isNull()) candidate.network.wifiPassword = doc["wifiPassword"].as<const char *>();
     if (!doc["apSsid"].isNull()) candidate.network.apSsid = doc["apSsid"].as<const char *>();
@@ -219,11 +222,11 @@ void WebUI::setupRoutes() {
     if (!doc["wifiTxPowerDbm"].isNull()) candidate.network.wifiTxPowerDbm = doc["wifiTxPowerDbm"].as<float>();
     if (!doc["wifi11bMode"].isNull()) candidate.network.wifi11bMode = doc["wifi11bMode"].as<bool>();
     String outErr;
-    if (!saveUpdatedConfig(candidate, outErr)) return server_.send(400, "text/plain", outErr);
-    server_.send(200, "text/plain", "network saved");
+    if (!saveUpdatedConfig(candidate, outErr)) return request->send(400, "text/plain", outErr);
+    request->send(200, "text/plain", "network saved");
   });
 
-  server_.on("/api/wifi/scan", HTTP_GET, [this]() {
+  server_.on("/api/wifi/scan", HTTP_GET, [this](AsyncWebServerRequest *request) {
     const int found = WiFi.scanNetworks(false, true);
     JsonDocument doc;
     JsonArray arr = doc["networks"].to<JsonArray>();
@@ -237,14 +240,14 @@ void WebUI::setupRoutes() {
     WiFi.scanDelete();
     String out;
     serializeJson(doc, out);
-    server_.send(200, "application/json", out);
+    request->send(200, "application/json", out);
   });
 
-  server_.on("/api/config/sensor", HTTP_POST, [this]() {
-    if (!cfg_) return server_.send(500, "text/plain", "config unavailable");
+  server_.on("/api/config/sensor", HTTP_POST, [this](AsyncWebServerRequest *request) {
+    if (!cfg_) return request->send(500, "text/plain", "config unavailable");
     AppConfig candidate = *cfg_;
     JsonDocument doc;
-    if (deserializeJson(doc, server_.arg("plain"))) return server_.send(400, "text/plain", "invalid json");
+    if (deserializeJson(doc, request->arg("plain"))) return request->send(400, "text/plain", "invalid json");
     if (!doc["adcPin"].isNull()) candidate.sensor.adcPin = doc["adcPin"].as<uint8_t>();
     if (!doc["sampleCount"].isNull()) candidate.sensor.sampleCount = doc["sampleCount"].as<uint16_t>();
     if (!doc["updateIntervalMs"].isNull()) candidate.sensor.updateIntervalMs = doc["updateIntervalMs"].as<uint32_t>();
@@ -282,26 +285,26 @@ void WebUI::setupRoutes() {
       }
     }
     String outErr;
-    if (!saveUpdatedConfig(candidate, outErr)) return server_.send(400, "text/plain", outErr);
-    server_.send(200, "text/plain", "sensor saved");
+    if (!saveUpdatedConfig(candidate, outErr)) return request->send(400, "text/plain", outErr);
+    request->send(200, "text/plain", "sensor saved");
   });
 
-  server_.on("/api/config/import", HTTP_POST, [this]() {
+  server_.on("/api/config/import", HTTP_POST, [this](AsyncWebServerRequest *request) {
     AppConfig candidate = cfg_ ? *cfg_ : defaultConfig();
     std::string err;
-    if (!configFromJson(server_.arg("plain").c_str(), candidate, err)) {
-      return server_.send(400, "text/plain", String("invalid json/config: ") + err.c_str());
+    if (!configFromJson(request->arg("plain").c_str(), candidate, err)) {
+      return request->send(400, "text/plain", String("invalid json/config: ") + err.c_str());
     }
     String outErr;
-    if (!saveUpdatedConfig(candidate, outErr)) return server_.send(400, "text/plain", outErr);
-    server_.send(200, "text/plain", "imported");
+    if (!saveUpdatedConfig(candidate, outErr)) return request->send(400, "text/plain", outErr);
+    request->send(200, "text/plain", "imported");
   });
 
-  server_.on("/api/config/mqtt", HTTP_POST, [this]() {
-    if (!cfg_) return server_.send(500, "text/plain", "config unavailable");
+  server_.on("/api/config/mqtt", HTTP_POST, [this](AsyncWebServerRequest *request) {
+    if (!cfg_) return request->send(500, "text/plain", "config unavailable");
     AppConfig candidate = *cfg_;
     JsonDocument doc;
-    if (deserializeJson(doc, server_.arg("plain"))) return server_.send(400, "text/plain", "invalid json");
+    if (deserializeJson(doc, request->arg("plain"))) return request->send(400, "text/plain", "invalid json");
     if (!doc["enabled"].isNull()) candidate.mqtt.enabled = doc["enabled"].as<bool>();
     if (!doc["host"].isNull()) candidate.mqtt.host = doc["host"].as<const char *>();
     if (!doc["port"].isNull()) candidate.mqtt.port = doc["port"].as<uint16_t>();
@@ -313,15 +316,15 @@ void WebUI::setupRoutes() {
     if (!doc["publishIntervalMs"].isNull()) candidate.mqtt.publishIntervalMs = doc["publishIntervalMs"].as<uint32_t>();
     if (!doc["requireWireguard"].isNull()) candidate.mqtt.requireWireguard = doc["requireWireguard"].as<bool>();
     String outErr;
-    if (!saveUpdatedConfig(candidate, outErr)) return server_.send(400, "text/plain", outErr);
-    server_.send(200, "text/plain", "mqtt saved");
+    if (!saveUpdatedConfig(candidate, outErr)) return request->send(400, "text/plain", outErr);
+    request->send(200, "text/plain", "mqtt saved");
   });
 
-  server_.on("/api/config/wireguard", HTTP_POST, [this]() {
-    if (!cfg_) return server_.send(500, "text/plain", "config unavailable");
+  server_.on("/api/config/wireguard", HTTP_POST, [this](AsyncWebServerRequest *request) {
+    if (!cfg_) return request->send(500, "text/plain", "config unavailable");
     AppConfig candidate = *cfg_;
     JsonDocument doc;
-    if (deserializeJson(doc, server_.arg("plain"))) return server_.send(400, "text/plain", "invalid json");
+    if (deserializeJson(doc, request->arg("plain"))) return request->send(400, "text/plain", "invalid json");
     if (!doc["enabled"].isNull()) candidate.wireguard.enabled = doc["enabled"].as<bool>();
     if (!doc["localAddress"].isNull()) candidate.wireguard.localAddress = doc["localAddress"].as<const char *>();
     if (!doc["netmask"].isNull()) candidate.wireguard.netmask = doc["netmask"].as<const char *>();
@@ -334,7 +337,7 @@ void WebUI::setupRoutes() {
     if (!doc["allowedIp2"].isNull()) candidate.wireguard.allowedIp2 = doc["allowedIp2"].as<const char *>();
     if (!doc["keepAliveSeconds"].isNull()) candidate.wireguard.keepAliveSeconds = doc["keepAliveSeconds"].as<uint16_t>();
     String outErr;
-    if (!saveUpdatedConfig(candidate, outErr)) return server_.send(400, "text/plain", outErr);
+    if (!saveUpdatedConfig(candidate, outErr)) return request->send(400, "text/plain", outErr);
     if (wireguard_ != nullptr) {
       if (candidate.wireguard.enabled) {
         wireguard_->enable(candidate.wireguard);
@@ -342,14 +345,14 @@ void WebUI::setupRoutes() {
         wireguard_->disable();
       }
     }
-    server_.send(200, "text/plain", "wireguard saved");
+    request->send(200, "text/plain", "wireguard saved");
   });
 
-  server_.on("/api/config/alarm", HTTP_POST, [this]() {
-    if (!cfg_) return server_.send(500, "text/plain", "config unavailable");
+  server_.on("/api/config/alarm", HTTP_POST, [this](AsyncWebServerRequest *request) {
+    if (!cfg_) return request->send(500, "text/plain", "config unavailable");
     AppConfig candidate = *cfg_;
     JsonDocument doc;
-    if (deserializeJson(doc, server_.arg("plain"))) return server_.send(400, "text/plain", "invalid json");
+    if (deserializeJson(doc, request->arg("plain"))) return request->send(400, "text/plain", "invalid json");
     if (!doc["lowBar"].isNull()) candidate.alarm.lowBar = doc["lowBar"].as<float>();
     if (!doc["highBar"].isNull()) candidate.alarm.highBar = doc["highBar"].as<float>();
     if (!doc["hysteresisBar"].isNull()) candidate.alarm.hysteresisBar = doc["hysteresisBar"].as<float>();
@@ -358,15 +361,15 @@ void WebUI::setupRoutes() {
     if (!doc["telegramChatId"].isNull()) candidate.alarm.telegramChatId = doc["telegramChatId"].as<const char *>();
     if (!doc["emailWebhookUrl"].isNull()) candidate.alarm.emailWebhookUrl = doc["emailWebhookUrl"].as<const char *>();
     String outErr;
-    if (!saveUpdatedConfig(candidate, outErr)) return server_.send(400, "text/plain", outErr);
-    server_.send(200, "text/plain", "alarm saved");
+    if (!saveUpdatedConfig(candidate, outErr)) return request->send(400, "text/plain", outErr);
+    request->send(200, "text/plain", "alarm saved");
   });
 
-  server_.on("/api/config/calibration", HTTP_POST, [this]() {
-    if (!cfg_) return server_.send(500, "text/plain", "config unavailable");
+  server_.on("/api/config/calibration", HTTP_POST, [this](AsyncWebServerRequest *request) {
+    if (!cfg_) return request->send(500, "text/plain", "config unavailable");
     AppConfig candidate = *cfg_;
     JsonDocument doc;
-    if (deserializeJson(doc, server_.arg("plain"))) return server_.send(400, "text/plain", "invalid json");
+    if (deserializeJson(doc, request->arg("plain"))) return request->send(400, "text/plain", "invalid json");
     JsonVariantConst cv = doc["calib"];
     if (cv.isNull()) cv = doc;
     if (!cv["adcLow"].isNull()) candidate.calib.adcLow = cv["adcLow"].as<int>();
@@ -387,60 +390,57 @@ void WebUI::setupRoutes() {
       }
     }
     String outErr;
-    if (!saveUpdatedConfig(candidate, outErr)) return server_.send(400, "text/plain", outErr);
-    server_.send(200, "text/plain", "calibration saved");
+    if (!saveUpdatedConfig(candidate, outErr)) return request->send(400, "text/plain", outErr);
+    request->send(200, "text/plain", "calibration saved");
   });
 
-  server_.on("/api/calibration/capture", HTTP_POST, [this]() {
-    if (!cfg_) return server_.send(500, "text/plain", "config unavailable");
+  server_.on("/api/calibration/capture", HTTP_POST, [this](AsyncWebServerRequest *request) {
+    if (!cfg_) return request->send(500, "text/plain", "config unavailable");
     AppConfig candidate = *cfg_;
     JsonDocument doc;
-    if (deserializeJson(doc, server_.arg("plain"))) return server_.send(400, "text/plain", "invalid json");
+    if (deserializeJson(doc, request->arg("plain"))) return request->send(400, "text/plain", "invalid json");
     const float bar = doc["bar"].as<float>();
-    if (bar < 0.0f || bar > 10.0f) return server_.send(400, "text/plain", "bar must be 0..10");
-    if (candidate.calib.points.size() >= CalibrationConfig::kMaxPointCount) return server_.send(400, "text/plain", "max 20 calibration points");
+    if (bar < 0.0f || bar > 10.0f) return request->send(400, "text/plain", "bar must be 0..10");
+    if (candidate.calib.points.size() >= CalibrationConfig::kMaxPointCount) return request->send(400, "text/plain", "max 20 calibration points");
     CalibrationConfig::Point point;
     point.bar = bar;
     point.adc = lastReading_.filteredAdc;
     point.valid = true;
     candidate.calib.points.push_back(point);
     String outErr;
-    if (!saveUpdatedConfig(candidate, outErr)) return server_.send(400, "text/plain", outErr);
-    server_.send(200, "text/plain", "captured");
+    if (!saveUpdatedConfig(candidate, outErr)) return request->send(400, "text/plain", outErr);
+    request->send(200, "text/plain", "captured");
   });
 
-  server_.on("/api/calibration/clear", HTTP_POST, [this]() {
-    if (!cfg_) return server_.send(500, "text/plain", "config unavailable");
+  server_.on("/api/calibration/clear", HTTP_POST, [this](AsyncWebServerRequest *request) {
+    if (!cfg_) return request->send(500, "text/plain", "config unavailable");
     AppConfig candidate = *cfg_;
     candidate.calib.points.clear();
     String outErr;
-    if (!saveUpdatedConfig(candidate, outErr)) return server_.send(400, "text/plain", outErr);
-    server_.send(200, "text/plain", "cleared");
+    if (!saveUpdatedConfig(candidate, outErr)) return request->send(400, "text/plain", outErr);
+    request->send(200, "text/plain", "cleared");
   });
 
-  server_.on("/api/test/telegram", HTTP_POST, [this]() {
-    if (!cfg_ || alarmManager_ == nullptr) return server_.send(500, "text/plain", "alarm manager unavailable");
-    const auto result = alarmManager_->sendTelegramMessage("Heizungsdruck test alarm.");
-    if (!result.ok) return server_.send(502, "text/plain", String("telegram failed: status=") + result.httpStatus + " " + result.detail);
-    server_.send(200, "text/plain", String("telegram ok: status=") + result.httpStatus + " " + result.detail);
+  server_.on("/api/test/telegram", HTTP_POST, [this](AsyncWebServerRequest *request) {
+    if (!cfg_ || alarmManager_ == nullptr) return request->send(500, "text/plain", "alarm manager unavailable");
+    pendingTelegramTest_ = true;
+    request->send(202, "text/plain", "telegram test scheduled");
   });
 
-  server_.on("/api/test/webhook", HTTP_POST, [this]() {
-    if (!cfg_ || alarmManager_ == nullptr) return server_.send(500, "text/plain", "alarm manager unavailable");
-    const auto result = alarmManager_->sendWebhookTest(lastReading_, lastState_, "test");
-    if (!result.ok) return server_.send(502, "text/plain", String("webhook failed: status=") + result.httpStatus + " " + result.detail);
-    server_.send(200, "text/plain", String("webhook ok: status=") + result.httpStatus + " " + result.detail);
+  server_.on("/api/test/webhook", HTTP_POST, [this](AsyncWebServerRequest *request) {
+    if (!cfg_ || alarmManager_ == nullptr) return request->send(500, "text/plain", "alarm manager unavailable");
+    pendingWebhookTest_ = true;
+    request->send(202, "text/plain", "webhook test scheduled");
   });
 
-  server_.on("/api/test/mqtt", HTTP_POST, [this]() {
-    if (mqttManager_ == nullptr) return server_.send(500, "text/plain", "mqtt manager unavailable");
-    const bool ok = mqttManager_->publishTestMessage("manual webui test");
-    if (!ok) return server_.send(502, "text/plain", String("mqtt test failed: ") + mqttManager_->diagnosticsJson());
-    server_.send(200, "text/plain", String("mqtt test ok: ") + mqttManager_->diagnosticsJson());
+  server_.on("/api/test/mqtt", HTTP_POST, [this](AsyncWebServerRequest *request) {
+    if (mqttManager_ == nullptr) return request->send(500, "text/plain", "mqtt manager unavailable");
+    pendingMqttTest_ = true;
+    request->send(202, "text/plain", "mqtt test scheduled");
   });
 
-  server_.on("/api/wireguard/status", HTTP_GET, [this]() {
-    if (wireguard_ == nullptr) return server_.send(500, "text/plain", "wireguard manager unavailable");
+  server_.on("/api/wireguard/status", HTTP_GET, [this](AsyncWebServerRequest *request) {
+    if (wireguard_ == nullptr) return request->send(500, "text/plain", "wireguard manager unavailable");
     const WireGuardStatus wg = wireguard_->status();
     JsonDocument doc;
     doc["enabled"] = wg.enabled;
@@ -453,37 +453,52 @@ void WebUI::setupRoutes() {
     doc["lastError"] = wg.lastError.c_str();
     String out;
     serializeJson(doc, out);
-    server_.send(200, "application/json", out);
+    request->send(200, "application/json", out);
   });
 
-  server_.on("/api/wireguard/enable", HTTP_POST, [this]() {
-    if (!cfg_ || wireguard_ == nullptr) return server_.send(500, "text/plain", "wireguard unavailable");
+  server_.on("/api/wireguard/enable", HTTP_POST, [this](AsyncWebServerRequest *request) {
+    if (!cfg_ || wireguard_ == nullptr) return request->send(500, "text/plain", "wireguard unavailable");
     if (!wireguard_->enable(cfg_->wireguard)) {
       const WireGuardStatus wg = wireguard_->status();
-      return server_.send(400, "text/plain", String("wireguard enable failed: ") + wg.lastError.c_str());
+      return request->send(400, "text/plain", String("wireguard enable failed: ") + wg.lastError.c_str());
     }
-    server_.send(200, "text/plain", "enabled");
+    request->send(200, "text/plain", "enabled");
   });
 
-  server_.on("/api/wireguard/disable", HTTP_POST, [this]() {
-    if (wireguard_ == nullptr) return server_.send(500, "text/plain", "wireguard manager unavailable");
+  server_.on("/api/wireguard/disable", HTTP_POST, [this](AsyncWebServerRequest *request) {
+    if (wireguard_ == nullptr) return request->send(500, "text/plain", "wireguard manager unavailable");
     wireguard_->disable();
-    server_.send(200, "text/plain", "disabled");
+    request->send(200, "text/plain", "disabled");
   });
 
-  server_.on("/api/reboot", HTTP_POST, [this]() {
-    server_.send(200, "text/plain", "restarting");
-    delay(100);
-    ESP.restart();
+  server_.on("/api/reboot", HTTP_POST, [this](AsyncWebServerRequest *request) {
+    request->send(200, "text/plain", "restarting");
+    pendingReboot_ = true;
   });
 
-  server_.onNotFound([this, serveSpaIndex]() {
-    if (server_.uri().startsWith("/api/")) return server_.send(404, "text/plain", "not found");
-    serveSpaIndex();
+  server_.onNotFound([](AsyncWebServerRequest *request) {
+    request->send(404, "text/plain", "not found");
   });
 }
 
-#endif
+void WebUI::handleDeferredActions() {
+  if (pendingTelegramTest_ && alarmManager_ != nullptr) {
+    pendingTelegramTest_ = false;
+    alarmManager_->sendTelegramMessage("Heizungsdruck test alarm.");
+  }
+  if (pendingWebhookTest_ && alarmManager_ != nullptr) {
+    pendingWebhookTest_ = false;
+    alarmManager_->sendWebhookTest(lastReading_, lastState_, "test");
+  }
+  if (pendingMqttTest_ && mqttManager_ != nullptr) {
+    pendingMqttTest_ = false;
+    mqttManager_->publishTestMessage("manual webui test");
+  }
+  if (pendingReboot_) {
+    pendingReboot_ = false;
+    ESP.restart();
+  }
+}
 
 #else
 

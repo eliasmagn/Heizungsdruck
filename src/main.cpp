@@ -206,9 +206,7 @@ void setup() {
   gWeb.attachAlarmManager(&gAlarm);
   gWeb.attachMqttManager(&gMqtt);
   gWireGuard.begin(gConfig.wireguard);
-#if HAS_FULL_WEBUI
-  gWeb.begin();
-#endif
+gWeb.begin();
 }
 
 void loop() {
@@ -229,9 +227,7 @@ void loop() {
 
   gWireGuard.loop(now / 1000);
   gWeb.updateLiveData(gLastReading, gLastState, wifiConnected, gMqtt.connected(), now / 1000);
-#if HAS_FULL_WEBUI
-  gWeb.loop();
-#endif
+gWeb.loop();
   ArduinoOTA.handle();
 
   DisplayState ds;

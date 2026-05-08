@@ -118,3 +118,8 @@
 - [x] pressureBarCompensated entfernt, compensatedAdc als Diagnose beibehalten
 
 - [x] 2026-05-08: Restprobleme finalisiert: WebUI/Display capability-basiert für esp8266_slim deaktiviert, Discovery-Modell profilabhängig benannt.
+
+- [x] Async-Webserver-Umstellung abgeschlossen (ESP32 + ESP8266 slim)
+- [x] Blockierende HTTP-Callbacks entfernt (Reboot/Test-Aktionen deferred)
+- [x] PlatformIO Async-Abhängigkeiten je Profil gepinnt
+- [x] README auf realen Web-Profilstand aktualisiert
