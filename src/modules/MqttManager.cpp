@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include "platform_caps.h"
 namespace {
 constexpr uint16_t kMqttBufferSize = 2048;
 String sanitizeId(const std::string &in) {
@@ -236,7 +237,7 @@ void MqttManager::publishHomeAssistantDiscovery() {
     ids.add(cleanId);
     dev["name"] = deviceName;
     dev["mf"] = "EliasMagn";
-    dev["mdl"] = "ESP32 Pressure Monitor";
+    dev["mdl"] = TARGET_ESP32 ? "ESP32 Pressure Monitor" : "ESP8266 Pressure Monitor (Slim)";
     dev["sw"] = "firmware";
   };
 

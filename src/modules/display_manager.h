@@ -1,9 +1,13 @@
 #pragma once
 
+#include <Arduino.h>
+#include "platform_caps.h"
+
+#if HAS_DISPLAY
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-#include <Arduino.h>
 #include <Wire.h>
+#endif
 
 struct DisplayState {
   bool wifi_connected{false};
@@ -22,7 +26,7 @@ struct DisplayState {
 
 class DisplayManager {
  public:
-  explicit DisplayManager(TwoWire *wire = &Wire);
+  DisplayManager();
 
   bool begin();
   void update(const DisplayState &state);
@@ -30,6 +34,7 @@ class DisplayManager {
   void showError(const char *message);
 
  private:
+#if HAS_DISPLAY
   static constexpr uint8_t kWidth = 128;
   static constexpr uint8_t kHeight = 64;
   static constexpr uint8_t kStatusHeight = 12;
@@ -51,4 +56,5 @@ class DisplayManager {
   bool hasLastState_{false};
   uint32_t lastAlarmHeaderSwitchMs_{0};
   bool showAlarmHeader_{true};
+#endif
 };

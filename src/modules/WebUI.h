@@ -1,6 +1,9 @@
 #pragma once
 
+#include "platform_caps.h"
+#if HAS_FULL_WEBUI
 #include <WebServer.h>
+#endif
 
 #include "AlarmManager.h"
 #include "AppConfig.h"
@@ -25,6 +28,7 @@ class WebUI {
   void attachMqttManager(MqttManager *mqttManager);
 
  private:
+#if HAS_FULL_WEBUI
   String statusJson() const;
   String historyJson() const;
   String diagnosticsJson() const;
@@ -33,6 +37,7 @@ class WebUI {
   void setupRoutes();
 
   WebServer server_;
+#endif
   PressureReading lastReading_;
   PressureState lastState_{PressureState::UNKNOWN};
   bool wifiConnected_{false};

@@ -76,3 +76,5 @@
 
 - 2026-05-07: Restprobleme abgeschlossen: klare ESP8266-Slim-Abgrenzung (ohne WireGuard), lokale Driftlogik auf Druckdrift reduziert, README konsolidiert.
 - 2026-05-08: Slim-Profil finalisiert (Task/critical/WiFi-ESP32 APIs entkoppelt), Druckwert-Linie auf pressureBar konsolidiert.
+
+- 2026-05-08: Plattformkonsistenz final: Slim ohne Full-WebUI/Display, Capability-Gates bis Objektpfad durchgezogen, Discovery-Modell profilabhängig.
