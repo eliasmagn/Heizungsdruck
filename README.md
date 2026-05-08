@@ -1,190 +1,57 @@
-# Heizungsdruck (ESP32 + PlatformIO)
+# Heizungsdruck (ESP32 Standard + ESP8266 Slim)
 
-## Kurzbeschreibung
-Heizungsdruck ist eine ESP32-Firmware mit **LittleFS-Weboberfläche**, **MQTT-Telemetrie**, **Telegram/Webhook-Alarmen**, **OTA via ArduinoOTA** und **freier Kalibrierung mit max. 20 Punkten**.
+Firmware zur Heizungsdruck-Messung mit Web-UI, MQTT und einfacher lokaler Driftberechnung.
 
-## Hardware / Verdrahtung
-- ESP32 DevKit (`esp32dev`)
-- Drucksensor-Ausgang auf ADC-taugliche 0–3.3V skaliert
-- Standard ADC-Pin: `GPIO34`
-- Optional Display (Projekt nutzt separaten Display-Manager)
+## Plattformprofile
+- `esp32_standard` (Default): Vollprofil mit Web-UI, Multi-ADC, optional WireGuard, OTA, MQTT Discovery.
+- `esp8266_slim`: reduziertes Profil ohne WireGuard und ohne ESP32-spezifische ADC-Features.
 
-## Build / Flash
+Build/Flash:
 ```bash
-pio run
+pio run -e esp32_standard
+pio run -e esp8266_slim
 pio run -t upload
-pio device monitor
-```
-
-## LittleFS / Web-Assets (`uploadfs`)
-Die Weboberfläche liegt in `data/` und wird nach LittleFS geflasht.
-
-```bash
 pio run -t uploadfs
+pio device monitor
+pio test -e native
 ```
 
-**Wichtig:**
-- `upload` = nur Firmware (`src/*`)
-- `uploadfs` = nur Web-Dateien (`data/*`)
-- Bei Änderungen in `data/index.html`, `data/app.js`, `data/style.css` ist `uploadfs` zwingend.
+## Messlogik (bewusst schlank)
+- Primärwert: `pressureBar` aus gefiltertem ADC.
+- Optionaler Temperaturpfad, Standard: `temperature.mode = ntc`.
+- Lokale Drift nur für Druck:
+  - `pressureDrift1h`
+  - `pressureDrift24h`
+- Komplexe Leckanalyse gehört bewusst nachgelagert in Home Assistant / PC / DB.
 
-## Ersteinrichtung / AP-Modus
-Wenn STA-WLAN nicht verbindet, startet das Gerät einen Setup-AP (`network.apSsid`).
-AP-Passwort wird bei Bedarf automatisch erzeugt und gespeichert.
+## `noise_ref` (transparent, nicht „magisch“)
+- Optionaler Referenzkanal `noise_ref` für Baseline-Korrektur von ADC-Werten.
+- Originalwerte bleiben immer erhalten (`rawAdc`, `filteredAdc`).
+- Kompensierter Zusatzwert (`compensatedAdc`) ist Diagnosehilfe, kein Ersatz für den Primärdruckwert.
 
-## Weboberfläche
-- Root `/` liefert die SPA aus LittleFS (`data/index.html`)
-- Tabs: **Live**, **Verlauf**, **Kalibrierung**, **Einstellungen**, **Diagnose**
-- Konfiguration läuft über REST-API-Endpunkte (`/api/config/*`)
+## ESP8266-Slim Grenzen (ehrlich)
+- Intern praktisch nur **ein** ADC-Eingang (A0).
+- Druck + NTC + `noise_ref` gleichzeitig intern sind nicht gleichwertig zum ESP32.
+- Mehrere Analogsensoren am ESP8266 nur mit externer Hardware (Mux/externes ADC-Frontend).
+- WireGuard ist **nicht** Teil des Slim-Profils.
 
-## MQTT konfigurieren und testen
-1. In **Einstellungen → MQTT** aktivieren.
-2. Host/Port/User/Pass/Topic-Base setzen und speichern.
-3. Optional: **„WireGuard für MQTT bevorzugen (Fallback aktiv)“** aktivieren.
-4. Diagnose prüfen:
-   - Serial-Log zeigt Connect/Reconnect/Publish inkl. Topic, Payload-Länge und Fehlerzustand.
-   - `/api/diag` enthält `mqttDiag` (connected/state/last error/buffer info).
-5. Broker-Topics prüfen:
-   - `<topicBase>/status`
-   - `<topicBase>/telemetry`
-   - `<topicBase>/state`
-
-## Telegram konfigurieren und testen
-1. In **Einstellungen → Alarm** `telegramBotToken` und `telegramChatId` setzen.
-2. In **Diagnose** „Telegram Test“ auslösen.
-3. Ergebnis wird mit HTTP-Status + API-Antwort angezeigt; Fehler sind nicht mehr still.
-
-Bot-Kommandos:
-- `/start`
-- `/getpres`
-- `/setoffset <wert>`
-- `/setcalpoint <bar> <adc>`
-- `/saveconfig`
-
-## OTA nutzen
-ArduinoOTA ist aktiv (`ArduinoOTA.begin()` in `setup()`).
-
-- OTA-Zielname entspricht `network.hostname`.
-- Upload aus gleichem Netz mit OTA-fähigem Tool (z. B. Arduino IDE oder PlatformIO Remote/OTA-Workflow).
-- Nach OTA-Flash wird nur Firmware ersetzt; bei UI-Änderungen weiterhin `uploadfs` nötig.
-
-## Kalibrierung
-- Maximal **20 frei verwaltete Punkte** (`bar`, `adc`, `valid`).
-- Punkte können im UI hinzugefügt und gelöscht werden.
-- Interpolation erfolgt stückweise linear über **gültige, nach ADC sortierte** Punkte.
-- Bei weniger als 2 gültigen Punkten greift der 2-Punkt-Fallback:
-  - `adcLow/adcHigh`
-  - `barLow/barHigh`
-  - plus `offsetBar`
-
-## Troubleshooting
-- Weboberfläche unverändert trotz Update → `pio run -t uploadfs`
-- MQTT connected, aber keine Daten am Broker → Serial-Logs auf Publish-Fehler/Buffer prüfen, `/api/diag` → `mqttDiag`
-- Telegram fehlgeschlagen → Token/Chat-ID prüfen, HTTP-Status + Detailtext in UI/Serial auswerten
-- WLAN-Probleme → AP-Modus nutzen und Netzwerkkonfig im UI korrigieren
-- WireGuard kommt nicht hoch bei `/24`-Eingabe: `localAddress` darf jetzt auch als CIDR (`10.66.0.2/24`) eingegeben werden; intern wird die IP extrahiert und der Hinweis im Diagnosefeld gesetzt.
-
-## Entwicklungshinweise
-- Build: `pio run`
-- Host-Tests: `pio test -e native`
-- Keine Secrets im Repo
-- Nicht-blockierende Loops bevorzugen
-Hinweis WireGuard:
-- Standard ist **beide Wege möglich** (normales Routing + WireGuard, falls Tunnel aktiv).
-- Mit `requireWireguard=true` wird WireGuard für MQTT bevorzugt und der Tunnelstatus diagnostisch geloggt; wenn der Tunnel offline ist, bleibt Fallback-Routing aktiv.
-- Für echte Tunnel-Nutzung als MQTT-Host eine Adresse aus dem Tunnelnetz verwenden und `Allowed IPs` passend setzen.
-- Zusätzlicher Funktionstest: Im Diagnose-Tab **MQTT Test Publish** ausführen (publisht auf `<topicBase>/telemetry_test`).
-
-## Mehrgerätebetrieb (4 Heizkreise)
-Empfohlen ist **ein Gerät je Heizkreis** mit eigener Identität:
-
-| Heizkreis | deviceId | hostname | topicBase |
-|----------|----------|----------|-----------|
-| HK1 | kreis1 | heizungsdruck-kreis1 | heizungsdruck/kreis1 |
-| HK2 | kreis2 | heizungsdruck-kreis2 | heizungsdruck/kreis2 |
-| HK3 | kreis3 | heizungsdruck-kreis3 | heizungsdruck/kreis3 |
-| HK4 | kreis4 | heizungsdruck-kreis4 | heizungsdruck/kreis4 |
-
-`deviceId` ist jetzt zentral. Wenn `hostname`, `mqtt.clientId` oder `mqtt.topicBase` leer bzw. auf Legacy-Default stehen, werden sie automatisch aus `deviceId` abgeleitet.
-
-Standard-Topics pro Gerät:
+## MQTT / Discovery
+Wichtige Topics:
 - `<topicBase>/telemetry`
 - `<topicBase>/state`
 - `<topicBase>/status`
-- `<topicBase>/telemetry_test`
-- `<topicBase>/cmd/restart`
 
-### Home Assistant MQTT Discovery
-Beim erfolgreichen MQTT-Connect veröffentlicht das Gerät retained Discovery-Configs unter:
-- `homeassistant/sensor/heizungsdruck_<deviceId>_pressure/config`
-- `homeassistant/sensor/heizungsdruck_<deviceId>_state/config`
-- `homeassistant/sensor/heizungsdruck_<deviceId>_rawadc/config`
-- `homeassistant/sensor/heizungsdruck_<deviceId>_filteredadc/config`
-- `homeassistant/binary_sensor/heizungsdruck_<deviceId>_valid/config`
-- `homeassistant/binary_sensor/heizungsdruck_<deviceId>_alarm/config`
+Discovery wird beim MQTT-Connect publiziert.
 
-Verfügbarkeit läuft über `<topicBase>/status` (`online`/`offline`).
+## Repo-Überblick
+- `platformio.ini` – Environments (`esp32_standard`, `esp8266_slim`, `native`)
+- `src/main.cpp` – Orchestrierung
+- `src/platform_caps.h` – zentrale Feature-Capabilities
+- `src/modules/*` – Sensorik, MQTT, Web, State, Config
+- `data/*` – Web-Assets (LittleFS)
+- `test/*` – Host-Tests
 
-### Discovery testen
-1. Auf jedem ESP32 eigene `deviceId` setzen (`kreis1`…`kreis4`) und speichern.
-2. MQTT neu verbinden (Neustart oder Broker reconnect).
-3. Im Broker prüfen, ob Discovery-Topics retained vorhanden sind.
-4. In Home Assistant unter MQTT-Integration neue Geräte prüfen.
-5. Testweise `/api/test/mqtt` auslösen und `telemetry_test` je Gerät prüfen.
-
-
-## Sensor-Stack Ausbau (Mai 2026)
-- Mehrere analoge Kanäle über `sensor.analogChannels` (Liste mit `id`, `adcPin`, `pressureSource`).
-- Druckpfad bleibt kompatibel (`pressureBar`, `rawAdc`, `filteredAdc`, `state`).
-- DS18B20-Unterstützung über `sensor.temperature` (`enabled`, `oneWirePin`, `updateIntervalMs`).
-- ADC-Erfassung nutzt jetzt bevorzugt ESP-IDF Continuous ADC (DMA) pro Kanal; falls nicht verfügbar, wird automatisch auf analogRead-Batches mit robustem Filter zurückgefallen.
-- MQTT ergänzt um `voltage`, `temperatureC`, `temperatureValid`; HA Discovery ergänzt um Spannung/Temperatur-Entitäten.
-
-
-### Sensor-Telemetrie (MQTT)
-`<topicBase>/telemetry` enthält jetzt zusätzlich:
-- `voltage`, `temperatureC`, `temperatureValid`
-- `channels`-Objekt mit Kanal-ID als Schlüssel, je Kanal `rawAdc`/`filteredAdc`
-
-### Home Assistant Discovery (erweitert)
-Zusätzlich zu Druck/State/ADC/Valid/Alarm werden jetzt publiziert:
-- Spannung: `..._voltage`
-- Temperatur: `..._temperature`
-- Temperatur gültig (Binary): `..._temperature_valid`
-- Pro konfiguriertem Analogkanal ein zusätzlicher ADC-Sensor: `..._adc_<kanalId>` (gefilterter Wert)
-
-### Sensor-Konfiguration in der Web-UI
-Im Tab **Einstellungen → Sensor**:
-- `analogChannels` als JSON-Liste editierbar
-- Druckkanal explizit über Dropdown wählbar
-- Temperatur-Support per `enabled`, `oneWirePin`, `updateIntervalMs` konfigurierbar
-- Live-Tab zeigt zusätzlich das `channels`-Objekt aus `/api/status`
-
-- 2026-05-06: Build-Fixes für PlatformIO/ESP32-Arduino: C++11-Kompatibilität (kein lambda-auto/std::clamp/structured bindings), MQTT String/JsonDocument-Konsistenz, AlarmDispatchResult- und Kalibrierpunkt-Zuweisungen gehärtet.
-
-## Lokale Driftwerte (schlank, ohne Leak-Engine)
-- Firmware berechnet jetzt zusätzlich einfache Driftwerte direkt auf dem ESP32:
-  - `pressureDrift1h`, `pressureDrift24h`
-  - optional mitgeführt: `temperatureDrift1h`, `temperatureDrift24h`
-- Umsetzung ist bewusst leichtgewichtig: Snapshot-Ringpuffer im RAM (5-Minuten-Intervall), keine Rohdaten-Vollhistorie über 24h.
-- MQTT liefert damit Druck + Temperatur + einfache Drifts; komplexe Leckanalyse bleibt bewusst extern (Home Assistant/PC).
-
-
-## Plattformprofile (aktualisiert)
-- `esp32_standard`: Vollprofil mit Multi-ADC, optional WireGuard, Discovery, WebUI.
-- `esp8266_slim`: Schlankprofil ohne WireGuard/ADC-Continuous; ein interner ADC, daher Multi-ADC nur mit externer Hardware.
-
-## Temperaturpfad
-- Standard ist `temperature.mode = ntc`.
-- Optional: `ds18b20` oder `none`.
-- NTC nutzt Beta-Modell (R25/Beta/Serienwiderstand/Offset).
-
-## Globaler `noise_ref`
-- Ein optionaler globaler Analogkanal mit Rolle `noise_ref` wird als einfache Baseline geführt.
-- Telemetrie enthält weiterhin Roh- und Filterwerte; kompensierte Werte sind nur Zusatzdiagnostik.
-
-## Drift lokal vs. extern
-- Lokal nur einfache Driftwerte (`pressureDrift1h`, `pressureDrift24h`, optional Temperaturdrift).
-- Komplexe Leck-/Langzeitanalyse bewusst in HA/PC/DB.
-
-- 2026-05-07 Nachschärfung: Sensor-API akzeptiert jetzt `temperature.mode` + vollständige NTC-Parameter in `/api/config/sensor`; Status zeigt `noise*`/`compensatedAdc` explizit.
+## Entwicklungsprinzipien
+- Keine Secrets im Repo
+- Keine unnötigen schweren Abhängigkeiten
+- Nicht-blockierende Loops bevorzugen

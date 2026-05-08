@@ -11,7 +11,7 @@ void PressureHistory::add(const PressureReading &reading, PressureState state) {
   if (lastDriftSnapshotMs_ != 0 && (reading.timestampMs - lastDriftSnapshotMs_) < kDriftSnapshotIntervalMs) return;
   lastDriftSnapshotMs_ = reading.timestampMs;
   if (driftRing_.size() >= kDriftCapacity) driftRing_.erase(driftRing_.begin());
-  driftRing_.push_back({reading.timestampMs, reading.pressureBar, reading.valid, reading.temperatureC, reading.temperatureValid});
+  driftRing_.push_back({reading.timestampMs, reading.pressureBar, reading.valid});
 }
 
 std::vector<PressureHistory::Entry> PressureHistory::entries() const { return ring_; }
@@ -29,18 +29,9 @@ void PressureHistory::applyDrift(PressureReading &reading, uint32_t nowMs) {
     reading.pressureDrift1h = reading.pressureBar - s1h->pressureBar;
     reading.pressureDrift1hValid = true;
   }
-  if (s1h != nullptr && s1h->temperatureValid && reading.temperatureValid) {
-    reading.temperatureDrift1h = reading.temperatureC - s1h->temperatureC;
-    reading.temperatureDrift1hValid = true;
-  }
-
   const DriftSnapshot *s24h = findSnapshotBefore(nowMs - 24UL * 60UL * 60UL * 1000UL);
   if (s24h != nullptr && s24h->pressureValid && reading.valid) {
     reading.pressureDrift24h = reading.pressureBar - s24h->pressureBar;
     reading.pressureDrift24hValid = true;
-  }
-  if (s24h != nullptr && s24h->temperatureValid && reading.temperatureValid) {
-    reading.temperatureDrift24h = reading.temperatureC - s24h->temperatureC;
-    reading.temperatureDrift24hValid = true;
   }
 }
