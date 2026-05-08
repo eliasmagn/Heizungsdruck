@@ -73,3 +73,5 @@
 - 2026-05-07: Plattform-Capabilities zentralisiert, NTC-Standardpfad und globalen noise_ref-Diagnosepfad umgesetzt.
 
 - 2026-05-07: Follow-up abgeschlossen: WebUI-Konfigurationspfad (Temp-Modi/NTC) und noise_ref-Kompensationszuordnung stabilisiert.
+
+- 2026-05-07: Restprobleme abgeschlossen: klare ESP8266-Slim-Abgrenzung (ohne WireGuard), lokale Driftlogik auf Druckdrift reduziert, README konsolidiert.

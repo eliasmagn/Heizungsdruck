@@ -36,10 +36,6 @@ struct PressureReading {
   float pressureDrift24h{0.0f};
   bool pressureDrift1hValid{false};
   bool pressureDrift24hValid{false};
-  float temperatureDrift1h{0.0f};
-  float temperatureDrift24h{0.0f};
-  bool temperatureDrift1hValid{false};
-  bool temperatureDrift24hValid{false};
   std::map<std::string, int> channelRaw;
   int compensatedAdc{0};
   int noiseRawAdc{0};

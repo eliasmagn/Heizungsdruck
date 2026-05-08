@@ -24,8 +24,6 @@ class PressureHistory {
     uint32_t ts;
     float pressureBar;
     bool pressureValid;
-    float temperatureC;
-    bool temperatureValid;
   };
 
   const DriftSnapshot *findSnapshotBefore(uint32_t targetMs) const;

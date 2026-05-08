@@ -1,11 +1,15 @@
 #include "WireGuardManager.h"
 
 #include <Arduino.h>
-#include <WiFi.h>
+#include "../platform_caps.h"
 
+#if HAS_WIREGUARD
+#include <WiFi.h>
 #include <WireGuard-ESP32.h>
+#endif
 
 namespace {
+#if HAS_WIREGUARD
 WireGuard gWireGuard;
 
 bool parseIp(const std::string &raw, IPAddress &out) {
@@ -23,6 +27,7 @@ bool parseCidrAddress(const std::string &raw, std::string &ipOut, uint8_t &prefi
   prefixOut = static_cast<uint8_t>(prefix);
   return true;
 }
+#endif
 }  // namespace
 
 void WireGuardManager::begin(const WireGuardConfig &cfg) {
@@ -34,6 +39,11 @@ void WireGuardManager::begin(const WireGuardConfig &cfg) {
 }
 
 void WireGuardManager::loop(uint32_t nowSec) {
+#if !HAS_WIREGUARD
+  (void)nowSec;
+  online_ = false;
+  return;
+#else
   if (!enabled_) {
     online_ = false;
     return;
@@ -44,9 +54,18 @@ void WireGuardManager::loop(uint32_t nowSec) {
   if (online_) {
     lastHandshake_ = nowSec;
   }
+#endif
 }
 
 bool WireGuardManager::enable(const WireGuardConfig &cfg) {
+#if !HAS_WIREGUARD
+  (void)cfg;
+  configured_ = false;
+  enabled_ = false;
+  online_ = false;
+  lastError_ = "WireGuard not supported on this profile";
+  return false;
+#else
   if (!applyConfig(cfg)) {
     enabled_ = false;
     online_ = false;
@@ -58,10 +77,13 @@ bool WireGuardManager::enable(const WireGuardConfig &cfg) {
     lastHandshake_ = millis() / 1000;
   }
   return true;
+#endif
 }
 
 void WireGuardManager::disable() {
+#if HAS_WIREGUARD
   gWireGuard.end();
+#endif
   enabled_ = false;
   online_ = false;
 }
@@ -109,6 +131,12 @@ bool WireGuardManager::configLooksUsable(const WireGuardConfig &cfg, std::string
 }
 
 bool WireGuardManager::applyConfig(const WireGuardConfig &cfg) {
+#if !HAS_WIREGUARD
+  (void)cfg;
+  configured_ = false;
+  lastError_ = "WireGuard not supported on this profile";
+  return false;
+#else
   std::string error;
   if (!configLooksUsable(cfg, error)) {
     configured_ = false;
@@ -148,4 +176,5 @@ bool WireGuardManager::applyConfig(const WireGuardConfig &cfg) {
     lastError_.clear();
   }
   return true;
+#endif
 }
