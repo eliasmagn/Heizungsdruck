@@ -179,7 +179,7 @@ void setup() {
 
   connectWifi();
   if (!gDisplay.begin()) {
-    Serial.println("Display init failed");
+    Serial.println("Display disabled or init failed");
   } else {
     gDisplay.showBootScreen();
 #if TARGET_ESP32
@@ -206,7 +206,9 @@ void setup() {
   gWeb.attachAlarmManager(&gAlarm);
   gWeb.attachMqttManager(&gMqtt);
   gWireGuard.begin(gConfig.wireguard);
+#if HAS_FULL_WEBUI
   gWeb.begin();
+#endif
 }
 
 void loop() {
@@ -227,7 +229,9 @@ void loop() {
 
   gWireGuard.loop(now / 1000);
   gWeb.updateLiveData(gLastReading, gLastState, wifiConnected, gMqtt.connected(), now / 1000);
+#if HAS_FULL_WEBUI
   gWeb.loop();
+#endif
   ArduinoOTA.handle();
 
   DisplayState ds;

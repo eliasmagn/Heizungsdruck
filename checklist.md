@@ -116,3 +116,5 @@
 - [x] 2026-05-07 Restprobleme: README gestrafft, Profile/Grenzen klar dokumentiert.
 - [x] ESP8266-Slim Pfad: ESP32-only APIs in main.cpp sauber gegated/ersetzt
 - [x] pressureBarCompensated entfernt, compensatedAdc als Diagnose beibehalten
+
+- [x] 2026-05-08: Restprobleme finalisiert: WebUI/Display capability-basiert für esp8266_slim deaktiviert, Discovery-Modell profilabhängig benannt.

@@ -98,3 +98,5 @@ Das System entwickelt sich von Einzel-ADC auf modulare Mehrkanal-Erfassung (ein 
 - 2026-05-07 Follow-up: Konfigurationskonsistenz zwischen JSON-Codec, WebUI-Sensor-Endpoint und Laufzeit-Sensorpfad hergestellt (Temp-Modi + NTC + noise_ref Zuordnung).
 
 - 2026-05-07 Restfokus umgesetzt: Capability-Gates für WireGuard konsistent gemacht; lokale Komplexität reduziert (keine Temperaturdrift im Embedded-Pfad), README auf kompakte Profil-/Grenzdoku gestrafft.
+
+- 2026-05-08: Finaler Plattformzuschnitt: `esp8266_slim` bleibt bewusst minimal (kein Full-WebUI-/Display-Pfad); Capabilities steuern Objektwahl und Discovery-Modell konsistent.

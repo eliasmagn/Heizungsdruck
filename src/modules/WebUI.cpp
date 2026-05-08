@@ -10,6 +10,7 @@
 
 #include "JsonCodec.h"
 
+#if HAS_FULL_WEBUI
 WebUI::WebUI(uint16_t port) : server_(port) {}
 
 void WebUI::begin() {
@@ -481,3 +482,26 @@ void WebUI::setupRoutes() {
     serveSpaIndex();
   });
 }
+
+#endif
+
+#else
+
+WebUI::WebUI(uint16_t) {}
+void WebUI::begin() {}
+void WebUI::loop() {}
+void WebUI::updateLiveData(const PressureReading &reading, PressureState state, bool wifiConnected, bool mqttConnected,
+                           uint32_t uptimeSec) {
+  lastReading_ = reading;
+  lastState_ = state;
+  wifiConnected_ = wifiConnected;
+  mqttConnected_ = mqttConnected;
+  uptimeSec_ = uptimeSec;
+}
+void WebUI::attachConfig(AppConfig *cfg, bool (*saveFn)(const AppConfig &)) { cfg_ = cfg; saveConfig_ = saveFn; }
+void WebUI::attachHistory(PressureHistory *history) { history_ = history; }
+void WebUI::attachWireGuardManager(WireGuardManager *wireguard) { wireguard_ = wireguard; }
+void WebUI::attachAlarmManager(AlarmManager *alarmManager) { alarmManager_ = alarmManager; }
+void WebUI::attachMqttManager(MqttManager *mqttManager) { mqttManager_ = mqttManager; }
+
+#endif
