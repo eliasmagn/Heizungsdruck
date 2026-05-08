@@ -4,7 +4,7 @@ Firmware zur Heizungsdruck-Messung mit Web-UI, MQTT und einfacher lokaler Driftb
 
 ## Plattformprofile
 - `esp32_standard` (Default): Vollprofil mit Web-UI, Multi-ADC, optional WireGuard, OTA, MQTT Discovery.
-- `esp8266_slim`: reduziertes Profil ohne WireGuard und ohne ESP32-spezifische ADC-Features.
+- `esp8266_slim`: reduziertes Profil ohne WireGuard, ohne Display-Task-Core-Pinning und ohne ESP32-spezifische WLAN/ADC-APIs.
 
 Build/Flash:
 ```bash
@@ -55,3 +55,9 @@ Discovery wird beim MQTT-Connect publiziert.
 - Keine Secrets im Repo
 - Keine unnötigen schweren Abhängigkeiten
 - Nicht-blockierende Loops bevorzugen
+
+
+## Plattformhinweis (final)
+- ESP32 nutzt Display-Background-Task, WiFi-TX-Power-Mapping und 11b-Profilumschaltung.
+- ESP8266 nutzt einen bewusst schlanken Pfad: Display-Update direkt im Loop, keine ESP32-spezifischen WiFi-API-Aufrufe.
+- `pressureBar` bleibt der einzige Primärdruckwert; `compensatedAdc` bleibt reine Diagnose.

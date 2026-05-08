@@ -2,7 +2,11 @@
 
 #include <ArduinoJson.h>
 #include <LittleFS.h>
+#if defined(ESP8266)
+#include <ESP8266WiFi.h>
+#else
 #include <WiFi.h>
+#endif
 
 #include "JsonCodec.h"
 

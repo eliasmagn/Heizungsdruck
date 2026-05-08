@@ -114,3 +114,5 @@
 - [x] 2026-05-07 Restprobleme: WireGuard sauber ESP32-only gekapselt; esp8266_slim zieht keine ESP32-WG-Includes mehr.
 - [x] 2026-05-07 Restprobleme: Temperaturdrift aus lokalem Datenmodell/MQTT/Discovery entfernt (Druckdrift 1h/24h bleibt).
 - [x] 2026-05-07 Restprobleme: README gestrafft, Profile/Grenzen klar dokumentiert.
+- [x] ESP8266-Slim Pfad: ESP32-only APIs in main.cpp sauber gegated/ersetzt
+- [x] pressureBarCompensated entfernt, compensatedAdc als Diagnose beibehalten
