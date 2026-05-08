@@ -100,3 +100,5 @@ Das System entwickelt sich von Einzel-ADC auf modulare Mehrkanal-Erfassung (ein 
 - 2026-05-07 Restfokus umgesetzt: Capability-Gates für WireGuard konsistent gemacht; lokale Komplexität reduziert (keine Temperaturdrift im Embedded-Pfad), README auf kompakte Profil-/Grenzdoku gestrafft.
 
 - 2026-05-08: Finaler Plattformzuschnitt: `esp8266_slim` bleibt bewusst minimal (kein Full-WebUI-/Display-Pfad); Capabilities steuern Objektwahl und Discovery-Modell konsistent.
+
+- 2026-05-08: Web-Schicht auf Async-Architektur konsolidiert (ESP32 voll mit LittleFS-SPA, ESP8266 slim API-fokussiert), inklusive non-blocking Request-Callbacks.

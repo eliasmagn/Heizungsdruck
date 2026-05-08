@@ -1,8 +1,8 @@
 #pragma once
 
 #include "platform_caps.h"
-#if HAS_FULL_WEBUI
-#include <WebServer.h>
+#if HAS_ASYNC_WEBUI
+#include <ESPAsyncWebServer.h>
 #endif
 
 #include "AlarmManager.h"
@@ -28,15 +28,20 @@ class WebUI {
   void attachMqttManager(MqttManager *mqttManager);
 
  private:
-#if HAS_FULL_WEBUI
+#if HAS_ASYNC_WEBUI
   String statusJson() const;
   String historyJson() const;
   String diagnosticsJson() const;
   String configJson() const;
   bool saveUpdatedConfig(const AppConfig &candidate, String &errorOut);
   void setupRoutes();
+  void handleDeferredActions();
 
-  WebServer server_;
+  AsyncWebServer server_;
+  volatile bool pendingReboot_{false};
+  volatile bool pendingTelegramTest_{false};
+  volatile bool pendingWebhookTest_{false};
+  volatile bool pendingMqttTest_{false};
 #endif
   PressureReading lastReading_;
   PressureState lastState_{PressureState::UNKNOWN};
