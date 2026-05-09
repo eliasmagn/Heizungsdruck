@@ -20,7 +20,13 @@ void WebUI::begin() {
   server_.begin();
 }
 
-void WebUI::loop() { handleDeferredActions(); }
+void WebUI::loop() {
+  if (pendingWifiScan_ && !wifiScanInProgress_) {
+    pendingWifiScan_ = false;
+    scheduleWifiScan();
+  }
+  handleDeferredActions();
+}
 
 void WebUI::updateLiveData(const PressureReading &reading, PressureState state, bool wifiConnected, bool mqttConnected,
                            uint32_t uptimeSec) {
@@ -238,6 +244,9 @@ void WebUI::setupRoutes() {
     server_.on(
         uri, HTTP_POST,
         [handler](AsyncWebServerRequest *request) {
+          if (request->contentType() != "application/json" && request->contentType() != "text/json") {
+            return request->send(415, "text/plain", "content-type must be application/json");
+          }
           String *body = reinterpret_cast<String *>(request->_tempObject);
           if (body == nullptr) return request->send(400, "text/plain", "missing body");
           handler(request, *body);
@@ -254,6 +263,7 @@ void WebUI::setupRoutes() {
           }
           if (body == nullptr) return;
           body->concat(reinterpret_cast<const char *>(data), len);
+          if (index + len >= total) request->_tempObject = body;
         });
   };
 
@@ -292,7 +302,7 @@ void WebUI::setupRoutes() {
   });
 
   server_.on("/api/wifi/scan", HTTP_GET, [this](AsyncWebServerRequest *request) {
-    if (!wifiScanInProgress_) scheduleWifiScan();
+    if (!wifiScanInProgress_) pendingWifiScan_ = true;
     request->send(200, "application/json", wifiScanJson());
   });
 

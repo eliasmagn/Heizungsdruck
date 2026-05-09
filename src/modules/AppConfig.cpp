@@ -158,11 +158,14 @@ bool AppConfig::validate(std::string &error) const {
     return false;
   }
   int validPointCount = 0;
-  bool hasPressureSource=false;
+  int pressureSourceCount = 0;
   for (const auto &ch : sensor.analogChannels) {
-    if (ch.pressureSource) hasPressureSource=true;
+    if (ch.pressureSource || ch.role == AnalogChannelRole::PRESSURE) pressureSourceCount++;
   }
-  if (!hasPressureSource) { error = "one analog channel must be pressureSource"; return false; }
+  if (pressureSourceCount != 1) {
+    error = "exactly one analog channel must be pressureSource/PRESSURE";
+    return false;
+  }
   for (const auto &p : calib.points) {
     if (!p.valid) continue;
     if (p.adc < 0 || p.adc > sensor.adcMax) {

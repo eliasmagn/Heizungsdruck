@@ -40,6 +40,7 @@ class WebUI {
   String wifiScanJson();
 
   bool wifiScanInProgress_{false};
+  volatile bool pendingWifiScan_{false};
 
   AsyncWebServer server_;
   volatile bool pendingReboot_{false};

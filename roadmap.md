@@ -89,3 +89,4 @@
 - 2026-05-09: Profilhärtung abgeschlossen (ESP8266-LittleFS-Persistenz, ehrliche ADC-Defaults, Async-JSON-Body-Handling).
 
 - 2026-05-09: Async-Härtung ergänzt: WLAN-Scan läuft jetzt als asynchrones Polling.
+- 2026-05-09: Resthärtung abgeschlossen: eindeutige Druckquelle erzwungen, Sensor-Reinit bei Runtime-Config aktiv, Setup-Overrides für MQTT/Intervall entfernt.

@@ -164,11 +164,8 @@ void setup() {
   if (gConfig.wireguard.allowedIp2.empty()) gConfig.wireguard.allowedIp2 = WIREGUARD_ALLOWED_IP2;
   if (gConfig.wireguard.keepAliveSeconds == 0) gConfig.wireguard.keepAliveSeconds = WIREGUARD_KEEPALIVE_SECONDS;
   if (!gConfig.wireguard.enabled && WIREGUARD_ENABLED_DEFAULT) gConfig.wireguard.enabled = true;
-  gConfig.mqtt.enabled = !gConfig.mqtt.host.empty();
-  // Enforce fast constant polling (battery is not a concern for this project).
-  if (gConfig.sensor.updateIntervalMs != SENSOR_UPDATE_INTERVAL_MS_DEFAULT) {
-    gConfig.sensor.updateIntervalMs = SENSOR_UPDATE_INTERVAL_MS_DEFAULT;
-    gStore.save(gConfig);
+  if (gConfig.mqtt.enabled && gConfig.mqtt.host.empty()) {
+    gConfig.mqtt.enabled = false;
   }
   logConfigIfVerbose();
 
