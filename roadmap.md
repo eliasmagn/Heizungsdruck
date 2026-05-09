@@ -93,3 +93,4 @@
 
 - 2026-05-09: Slim-ADC-Default/Validation, WebUI JSON robustness, FS-mount safety, network-change handling refined.
 - 2026-05-09: Slim shared-ADC frontend config (ADS1115/ADS1015/TLA2024/CD4051/TCA9548A candidates) added for pressure+NTC boot policy.
+- 2026-05-09: Shared ADC frontend validation generalized to ESP32+ESP8266 when pressure and NTC share one ADC path.
