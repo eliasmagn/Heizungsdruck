@@ -291,6 +291,11 @@ void WebUI::setupRoutes() {
     if (!configFromJson(body.c_str(), candidate, err)) {
       return request->send(400, "text/plain", String("invalid json/config: ") + err.c_str());
     }
+    JsonVariantConst slim = doc["slim"];
+    if (!slim.isNull()) {
+      if (!slim["sharedAdcFrontend"].isNull()) candidate.sensor.slim.sharedAdcFrontend = static_cast<SlimSharedAdcFrontend>(slim["sharedAdcFrontend"].as<int>());
+      if (!slim["bootSensorSelection"].isNull()) candidate.sensor.slim.bootSensorSelection = static_cast<SlimBootSensorSelection>(slim["bootSensorSelection"].as<int>());
+    }
     String outErr;
     if (!saveUpdatedConfig(candidate, outErr)) return request->send(400, "text/plain", outErr);
     request->send(200, "text/plain", "saved");
@@ -357,6 +362,15 @@ void WebUI::setupRoutes() {
         if (!ntc["beta"].isNull()) candidate.sensor.temperature.ntc.beta = ntc["beta"].as<float>();
         if (!ntc["nominalTempC"].isNull()) candidate.sensor.temperature.ntc.nominalTempC = ntc["nominalTempC"].as<float>();
         if (!ntc["offsetC"].isNull()) candidate.sensor.temperature.ntc.offsetC = ntc["offsetC"].as<float>();
+      }
+    }
+    JsonVariantConst slim = doc["slim"];
+    if (!slim.isNull()) {
+      if (!slim["sharedAdcFrontend"].isNull()) {
+        candidate.sensor.slim.sharedAdcFrontend = static_cast<SlimSharedAdcFrontend>(slim["sharedAdcFrontend"].as<int>());
+      }
+      if (!slim["bootSensorSelection"].isNull()) {
+        candidate.sensor.slim.bootSensorSelection = static_cast<SlimBootSensorSelection>(slim["bootSensorSelection"].as<int>());
       }
     }
     String outErr;

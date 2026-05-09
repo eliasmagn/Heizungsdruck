@@ -16,6 +16,14 @@ struct AnalogChannelConfig {
 
 enum class TemperatureMode : uint8_t { NONE = 0, NTC = 1, DS18B20 = 2 };
 
+enum class SlimSharedAdcFrontend : uint8_t { NONE = 0, ADS1115 = 1, ADS1015 = 2, TLA2024 = 3, CD4051_MUX = 4, TCA9548A = 5 };
+enum class SlimBootSensorSelection : uint8_t { PRESSURE = 0, TEMPERATURE = 1 };
+
+struct SlimProfileConfig {
+  SlimSharedAdcFrontend sharedAdcFrontend{SlimSharedAdcFrontend::NONE};
+  SlimBootSensorSelection bootSensorSelection{SlimBootSensorSelection::PRESSURE};
+};
+
 struct NtcConfig {
   uint8_t adcPin{35};
   float seriesResistorOhm{10000.0f};
@@ -46,6 +54,7 @@ struct SensorConfig {
   float maxJumpBar{0.7f};
   std::vector<AnalogChannelConfig> analogChannels;
   TemperatureConfig temperature;
+  SlimProfileConfig slim;
 };
 
 struct CalibrationConfig {

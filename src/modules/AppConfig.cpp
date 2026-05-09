@@ -42,6 +42,8 @@ AppConfig defaultConfig() {
   cfg.sensor.shortVccAdc = 1010;
   cfg.sensor.temperature.enabled = false;
   cfg.sensor.temperature.mode = TemperatureMode::NONE;
+  cfg.sensor.slim.sharedAdcFrontend = SlimSharedAdcFrontend::NONE;
+  cfg.sensor.slim.bootSensorSelection = SlimBootSensorSelection::PRESSURE;
   cfg.sensor.temperature.ntc.adcPin = A0;
   cfg.sensor.analogChannels.clear();
   AnalogChannelConfig pressure;
@@ -191,8 +193,8 @@ bool AppConfig::validate(std::string &error) const {
         break;
       }
     }
-    if (hasPressureOnA0 && sensor.temperature.ntc.adcPin == A0) {
-      error = "ESP8266 A0 conflict: pressure and NTC cannot share ADC simultaneously";
+    if (hasPressureOnA0 && sensor.temperature.ntc.adcPin == A0 && sensor.slim.sharedAdcFrontend == SlimSharedAdcFrontend::NONE) {
+      error = "ESP8266 A0 conflict: pressure+NTC requires shared ADC frontend (ADS1115/ADS1015/TLA2024) or mux";
       return false;
     }
   }

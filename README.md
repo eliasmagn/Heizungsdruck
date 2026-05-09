@@ -54,3 +54,5 @@ pio test -e native
 - LittleFS wird für Konfiguration zentral über `ConfigStore` verwendet; WebUI mountet/formatieret die FS nicht mehr eigenständig.
 - JSON-POST akzeptiert jetzt praxisübliche Header wie `application/json; charset=utf-8`.
 - Netzwerkänderungen werden gespeichert, aber nicht aggressiv live erzwungen; für Hostname/PHY/SSID-Änderungen wird ein Reboot bzw. Reconnect-Zyklus empfohlen.
+
+- Wenn auf ESP8266 **Druck + NTC** gleichzeitig gewünscht sind, muss `sensor.slim.sharedAdcFrontend` auf einen unterstützten Frontend-Typ gesetzt werden (`ADS1115`, `ADS1015`, `TLA2024`, `CD4051_MUX`, `TCA9548A` als Kandidaten). Ohne Frontend blockiert die Validierung A0-Doppelbelegung.
