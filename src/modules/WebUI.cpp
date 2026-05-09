@@ -188,16 +188,40 @@ void WebUI::setupRoutes() {
   });
 #endif
 
+
+  auto registerJsonPost = [this](const char *uri, std::function<void(AsyncWebServerRequest *, const String &)> handler) {
+    server_.on(
+        uri, HTTP_POST,
+        [handler](AsyncWebServerRequest *request) {
+          String *body = reinterpret_cast<String *>(request->_tempObject);
+          if (body == nullptr) return request->send(400, "text/plain", "missing body");
+          handler(request, *body);
+          delete body;
+          request->_tempObject = nullptr;
+        },
+        nullptr,
+        [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
+          String *body = reinterpret_cast<String *>(request->_tempObject);
+          if (index == 0) {
+            body = new String();
+            body->reserve(total);
+            request->_tempObject = body;
+          }
+          if (body == nullptr) return;
+          body->concat(reinterpret_cast<const char *>(data), len);
+        });
+  };
+
   server_.on("/api/status", HTTP_GET, [this](AsyncWebServerRequest *request) { request->send(200, "application/json", statusJson()); });
   server_.on("/api/history", HTTP_GET, [this](AsyncWebServerRequest *request) { request->send(200, "application/json", historyJson()); });
   server_.on("/api/diag", HTTP_GET, [this](AsyncWebServerRequest *request) { request->send(200, "application/json", diagnosticsJson()); });
   server_.on("/api/config", HTTP_GET, [this](AsyncWebServerRequest *request) { request->send(200, "application/json", configJson()); });
   server_.on("/api/config/export", HTTP_GET, [this](AsyncWebServerRequest *request) { request->send(200, "application/json", configJson()); });
 
-  server_.on("/api/config", HTTP_POST, [this](AsyncWebServerRequest *request) {
+  registerJsonPost("/api/config", [this](AsyncWebServerRequest *request, const String &body) {
     AppConfig candidate = cfg_ ? *cfg_ : defaultConfig();
     std::string err;
-    if (!configFromJson(request->arg("plain").c_str(), candidate, err)) {
+    if (!configFromJson(body.c_str(), candidate, err)) {
       return request->send(400, "text/plain", String("invalid json/config: ") + err.c_str());
     }
     String outErr;
@@ -205,11 +229,11 @@ void WebUI::setupRoutes() {
     request->send(200, "text/plain", "saved");
   });
 
-  server_.on("/api/config/network", HTTP_POST, [this](AsyncWebServerRequest *request) {
+  registerJsonPost("/api/config/network", [this](AsyncWebServerRequest *request, const String &body) {
     if (!cfg_) return request->send(500, "text/plain", "config unavailable");
     AppConfig candidate = *cfg_;
     JsonDocument doc;
-    if (deserializeJson(doc, request->arg("plain"))) return request->send(400, "text/plain", "invalid json");
+    if (deserializeJson(doc, body)) return request->send(400, "text/plain", "invalid json");
     if (!doc["wifiSsid"].isNull()) candidate.network.wifiSsid = doc["wifiSsid"].as<const char *>();
     if (!doc["wifiPassword"].isNull()) candidate.network.wifiPassword = doc["wifiPassword"].as<const char *>();
     if (!doc["apSsid"].isNull()) candidate.network.apSsid = doc["apSsid"].as<const char *>();
@@ -223,7 +247,11 @@ void WebUI::setupRoutes() {
   });
 
   server_.on("/api/wifi/scan", HTTP_GET, [this](AsyncWebServerRequest *request) {
+#if defined(ESP8266)
+    const int found = WiFi.scanNetworks();
+#else
     const int found = WiFi.scanNetworks(false, true);
+#endif
     JsonDocument doc;
     JsonArray arr = doc["networks"].to<JsonArray>();
     for (int i = 0; i < found; ++i) {
@@ -239,11 +267,11 @@ void WebUI::setupRoutes() {
     request->send(200, "application/json", out);
   });
 
-  server_.on("/api/config/sensor", HTTP_POST, [this](AsyncWebServerRequest *request) {
+  registerJsonPost("/api/config/sensor", [this](AsyncWebServerRequest *request, const String &body) {
     if (!cfg_) return request->send(500, "text/plain", "config unavailable");
     AppConfig candidate = *cfg_;
     JsonDocument doc;
-    if (deserializeJson(doc, request->arg("plain"))) return request->send(400, "text/plain", "invalid json");
+    if (deserializeJson(doc, body)) return request->send(400, "text/plain", "invalid json");
     if (!doc["adcPin"].isNull()) candidate.sensor.adcPin = doc["adcPin"].as<uint8_t>();
     if (!doc["sampleCount"].isNull()) candidate.sensor.sampleCount = doc["sampleCount"].as<uint16_t>();
     if (!doc["updateIntervalMs"].isNull()) candidate.sensor.updateIntervalMs = doc["updateIntervalMs"].as<uint32_t>();
@@ -285,10 +313,10 @@ void WebUI::setupRoutes() {
     request->send(200, "text/plain", "sensor saved");
   });
 
-  server_.on("/api/config/import", HTTP_POST, [this](AsyncWebServerRequest *request) {
+  registerJsonPost("/api/config/import", [this](AsyncWebServerRequest *request, const String &body) {
     AppConfig candidate = cfg_ ? *cfg_ : defaultConfig();
     std::string err;
-    if (!configFromJson(request->arg("plain").c_str(), candidate, err)) {
+    if (!configFromJson(body.c_str(), candidate, err)) {
       return request->send(400, "text/plain", String("invalid json/config: ") + err.c_str());
     }
     String outErr;
@@ -296,11 +324,11 @@ void WebUI::setupRoutes() {
     request->send(200, "text/plain", "imported");
   });
 
-  server_.on("/api/config/mqtt", HTTP_POST, [this](AsyncWebServerRequest *request) {
+  registerJsonPost("/api/config/mqtt", [this](AsyncWebServerRequest *request, const String &body) {
     if (!cfg_) return request->send(500, "text/plain", "config unavailable");
     AppConfig candidate = *cfg_;
     JsonDocument doc;
-    if (deserializeJson(doc, request->arg("plain"))) return request->send(400, "text/plain", "invalid json");
+    if (deserializeJson(doc, body)) return request->send(400, "text/plain", "invalid json");
     if (!doc["enabled"].isNull()) candidate.mqtt.enabled = doc["enabled"].as<bool>();
     if (!doc["host"].isNull()) candidate.mqtt.host = doc["host"].as<const char *>();
     if (!doc["port"].isNull()) candidate.mqtt.port = doc["port"].as<uint16_t>();
@@ -316,11 +344,11 @@ void WebUI::setupRoutes() {
     request->send(200, "text/plain", "mqtt saved");
   });
 
-  server_.on("/api/config/wireguard", HTTP_POST, [this](AsyncWebServerRequest *request) {
+  registerJsonPost("/api/config/wireguard", [this](AsyncWebServerRequest *request, const String &body) {
     if (!cfg_) return request->send(500, "text/plain", "config unavailable");
     AppConfig candidate = *cfg_;
     JsonDocument doc;
-    if (deserializeJson(doc, request->arg("plain"))) return request->send(400, "text/plain", "invalid json");
+    if (deserializeJson(doc, body)) return request->send(400, "text/plain", "invalid json");
     if (!doc["enabled"].isNull()) candidate.wireguard.enabled = doc["enabled"].as<bool>();
     if (!doc["localAddress"].isNull()) candidate.wireguard.localAddress = doc["localAddress"].as<const char *>();
     if (!doc["netmask"].isNull()) candidate.wireguard.netmask = doc["netmask"].as<const char *>();
@@ -344,11 +372,11 @@ void WebUI::setupRoutes() {
     request->send(200, "text/plain", "wireguard saved");
   });
 
-  server_.on("/api/config/alarm", HTTP_POST, [this](AsyncWebServerRequest *request) {
+  registerJsonPost("/api/config/alarm", [this](AsyncWebServerRequest *request, const String &body) {
     if (!cfg_) return request->send(500, "text/plain", "config unavailable");
     AppConfig candidate = *cfg_;
     JsonDocument doc;
-    if (deserializeJson(doc, request->arg("plain"))) return request->send(400, "text/plain", "invalid json");
+    if (deserializeJson(doc, body)) return request->send(400, "text/plain", "invalid json");
     if (!doc["lowBar"].isNull()) candidate.alarm.lowBar = doc["lowBar"].as<float>();
     if (!doc["highBar"].isNull()) candidate.alarm.highBar = doc["highBar"].as<float>();
     if (!doc["hysteresisBar"].isNull()) candidate.alarm.hysteresisBar = doc["hysteresisBar"].as<float>();
@@ -361,11 +389,11 @@ void WebUI::setupRoutes() {
     request->send(200, "text/plain", "alarm saved");
   });
 
-  server_.on("/api/config/calibration", HTTP_POST, [this](AsyncWebServerRequest *request) {
+  registerJsonPost("/api/config/calibration", [this](AsyncWebServerRequest *request, const String &body) {
     if (!cfg_) return request->send(500, "text/plain", "config unavailable");
     AppConfig candidate = *cfg_;
     JsonDocument doc;
-    if (deserializeJson(doc, request->arg("plain"))) return request->send(400, "text/plain", "invalid json");
+    if (deserializeJson(doc, body)) return request->send(400, "text/plain", "invalid json");
     JsonVariantConst cv = doc["calib"];
     if (cv.isNull()) cv = doc;
     if (!cv["adcLow"].isNull()) candidate.calib.adcLow = cv["adcLow"].as<int>();
@@ -390,11 +418,11 @@ void WebUI::setupRoutes() {
     request->send(200, "text/plain", "calibration saved");
   });
 
-  server_.on("/api/calibration/capture", HTTP_POST, [this](AsyncWebServerRequest *request) {
+  registerJsonPost("/api/calibration/capture", [this](AsyncWebServerRequest *request, const String &body) {
     if (!cfg_) return request->send(500, "text/plain", "config unavailable");
     AppConfig candidate = *cfg_;
     JsonDocument doc;
-    if (deserializeJson(doc, request->arg("plain"))) return request->send(400, "text/plain", "invalid json");
+    if (deserializeJson(doc, body)) return request->send(400, "text/plain", "invalid json");
     const float bar = doc["bar"].as<float>();
     if (bar < 0.0f || bar > 10.0f) return request->send(400, "text/plain", "bar must be 0..10");
     if (candidate.calib.points.size() >= CalibrationConfig::kMaxPointCount) return request->send(400, "text/plain", "max 20 calibration points");

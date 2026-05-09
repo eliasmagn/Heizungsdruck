@@ -36,6 +36,23 @@ void ensureAnalogChannels(SensorConfig &sensor) {
 
 AppConfig defaultConfig() {
   AppConfig cfg{};
+#if defined(ESP8266)
+  cfg.sensor.adcPin = A0;
+  cfg.sensor.adcMax = 1023;
+  cfg.sensor.shortVccAdc = 1010;
+  cfg.sensor.temperature.ntc.adcPin = A0;
+  cfg.sensor.analogChannels.clear();
+  AnalogChannelConfig pressure;
+  pressure.id = "pressure_main";
+  pressure.adcPin = A0;
+  pressure.pressureSource = true;
+  pressure.role = AnalogChannelRole::PRESSURE;
+  cfg.sensor.analogChannels.push_back(pressure);
+#else
+  cfg.sensor.adcPin = 34;
+  cfg.sensor.adcMax = 4095;
+  cfg.sensor.temperature.ntc.adcPin = 35;
+#endif
   initCalibrationPoints(cfg.calib);
   ensureAnalogChannels(cfg.sensor);
   return cfg;

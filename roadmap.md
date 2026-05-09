@@ -85,3 +85,5 @@
 - ESP8266-slim bewusst als reduzierte Async-API-Schicht dokumentiert/umgesetzt.
 
 - 2026-05-08: Async-Restkorrekturen abgeschlossen (korrekte ESP8266 Async-Lib, PressureReading/WebUI konsistent ohne Temperaturdrift, SPA-Fallback für Nicht-API-Routen im Vollprofil).
+
+- 2026-05-09: Profilhärtung abgeschlossen (ESP8266-LittleFS-Persistenz, ehrliche ADC-Defaults, Async-JSON-Body-Handling).

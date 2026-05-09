@@ -101,7 +101,9 @@ static float readNtcC(const std::vector<int> &samples, const NtcConfig &ntc, int
 PressureSensor::PressureSensor(const AppConfig &cfg) : cfg_(cfg), math_(cfg) {}
 
 void PressureSensor::begin() {
+#if defined(ESP32)
   analogReadResolution(12);
+#endif
   for (const auto &ch : cfg_.sensor.analogChannels) pinMode(ch.adcPin, INPUT);
   if (cfg_.sensor.temperature.enabled) {
     oneWire_ = OneWire(cfg_.sensor.temperature.oneWirePin);
