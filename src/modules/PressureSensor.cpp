@@ -100,7 +100,7 @@ static float readNtcC(const std::vector<int> &samples, const NtcConfig &ntc, int
 }
 PressureSensor::PressureSensor(const AppConfig &cfg) : cfg_(cfg), math_(cfg) {}
 
-void PressureSensor::begin() {
+void PressureSensor::initForCurrentConfig() {
 #if defined(ESP32)
   analogReadResolution(12);
 #endif
@@ -110,11 +110,19 @@ void PressureSensor::begin() {
     dallas_ = DallasTemperature(&oneWire_);
     dallas_.begin();
   }
+  lastTempReadMs_ = 0;
+  lastTempValid_ = false;
 }
+
+void PressureSensor::begin() { initForCurrentConfig(); }
 
 void PressureSensor::updateConfig(const AppConfig &cfg) {
   cfg_ = cfg;
   math_ = PressureMath(cfg_);
+  initForCurrentConfig();
+  hasLastValid_ = false;
+  channelLastRaw_.clear();
+  channelLastFiltered_.clear();
 }
 
 bool PressureSensor::classifyFault(const PressureReading &candidate, SensorFault &faultOut) const {
@@ -145,7 +153,12 @@ PressureReading PressureSensor::sample(uint32_t nowMs) {
   uint8_t pressurePin = cfg_.sensor.adcPin;
   std::string pressureChannelId = "pressure_main";
   String noiseId="";
-  for (const auto &ch : cfg_.sensor.analogChannels) { if (ch.pressureSource || ch.role==AnalogChannelRole::PRESSURE) { pressurePin = ch.adcPin; pressureChannelId = ch.id; } if (ch.role==AnalogChannelRole::NOISE_REF) noiseId = ch.id.c_str(); }
+  for (const auto &ch : cfg_.sensor.analogChannels) {
+    if (ch.pressureSource || ch.role==AnalogChannelRole::PRESSURE) { pressurePin = ch.adcPin; pressureChannelId = ch.id; break; }
+  }
+  for (const auto &ch : cfg_.sensor.analogChannels) {
+    if (ch.role==AnalogChannelRole::NOISE_REF) { noiseId = ch.id.c_str(); break; }
+  }
   for (const auto &ch : cfg_.sensor.analogChannels) {
     std::vector<int> samples; samples.reserve(cfg_.sensor.sampleCount);
     #if HAS_ADC_DMA

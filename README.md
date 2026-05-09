@@ -13,6 +13,7 @@ Firmware zur Heizungsdruck-Messung mit schlanker, profilgetrennter Web-Schicht, 
 - Web-Schicht nutzt `ESPAsyncWebServer` profilübergreifend.
 - HTTP-Callbacks bleiben kurz: kein `delay()`/`yield()` in Request-Handlern.
 - Langsamere Aktionen (`reboot`, Telegram/Webhook/MQTT-Test) werden nur eingeplant und in `loop()` abgearbeitet.
+- JSON-POST-Endpunkte akzeptieren nur `application/json` und lesen den Body chunk-sicher über den Async-Body-Handler.
 - Struktur bleibt offen für spätere SSE/WebSocket-Erweiterung, ohne jetzt zusätzlichen Feature-Umbau.
 
 ## Libraries pro Profil (gepinnt)
@@ -40,4 +41,8 @@ pio test -e native
 ## JSON-POST im Async-Modell
 - Relevante POST-Endpunkte lesen den Request-Body jetzt über Async-Body-Handler (chunk-sicher), nicht mehr über `request->arg("plain")`.
 - Deferred-Actions (`/api/reboot`, Telegram/Webhook/MQTT-Test) bleiben unverändert non-blocking.
-- `/api/wifi/scan` läuft als async Start/Polling und blockiert den Request-Callback nicht mehr.
+- `/api/wifi/scan` läuft als deferred async Start/Polling und blockiert den Request-Callback nicht mehr.
+
+## Laufzeitwirksamkeit von Konfigänderungen
+- Änderungen an Sensor-/Temperaturkanälen werden in `PressureSensor::updateConfig()` sofort wirksam (Re-Init der betroffenen Pins/OneWire-Instanz).
+- Ein Neustart ist dafür nicht erforderlich; bestehende Deferred-Actions bleiben unverändert.

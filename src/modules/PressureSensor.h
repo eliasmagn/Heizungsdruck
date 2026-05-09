@@ -19,6 +19,7 @@ class PressureSensor {
 
  private:
   bool classifyFault(const PressureReading &candidate, SensorFault &faultOut) const;
+  void initForCurrentConfig();
 
   AppConfig cfg_;
   PressureMath math_;

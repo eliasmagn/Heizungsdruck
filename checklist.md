@@ -129,3 +129,6 @@
 - [x] 2026-05-09: ESP8266-Slim Persistenzpfad auf LittleFS-Datei umgestellt; ESP32 bleibt auf Preferences/NVS.
 
 - [x] 2026-05-09: `/api/wifi/scan` entblockt (async Start/Poll statt synchronem Scan im Callback).
+- [x] 2026-05-09: Konfig-Validierung auf exakt eine Druckquelle geschärft (kein mehrdeutiges pressureSource-Verhalten).
+- [x] 2026-05-09: Sensor-Rekonfiguration wirksam gemacht (Re-Init in `PressureSensor::updateConfig()` statt stiller Teilübernahme).
+- [x] 2026-05-09: Setup-Logik korrigiert: MQTT enabled wird nicht mehr blind aus Host abgeleitet; `updateIntervalMs` wird nicht mehr zwangsweise überschrieben.
