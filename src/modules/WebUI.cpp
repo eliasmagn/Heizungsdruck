@@ -60,10 +60,6 @@ String WebUI::statusJson() const {
   doc["pressureDrift24h"] = lastReading_.pressureDrift24h;
   doc["pressureDrift1hValid"] = lastReading_.pressureDrift1hValid;
   doc["pressureDrift24hValid"] = lastReading_.pressureDrift24hValid;
-  doc["temperatureDrift1h"] = lastReading_.temperatureDrift1h;
-  doc["temperatureDrift24h"] = lastReading_.temperatureDrift24h;
-  doc["temperatureDrift1hValid"] = lastReading_.temperatureDrift1hValid;
-  doc["temperatureDrift24hValid"] = lastReading_.temperatureDrift24hValid;
   JsonObject channels = doc["channels"].to<JsonObject>();
   for (std::map<std::string, int>::const_iterator it = lastReading_.channelRaw.begin(); it != lastReading_.channelRaw.end(); ++it) {
     JsonObject c = channels[it->first.c_str()].to<JsonObject>();
@@ -477,6 +473,12 @@ void WebUI::setupRoutes() {
   });
 
   server_.onNotFound([](AsyncWebServerRequest *request) {
+#if HAS_FULL_WEBUI
+    if (!request->url().startsWith("/api/")) {
+      if (!LittleFS.exists("/index.html")) return request->send(500, "text/plain", "LittleFS index.html missing");
+      return request->send(LittleFS, "/index.html", "text/html");
+    }
+#endif
     request->send(404, "text/plain", "not found");
   });
 }

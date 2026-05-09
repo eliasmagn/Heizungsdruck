@@ -4,7 +4,7 @@ Firmware zur Heizungsdruck-Messung mit schlanker, profilgetrennter Web-Schicht, 
 
 ## Plattformprofile
 - `esp32_standard` (Default): **Async-Webserver** + LittleFS-SPA (`/`, `app.js`, `style.css`, `assets`) und volle REST-/Diagnose-API.
-- `esp8266_slim`: **Async-Webserver (reduziert, ehrlich)** mit API-Fokus (Status/History/Config/Diag/Test-Endpunkte), ohne volle SPA-Auslieferung.
+- `esp8266_slim`: **Async-Webserver (reduziert, ehrlich)** mit API-Fokus (Status/History/Config/Diag/Test-Endpunkte), ohne SPA/Fallback-Routing.
 
 ## Async-Web-Architektur
 - Web-Schicht nutzt `ESPAsyncWebServer` profilübergreifend.
@@ -29,3 +29,7 @@ pio run -t uploadfs
 pio device monitor
 pio test -e native
 ```
+
+## Routing-Verhalten
+- `esp32_standard`: `/api/*` liefert API-Antworten bzw. echte 404, alle anderen unbekannten Pfade fallen auf `index.html` zurück (SPA-Fallback).
+- `esp8266_slim`: unbekannte Pfade liefern 404; kein SPA-Fallback.
