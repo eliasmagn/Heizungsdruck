@@ -36,6 +36,10 @@ class WebUI {
   bool saveUpdatedConfig(const AppConfig &candidate, String &errorOut);
   void setupRoutes();
   void handleDeferredActions();
+  void scheduleWifiScan();
+  String wifiScanJson();
+
+  bool wifiScanInProgress_{false};
 
   AsyncWebServer server_;
   volatile bool pendingReboot_{false};

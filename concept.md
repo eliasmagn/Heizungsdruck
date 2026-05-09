@@ -104,3 +104,5 @@ Das System entwickelt sich von Einzel-ADC auf modulare Mehrkanal-Erfassung (ein 
 - 2026-05-08: Web-Schicht auf Async-Architektur konsolidiert (ESP32 voll mit LittleFS-SPA, ESP8266 slim API-fokussiert), inklusive non-blocking Request-Callbacks.
 
 - 2026-05-09: Async-POST-Parsing wurde auf echten Body-Handler umgestellt; ESP8266-Slim nutzt eigenständigen LittleFS-Konfigspeicher.
+
+- 2026-05-09: WLAN-Scan-Endpoint auf asynchrones Start/Polling umgestellt, damit Async-Handler kurz bleiben.

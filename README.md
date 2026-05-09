@@ -40,3 +40,4 @@ pio test -e native
 ## JSON-POST im Async-Modell
 - Relevante POST-Endpunkte lesen den Request-Body jetzt über Async-Body-Handler (chunk-sicher), nicht mehr über `request->arg("plain")`.
 - Deferred-Actions (`/api/reboot`, Telegram/Webhook/MQTT-Test) bleiben unverändert non-blocking.
+- `/api/wifi/scan` läuft als async Start/Polling und blockiert den Request-Callback nicht mehr.
