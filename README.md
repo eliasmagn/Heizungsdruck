@@ -55,6 +55,5 @@ pio test -e native
 - JSON-POST akzeptiert jetzt praxisübliche Header wie `application/json; charset=utf-8`.
 - Netzwerkänderungen werden gespeichert, aber nicht aggressiv live erzwungen; für Hostname/PHY/SSID-Änderungen wird ein Reboot bzw. Reconnect-Zyklus empfohlen.
 
-- Wenn auf ESP8266 **Druck + NTC** gleichzeitig gewünscht sind, muss `sensor.slim.sharedAdcFrontend` auf einen unterstützten Frontend-Typ gesetzt werden (`ADS1115`, `ADS1015`, `TLA2024`, `CD4051_MUX`, `TCA9548A` als Kandidaten). Ohne Frontend blockiert die Validierung A0-Doppelbelegung.
-
-- Die Shared-Frontend/MUX-Konfiguration (`sensor.slim.sharedAdcFrontend`) ist jetzt **profilübergreifend** nutzbar (ESP8266 und ESP32), falls Druck und NTC absichtlich denselben ADC-Pfad teilen.
+- Shared-ADC/MUX-Felder (`sensor.slim.sharedAdcFrontend`, `sensor.slim.bootSensorSelection`) bleiben aktuell **reserviert**: Die Laufzeit nutzt weiterhin direkte ADC-Abtastung ohne echte MUX-Umschaltlogik.
+- Deshalb ist Druck+NTC auf demselben ADC-Pin derzeit bewusst nicht zulässig; die Validierung blockiert solche Konfigurationen konsequent.
