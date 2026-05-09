@@ -92,5 +92,5 @@
 - 2026-05-09: Resthärtung abgeschlossen: eindeutige Druckquelle erzwungen, Sensor-Reinit bei Runtime-Config aktiv, Setup-Overrides für MQTT/Intervall entfernt.
 
 - 2026-05-09: Slim-ADC-Default/Validation, WebUI JSON robustness, FS-mount safety, network-change handling refined.
-- 2026-05-09: Slim shared-ADC frontend config (ADS1115/ADS1015/TLA2024/CD4051/TCA9548A candidates) added for pressure+NTC boot policy.
-- 2026-05-09: Shared ADC frontend validation generalized to ESP32+ESP8266 when pressure and NTC share one ADC path.
+- 2026-05-09: Shared-ADC/MUX derzeit bewusst zurückgestuft: Konfigurationsfelder bleiben reserviert, bis echte Runtime-Umschaltung implementiert ist.
+- 2026-05-09: Konsistenzschritt abgeschlossen: Validierung blockiert Druck+NTC auf gleichem ADC-Pin solange kein echter Shared-ADC-Laufzeitpfad existiert.

@@ -63,6 +63,16 @@ AppConfig defaultConfig() {
 }
 
 bool AppConfig::validate(std::string &error) const {
+  const bool sharedFrontendConfigured = sensor.slim.sharedAdcFrontend != SlimSharedAdcFrontend::NONE;
+  if (sharedFrontendConfigured) {
+    error = "sensor.slim.sharedAdcFrontend is reserved but not yet runtime-supported";
+    return false;
+  }
+  if (sensor.slim.bootSensorSelection != SlimBootSensorSelection::PRESSURE) {
+    error = "sensor.slim.bootSensorSelection=temperature is reserved until shared ADC runtime support exists";
+    return false;
+  }
+
   if (sensor.sampleCount < 3 || sensor.sampleCount > 31 || sensor.sampleCount % 2 == 0) {
     error = "sampleCount must be odd and in range 3..31";
     return false;
@@ -178,9 +188,8 @@ bool AppConfig::validate(std::string &error) const {
         break;
       }
     }
-    if (pressurePin >= 0 && pressurePin == sensor.temperature.ntc.adcPin &&
-        sensor.slim.sharedAdcFrontend == SlimSharedAdcFrontend::NONE) {
-      error = "pressure+NTC on same ADC pin requires shared frontend/mux configuration";
+    if (pressurePin >= 0 && pressurePin == sensor.temperature.ntc.adcPin) {
+      error = "pressure+NTC on same ADC pin is currently unsupported (shared ADC frontend runtime pending)";
       return false;
     }
   }
