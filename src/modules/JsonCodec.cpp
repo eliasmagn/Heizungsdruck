@@ -32,6 +32,8 @@ std::string configToJson(const AppConfig &cfg) {
   doc["sensor"]["temperature"]["ntc"]["nominalTempC"] = cfg.sensor.temperature.ntc.nominalTempC;
   doc["sensor"]["temperature"]["ntc"]["offsetC"] = cfg.sensor.temperature.ntc.offsetC;
   doc["sensor"]["temperature"]["ntc"]["sensorId"] = cfg.sensor.temperature.ntc.sensorId;
+  doc["sensor"]["slim"]["sharedAdcFrontend"] = static_cast<int>(cfg.sensor.slim.sharedAdcFrontend);
+  doc["sensor"]["slim"]["bootSensorSelection"] = static_cast<int>(cfg.sensor.slim.bootSensorSelection);
 
   doc["calib"]["adcLow"] = cfg.calib.adcLow;
   doc["calib"]["adcHigh"] = cfg.calib.adcHigh;
@@ -144,6 +146,13 @@ bool configFromJson(const std::string &json, AppConfig &cfgOut, std::string &err
   setIfExists(ntc["nominalTempC"], cfgOut.sensor.temperature.ntc.nominalTempC);
   setIfExists(ntc["offsetC"], cfgOut.sensor.temperature.ntc.offsetC);
   setIfExists(ntc["sensorId"], cfgOut.sensor.temperature.ntc.sensorId);
+  JsonVariantConst slim = s["slim"];
+  int slimFrontend = static_cast<int>(cfgOut.sensor.slim.sharedAdcFrontend);
+  setIfExists(slim["sharedAdcFrontend"], slimFrontend);
+  cfgOut.sensor.slim.sharedAdcFrontend = static_cast<SlimSharedAdcFrontend>(slimFrontend);
+  int bootSelection = static_cast<int>(cfgOut.sensor.slim.bootSensorSelection);
+  setIfExists(slim["bootSensorSelection"], bootSelection);
+  cfgOut.sensor.slim.bootSensorSelection = static_cast<SlimBootSensorSelection>(bootSelection);
 
   JsonVariantConst c = doc["calib"];
   setIfExists(c["adcLow"], cfgOut.calib.adcLow);

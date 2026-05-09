@@ -40,6 +40,10 @@ AppConfig defaultConfig() {
   cfg.sensor.adcPin = A0;
   cfg.sensor.adcMax = 1023;
   cfg.sensor.shortVccAdc = 1010;
+  cfg.sensor.temperature.enabled = false;
+  cfg.sensor.temperature.mode = TemperatureMode::NONE;
+  cfg.sensor.slim.sharedAdcFrontend = SlimSharedAdcFrontend::NONE;
+  cfg.sensor.slim.bootSensorSelection = SlimBootSensorSelection::PRESSURE;
   cfg.sensor.temperature.ntc.adcPin = A0;
   cfg.sensor.analogChannels.clear();
   AnalogChannelConfig pressure;
@@ -166,6 +170,36 @@ bool AppConfig::validate(std::string &error) const {
     error = "exactly one analog channel must be pressureSource/PRESSURE";
     return false;
   }
+  if (sensor.temperature.enabled && sensor.temperature.mode == TemperatureMode::NTC) {
+    int pressurePin = -1;
+    for (const auto &ch : sensor.analogChannels) {
+      if (ch.pressureSource || ch.role == AnalogChannelRole::PRESSURE) {
+        pressurePin = ch.adcPin;
+        break;
+      }
+    }
+    if (pressurePin >= 0 && pressurePin == sensor.temperature.ntc.adcPin &&
+        sensor.slim.sharedAdcFrontend == SlimSharedAdcFrontend::NONE) {
+      error = "pressure+NTC on same ADC pin requires shared frontend/mux configuration";
+      return false;
+    }
+  }
+#if defined(ESP8266)
+  if (sensor.analogChannels.size() > 1) {
+    error = "ESP8266 supports only one analog channel (A0) in slim profile";
+    return false;
+  }
+  for (const auto &ch : sensor.analogChannels) {
+    if (ch.adcPin != A0) {
+      error = "ESP8266 analog channel pin must be A0";
+      return false;
+    }
+    if (ch.role == AnalogChannelRole::NOISE_REF) {
+      error = "ESP8266 slim profile does not support dedicated noise_ref channel by default";
+      return false;
+    }
+  }
+#endif
   for (const auto &p : calib.points) {
     if (!p.valid) continue;
     if (p.adc < 0 || p.adc > sensor.adcMax) {
