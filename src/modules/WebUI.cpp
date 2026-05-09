@@ -172,6 +172,51 @@ bool WebUI::saveUpdatedConfig(const AppConfig &candidate, String &errorOut) {
   return true;
 }
 
+
+void WebUI::scheduleWifiScan() {
+  if (wifiScanInProgress_) return;
+#if defined(ESP8266)
+  WiFi.scanNetworks(true, true);
+#else
+  WiFi.scanNetworks(true, true, false, 120, String());
+#endif
+  wifiScanInProgress_ = true;
+}
+
+String WebUI::wifiScanJson() {
+  JsonDocument doc;
+  int found = -1;
+#if defined(ESP8266)
+  found = WiFi.scanComplete();
+#else
+  found = WiFi.scanComplete();
+#endif
+
+  if (found == WIFI_SCAN_RUNNING || found == -1) {
+    doc["scanning"] = true;
+    String out;
+    serializeJson(doc, out);
+    return out;
+  }
+
+  doc["scanning"] = false;
+  JsonArray arr = doc["networks"].to<JsonArray>();
+  if (found > 0) {
+    for (int i = 0; i < found; ++i) {
+      JsonObject item = arr.add<JsonObject>();
+      item["ssid"] = WiFi.SSID(i);
+      item["rssi"] = WiFi.RSSI(i);
+      item["channel"] = WiFi.channel(i);
+      item["open"] = (WiFi.encryptionType(i) == WIFI_AUTH_OPEN);
+    }
+  }
+  WiFi.scanDelete();
+  wifiScanInProgress_ = false;
+  String out;
+  serializeJson(doc, out);
+  return out;
+}
+
 void WebUI::setupRoutes() {
 #if HAS_FULL_WEBUI
   auto serveSpaIndex = [](AsyncWebServerRequest *request) {
@@ -247,24 +292,8 @@ void WebUI::setupRoutes() {
   });
 
   server_.on("/api/wifi/scan", HTTP_GET, [this](AsyncWebServerRequest *request) {
-#if defined(ESP8266)
-    const int found = WiFi.scanNetworks();
-#else
-    const int found = WiFi.scanNetworks(false, true);
-#endif
-    JsonDocument doc;
-    JsonArray arr = doc["networks"].to<JsonArray>();
-    for (int i = 0; i < found; ++i) {
-      JsonObject item = arr.add<JsonObject>();
-      item["ssid"] = WiFi.SSID(i);
-      item["rssi"] = WiFi.RSSI(i);
-      item["channel"] = WiFi.channel(i);
-      item["open"] = (WiFi.encryptionType(i) == WIFI_AUTH_OPEN);
-    }
-    WiFi.scanDelete();
-    String out;
-    serializeJson(doc, out);
-    request->send(200, "application/json", out);
+    if (!wifiScanInProgress_) scheduleWifiScan();
+    request->send(200, "application/json", wifiScanJson());
   });
 
   registerJsonPost("/api/config/sensor", [this](AsyncWebServerRequest *request, const String &body) {
