@@ -107,3 +107,5 @@ Das System entwickelt sich von Einzel-ADC auf modulare Mehrkanal-Erfassung (ein 
 
 - 2026-05-09: WLAN-Scan-Endpoint auf asynchrones Start/Polling umgestellt, damit Async-Handler kurz bleiben.
 - 2026-05-09: Konfiglogik geschärft: exakt eine Druckquelle ist Pflicht; Sensoränderungen greifen zur Laufzeit per Re-Init statt nur nach Neustart.
+
+- 2026-05-09: Slim-ADC-Default/Validation, WebUI JSON robustness, FS-mount safety, network-change handling refined.

@@ -90,3 +90,5 @@
 
 - 2026-05-09: Async-Härtung ergänzt: WLAN-Scan läuft jetzt als asynchrones Polling.
 - 2026-05-09: Resthärtung abgeschlossen: eindeutige Druckquelle erzwungen, Sensor-Reinit bei Runtime-Config aktiv, Setup-Overrides für MQTT/Intervall entfernt.
+
+- 2026-05-09: Slim-ADC-Default/Validation, WebUI JSON robustness, FS-mount safety, network-change handling refined.

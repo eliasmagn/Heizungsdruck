@@ -15,7 +15,6 @@
 WebUI::WebUI(uint16_t port) : server_(port) {}
 
 void WebUI::begin() {
-  LittleFS.begin(true);
   setupRoutes();
   server_.begin();
 }
@@ -244,14 +243,27 @@ void WebUI::setupRoutes() {
     server_.on(
         uri, HTTP_POST,
         [handler](AsyncWebServerRequest *request) {
-          if (request->contentType() != "application/json" && request->contentType() != "text/json") {
+          auto cleanupTempBody = [request]() {
+            String *bodyPtr = reinterpret_cast<String *>(request->_tempObject);
+            if (bodyPtr != nullptr) {
+              delete bodyPtr;
+              request->_tempObject = nullptr;
+            }
+          };
+          String contentType = request->contentType();
+          contentType.toLowerCase();
+          const bool isJson = contentType.startsWith("application/json") || contentType.startsWith("text/json");
+          if (!isJson) {
+            cleanupTempBody();
             return request->send(415, "text/plain", "content-type must be application/json");
           }
           String *body = reinterpret_cast<String *>(request->_tempObject);
-          if (body == nullptr) return request->send(400, "text/plain", "missing body");
+          if (body == nullptr || body->length() == 0) {
+            cleanupTempBody();
+            return request->send(400, "text/plain", "missing body");
+          }
           handler(request, *body);
-          delete body;
-          request->_tempObject = nullptr;
+          cleanupTempBody();
         },
         nullptr,
         [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {

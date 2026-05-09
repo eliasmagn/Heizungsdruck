@@ -46,3 +46,11 @@ pio test -e native
 ## Laufzeitwirksamkeit von Konfigänderungen
 - Änderungen an Sensor-/Temperaturkanälen werden in `PressureSensor::updateConfig()` sofort wirksam (Re-Init der betroffenen Pins/OneWire-Instanz).
 - Ein Neustart ist dafür nicht erforderlich; bestehende Deferred-Actions bleiben unverändert.
+
+
+## Konfigurationsgrenzen & Laufzeitwirkung
+- ESP8266 Slim startet standardmäßig mit **Druckmessung aktiv** und **Temperatur standardmäßig deaktiviert** (`mode=NONE`), um A0-ADC-Kollisionen zu vermeiden.
+- ESP8266 hat nur einen ADC (A0): parallele Druck+NTC-Nutzung auf A0 ist in der Validierung gesperrt; mehrere Analogkanäle/`noise_ref` sind im Slim-Profil standardmäßig nicht zulässig.
+- LittleFS wird für Konfiguration zentral über `ConfigStore` verwendet; WebUI mountet/formatieret die FS nicht mehr eigenständig.
+- JSON-POST akzeptiert jetzt praxisübliche Header wie `application/json; charset=utf-8`.
+- Netzwerkänderungen werden gespeichert, aber nicht aggressiv live erzwungen; für Hostname/PHY/SSID-Änderungen wird ein Reboot bzw. Reconnect-Zyklus empfohlen.
