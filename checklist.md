@@ -136,3 +136,4 @@
 - 2026-05-09: Slim-ADC-Default/Validation, WebUI JSON robustness, FS-mount safety, network-change handling refined.
 - [x] 2026-05-09: Shared-ADC/MUX-Modellfelder auf ehrlichen Reserve-Status zurückgestuft (keine Scheinunterstützung ohne Runtime-MUX).
 - [x] 2026-05-09: Validierung und Laufzeit konsistent gemacht: gleicher ADC-Pin für Druck+NTC ist bis echter Shared-ADC-Implementierung gesperrt.
+- [x] 2026-05-09: WebUI-Config-Roundtrip für Slim-Felder gehärtet (`/api/config` nutzt konsistent `configFromJson`; kein fehlerhafter Sonderpfad mehr).

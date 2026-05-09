@@ -111,3 +111,4 @@ Das System entwickelt sich von Einzel-ADC auf modulare Mehrkanal-Erfassung (ein 
 - 2026-05-09: Slim-ADC-Default/Validation, WebUI JSON robustness, FS-mount safety, network-change handling refined.
 - 2026-05-09: Shared-ADC/MUX-Felder im Modell als reserviert markiert, bis eine echte Laufzeit-Umschaltlogik vorhanden ist.
 - 2026-05-09: Validierung bewusst auf „ehrlich lauffähig“ geschärft: Druck+NTC auf identischem ADC-Pin bleibt bis zur Runtime-Implementierung gesperrt.
+- 2026-05-09: WebUI-Konfigurationsroundtrip nutzt nun einen konsistenten Pfad ohne separates Slim-Sonderparsing; Fehler werden über zentrale Validation gemeldet.
