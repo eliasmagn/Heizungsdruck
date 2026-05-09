@@ -125,3 +125,5 @@
 - [x] README auf realen Web-Profilstand aktualisiert
 
 - [x] 2026-05-08: Async-Restfehler bereinigt (ESP8266 AsyncTCP korrekt gepinnt, WebUI ohne Temperaturdrift-Altfelder, SPA-Fallback /api-vs-index repariert).
+
+- [x] 2026-05-09: ESP8266-Slim Persistenzpfad auf LittleFS-Datei umgestellt; ESP32 bleibt auf Preferences/NVS.

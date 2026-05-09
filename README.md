@@ -3,8 +3,11 @@
 Firmware zur Heizungsdruck-Messung mit schlanker, profilgetrennter Web-Schicht, MQTT und lokaler Driftberechnung.
 
 ## Plattformprofile
-- `esp32_standard` (Default): **Async-Webserver** + LittleFS-SPA (`/`, `app.js`, `style.css`, `assets`) und volle REST-/Diagnose-API.
-- `esp8266_slim`: **Async-Webserver (reduziert, ehrlich)** mit API-Fokus (Status/History/Config/Diag/Test-Endpunkte), ohne SPA/Fallback-Routing.
+- `esp32_standard` (Default): Async-Webserver + LittleFS-SPA + volle REST-/Diagnose-API, Persistenz über ESP32 `Preferences` (NVS).
+- `esp8266_slim`: Async-Webserver (API-fokussiert, ohne SPA-Fallback), Persistenz über LittleFS-Datei (`/appcfg.json`) statt `Preferences`.
+- ADC-Realität:
+  - ESP32: 12-bit Pfad (`adcMax=4095`, Default-Pins Druck `34`, NTC `35`, `analogReadResolution(12)`).
+  - ESP8266-slim: Single-ADC A0 (`adcMax=1023`, Druck+NTC Default auf `A0`), kein ESP32-Mehrkanalversprechen.
 
 ## Async-Web-Architektur
 - Web-Schicht nutzt `ESPAsyncWebServer` profilübergreifend.
@@ -33,3 +36,7 @@ pio test -e native
 ## Routing-Verhalten
 - `esp32_standard`: `/api/*` liefert API-Antworten bzw. echte 404, alle anderen unbekannten Pfade fallen auf `index.html` zurück (SPA-Fallback).
 - `esp8266_slim`: unbekannte Pfade liefern 404; kein SPA-Fallback.
+
+## JSON-POST im Async-Modell
+- Relevante POST-Endpunkte lesen den Request-Body jetzt über Async-Body-Handler (chunk-sicher), nicht mehr über `request->arg("plain")`.
+- Deferred-Actions (`/api/reboot`, Telegram/Webhook/MQTT-Test) bleiben unverändert non-blocking.
