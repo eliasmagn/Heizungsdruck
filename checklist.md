@@ -123,3 +123,5 @@
 - [x] Blockierende HTTP-Callbacks entfernt (Reboot/Test-Aktionen deferred)
 - [x] PlatformIO Async-Abhängigkeiten je Profil gepinnt
 - [x] README auf realen Web-Profilstand aktualisiert
+
+- [x] 2026-05-08: Async-Restfehler bereinigt (ESP8266 AsyncTCP korrekt gepinnt, WebUI ohne Temperaturdrift-Altfelder, SPA-Fallback /api-vs-index repariert).
