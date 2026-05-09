@@ -56,4 +56,6 @@ pio test -e native
 - Netzwerkänderungen werden gespeichert, aber nicht aggressiv live erzwungen; für Hostname/PHY/SSID-Änderungen wird ein Reboot bzw. Reconnect-Zyklus empfohlen.
 
 - Shared-ADC/MUX-Felder (`sensor.slim.sharedAdcFrontend`, `sensor.slim.bootSensorSelection`) bleiben aktuell **reserviert**: Die Laufzeit nutzt weiterhin direkte ADC-Abtastung ohne echte MUX-Umschaltlogik.
+- `sharedAdcFrontend`-Werte ungleich `NONE` (z. B. ADS1115/ADS1015/TLA2024/CD4051/TCA9548A) sind derzeit **unsupported/reserved** und werden von der Validierung abgelehnt.
+- `bootSensorSelection=temperature` hat aktuell **keine zulässige Runtime-Wirkung** und ist daher bis zur echten Shared-ADC-Implementierung ebenfalls validierungsseitig gesperrt.
 - Deshalb ist Druck+NTC auf demselben ADC-Pin derzeit bewusst nicht zulässig; die Validierung blockiert solche Konfigurationen konsequent.
