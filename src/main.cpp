@@ -215,6 +215,7 @@ void setup() {
   gMqtt.setWireGuardStateProvider(isWireGuardOnline);
   gAlarm.begin(gConfig);
   gAlarm.attachConfigSaver(saveCfg);
+  gAlarm.attachRuntimeConfig(&gConfig);
   gWeb.attachConfig(&gConfig, saveCfg);
   gWeb.attachHistory(&gHistory);
   gWeb.attachWireGuardManager(&gWireGuard);

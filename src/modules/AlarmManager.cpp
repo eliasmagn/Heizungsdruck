@@ -25,6 +25,7 @@ void AlarmManager::begin(const AppConfig &cfg) {
 }
 void AlarmManager::updateConfig(const AppConfig &cfg) { cfg_ = cfg; }
 void AlarmManager::attachConfigSaver(bool (*saveFn)(const AppConfig &)) { saveConfig_ = saveFn; }
+void AlarmManager::attachRuntimeConfig(const AppConfig *cfg) { runtimeConfig_ = cfg; }
 bool AlarmManager::isAlarmState(PressureState s) const { return s == PressureState::PRESSURE_LOW || s == PressureState::PRESSURE_HIGH || s == PressureState::SENSOR_FAULT; }
 
 AlarmDispatchResult AlarmManager::sendTelegramMessage(const String &text) const {
@@ -106,6 +107,9 @@ void AlarmManager::handleTelegramCommand(const String &cmd) {
     if (!saveConfig_(candidate)) {
       sendTelegramMessage("Config speichern fehlgeschlagen.");
       return;
+    }
+    if (runtimeConfig_ != nullptr) {
+      cfg_ = *runtimeConfig_;
     }
     sendTelegramMessage("Config gespeichert.");
     return;

@@ -21,6 +21,7 @@ class AlarmManager {
   void updateConfig(const AppConfig &cfg);
   void loop(uint32_t nowMs, const PressureReading &reading, PressureState state);
   void attachConfigSaver(bool (*saveFn)(const AppConfig &));
+  void attachRuntimeConfig(const AppConfig *cfg);
   AlarmDispatchResult sendTelegramMessage(const String &text) const;
   AlarmDispatchResult sendWebhookTest(const PressureReading &reading, PressureState state, const String &event) const;
   AlarmDispatchResult lastTelegramResult() const { return lastTelegramResult_; }
@@ -38,5 +39,6 @@ class AlarmManager {
   uint32_t lastTelegramPollMs_{0};
   int64_t telegramUpdateOffset_{0};
   bool (*saveConfig_)(const AppConfig &) = nullptr;
+  const AppConfig *runtimeConfig_ = nullptr;
   mutable AlarmDispatchResult lastTelegramResult_{};
 };
