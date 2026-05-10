@@ -135,9 +135,9 @@ void connectWifi(){ WiFi.mode(WIFI_STA); WiFi.setHostname(gConfig.network.hostna
   const String configuredSsid=gConfig.network.wifiSsid.c_str(), configuredPass=gConfig.network.wifiPassword.c_str(), secretsSsid=WIFI_SSID, secretsPass=WIFI_PASSWORD;
   bool connected=false; String usedSsid;
   if(!configuredSsid.isEmpty()){connected=connectWithCreds(configuredSsid.c_str(),configuredPass.c_str(),WIFI_CONNECT_TIMEOUT_MS); usedSsid=configuredSsid;} else if(!secretsSsid.isEmpty()){connected=connectWithCreds(secretsSsid.c_str(),secretsPass.c_str(),WIFI_CONNECT_TIMEOUT_MS); usedSsid=secretsSsid;}
-  if(!connected && !secretsSsid.isEmpty() && configuredSsid!=secretsSsid){connected=connectWithCreds(secretsSsid.c_str(),secretsPass.c_str(),WIFI_CONNECT_TIMEOUT_MS); usedSsid=secretsSsid; if(connected){gConfig.network.wifiSsid=secretsSsid.c_str(); gConfig.network.wifiPassword=secretsPass.c_str(); gStore.save(gConfig);}}
+  if(!connected && !secretsSsid.isEmpty() && configuredSsid!=secretsSsid){connected=connectWithCreds(secretsSsid.c_str(),secretsPass.c_str(),WIFI_CONNECT_TIMEOUT_MS); usedSsid=secretsSsid; if(connected){gConfig.network.wifiSsid=secretsSsid.c_str(); gConfig.network.wifiPassword=secretsPass.c_str(); if(gConfigStoreReady) gStore.save(gConfig);}}
   if(connected){Serial.printf("WiFi connected: SSID=%s IP=%s\n", usedSsid.c_str(), WiFi.localIP().toString().c_str()); return;}
-  WiFi.mode(WIFI_AP_STA); if(gConfig.network.apPassword.empty()){gConfig.network.apPassword=generateApPassword().c_str(); gStore.save(gConfig);} WiFi.softAP(gConfig.network.apSsid.c_str(), gConfig.network.apPassword.c_str());
+  WiFi.mode(WIFI_AP_STA); if(gConfig.network.apPassword.empty()){gConfig.network.apPassword=generateApPassword().c_str(); if(gConfigStoreReady) gStore.save(gConfig);} WiFi.softAP(gConfig.network.apSsid.c_str(), gConfig.network.apPassword.c_str());
 }
 }
 void setup() {

@@ -86,3 +86,5 @@ pio test -e native
 - 2026-05-10 Follow-up 6: Telegram-`/saveconfig` Konsistenz fixiert: AlarmManager synchronisiert nach erfolgreichem zentralem Save explizit aus der gemeinsamen Runtime-Config (`gConfig`) statt im potenziell rohen Kandidatstand zu bleiben.
 
 - 2026-05-10 Follow-up 7: WireGuard/MQTT-Semantik geschärft: `mqtt.requireWireguard=true` blockiert jetzt Reconnect + Publish bei offlineem Tunnel; WireGuard-Status meldet explizit den derzeitigen Heuristik-Charakter (WiFi-Link statt echter Handshake-Telemetrie).
+
+- 2026-05-10 Follow-up 8: Persistenz-/Security-Härtung: Main speichert nur noch bei erfolgreich initialisiertem ConfigStore, und Telegram-Befehle werden strikt auf die konfigurierte `telegramChatId` gefiltert.
