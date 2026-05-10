@@ -130,3 +130,5 @@ Das System entwickelt sich von Einzel-ADC auf modulare Mehrkanal-Erfassung (ein 
 - 2026-05-10 Follow-up 7: WireGuard/MQTT-Semantik geschärft: `mqtt.requireWireguard=true` blockiert jetzt Reconnect + Publish bei offlineem Tunnel; WireGuard-Status meldet explizit den derzeitigen Heuristik-Charakter (WiFi-Link statt echter Handshake-Telemetrie).
 
 - 2026-05-10 Follow-up 8: Persistenz-/Security-Härtung: Main speichert nur noch bei erfolgreich initialisiertem ConfigStore, und Telegram-Befehle werden strikt auf die konfigurierte `telegramChatId` gefiltert.
+
+- 2026-05-10 Follow-up 9: README/Feature-Semantik geschärft (Display-Hardwarebindung, strict `requireWireguard`, WireGuard-Online-Heuristik, Shared-ADC-Grenzen) für ehrliche Laufzeitdokumentation.

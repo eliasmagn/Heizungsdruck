@@ -88,3 +88,10 @@ pio test -e native
 - 2026-05-10 Follow-up 7: WireGuard/MQTT-Semantik geschärft: `mqtt.requireWireguard=true` blockiert jetzt Reconnect + Publish bei offlineem Tunnel; WireGuard-Status meldet explizit den derzeitigen Heuristik-Charakter (WiFi-Link statt echter Handshake-Telemetrie).
 
 - 2026-05-10 Follow-up 8: Persistenz-/Security-Härtung: Main speichert nur noch bei erfolgreich initialisiertem ConfigStore, und Telegram-Befehle werden strikt auf die konfigurierte `telegramChatId` gefiltert.
+
+
+## Profil-/Feature-Semantik (Stand 2026-05-10)
+- Display-Pfad ist aktuell **board-spezifisch** auf ESP32-I2C-Pins `SDA=21`, `SCL=22` und OLED-Adresse `0x3C` verdrahtet.
+- `mqtt.requireWireguard=true` ist **strict**: ohne WireGuard-Online-Status werden MQTT-Reconnect und Publish blockiert.
+- WireGuard-Status `online` ist derzeit eine Runtime-Heuristik (`configured && WiFi connected`), **kein** kryptographisch verifizierter Handshake-Nachweis.
+- Shared-ADC-Modus erlaubt gleiche ADC-Pins nur mit aktivem `sharedAdcFrontend`; ohne dieses Flag blockiert die Validierung solche Konfigurationen.
