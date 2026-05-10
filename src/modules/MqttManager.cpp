@@ -120,6 +120,9 @@ void MqttManager::publishReading(const PressureReading &reading, PressureState s
   doc["pressureDrift24h"] = reading.pressureDrift24h;
   doc["pressureDrift1hValid"] = reading.pressureDrift1hValid;
   doc["pressureDrift24hValid"] = reading.pressureDrift24hValid;
+  doc["sharedAdcFrontend"] = static_cast<int>(cfg_.sensor.slim.sharedAdcFrontend);
+  doc["bootSensorSelection"] = static_cast<int>(cfg_.sensor.slim.bootSensorSelection);
+  doc["noiseCompActive"] = reading.hasNoiseRef;
   JsonObject channels = doc["channels"].to<JsonObject>();
   for (std::map<std::string, int>::const_iterator it = reading.channelRaw.begin(); it != reading.channelRaw.end(); ++it) {
     JsonObject c = channels[it->first.c_str()].to<JsonObject>();

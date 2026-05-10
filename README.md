@@ -95,3 +95,6 @@ pio test -e native
 - `mqtt.requireWireguard=true` ist **strict**: ohne WireGuard-Online-Status werden MQTT-Reconnect und Publish blockiert.
 - WireGuard-Status `online` ist derzeit eine Runtime-Heuristik (`configured && WiFi connected`), **kein** kryptographisch verifizierter Handshake-Nachweis.
 - Shared-ADC-Modus erlaubt gleiche ADC-Pins nur mit aktivem `sharedAdcFrontend`; ohne dieses Flag blockiert die Validierung solche Konfigurationen.
+
+- Display-I2C ist jetzt minimal konfigurierbar über `DISPLAY_I2C_SDA_PIN`, `DISPLAY_I2C_SCL_PIN`, `DISPLAY_I2C_ADDRESS` (Default weiter 21/22/0x3C).
+- MQTT-Telemetrie enthält jetzt zusätzlich `sharedAdcFrontend`, `bootSensorSelection` und `noiseCompActive`, damit Discovery/Monitoring die Sensorpfad-Semantik transparent sieht.

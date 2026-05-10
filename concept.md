@@ -132,3 +132,5 @@ Das System entwickelt sich von Einzel-ADC auf modulare Mehrkanal-Erfassung (ein 
 - 2026-05-10 Follow-up 8: Persistenz-/Security-Härtung: Main speichert nur noch bei erfolgreich initialisiertem ConfigStore, und Telegram-Befehle werden strikt auf die konfigurierte `telegramChatId` gefiltert.
 
 - 2026-05-10 Follow-up 9: README/Feature-Semantik geschärft (Display-Hardwarebindung, strict `requireWireguard`, WireGuard-Online-Heuristik, Shared-ADC-Grenzen) für ehrliche Laufzeitdokumentation.
+
+- 2026-05-10 Follow-up 10: Display-Portabilität verbessert (I2C-Pins/Adresse per Build-Defines konfigurierbar) und MQTT-Telemetrie um Shared-ADC-Semantikfelder ergänzt.
