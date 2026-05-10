@@ -43,9 +43,10 @@ void MqttManager::reconnect(uint32_t nowMs) {
   if (cfg_.mqtt.requireWireguard && wireGuardOnlineFn_ != nullptr && !wireGuardOnlineFn_()) {
     if (nowMs - lastReconnectTryMs_ >= 5000) {
       lastReconnectTryMs_ = nowMs;
-      lastError_ = "wireguard requested but offline (fallback active)";
-      Serial.println("[MQTT] requireWireguard=1 but tunnel offline; fallback via standard routing remains active");
+      lastError_ = "wireguard required but offline (connect blocked)";
+      Serial.println("[MQTT] requireWireguard=1 and tunnel offline; connect blocked");
     }
+    return;
   }
   if (client_.connected()) return;
   if (nowMs - lastReconnectTryMs_ < 5000) return;
@@ -94,8 +95,9 @@ void MqttManager::publishReading(const PressureReading &reading, PressureState s
                                  uint32_t uptimeSec) {
   if (!cfg_.mqtt.enabled || !client_.connected()) return;
   if (cfg_.mqtt.requireWireguard && wireGuardOnlineFn_ != nullptr && !wireGuardOnlineFn_()) {
-    lastError_ = "wireguard requested but offline (publishing via standard routing)";
-    Serial.println("[MQTT] requireWireguard=1 but tunnel offline; publish continues via standard routing");
+    lastError_ = "wireguard required but offline (publish blocked)";
+    Serial.println("[MQTT] requireWireguard=1 and tunnel offline; publish blocked");
+    return;
   }
 
   const uint32_t nowMs = millis();
