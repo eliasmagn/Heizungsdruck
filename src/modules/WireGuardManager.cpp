@@ -50,9 +50,9 @@ void WireGuardManager::loop(uint32_t nowSec) {
   }
 
   const wl_status_t wifiStatus = WiFi.status();
-  online_ = (wifiStatus == WL_CONNECTED);
-  if (online_) {
-    lastHandshake_ = nowSec;
+  online_ = configured_ && (wifiStatus == WL_CONNECTED);
+  if (!online_) {
+    lastError_ = "WireGuard transport offline (WiFi disconnected or tunnel not configured)";
   }
 #endif
 }
@@ -170,10 +170,13 @@ bool WireGuardManager::applyConfig(const WireGuardConfig &cfg) {
   localAddress_ = localAddressRaw;
   peerEndpoint_ = cfg.peerEndpoint;
   peerPort_ = cfg.peerPort;
+  // The WireGuard-ESP32 API used here does not expose explicit setters for
+  // netmask/presharedKey/allowed IP list/keepalive; these fields are still
+  // validated and persisted for future backend support.
   if (cidrPrefix > 0) {
-    lastError_ = "localAddress CIDR suffix accepted; routing depends on peer AllowedIPs";
+    lastError_ = "CIDR accepted; runtime tunnel health currently inferred from WiFi link state only";
   } else {
-    lastError_.clear();
+    lastError_ = "runtime tunnel health currently inferred from WiFi link state only";
   }
   return true;
 #endif

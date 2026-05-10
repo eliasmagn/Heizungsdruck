@@ -9,9 +9,18 @@ namespace {
 constexpr uint8_t kWidth = 128;
 constexpr uint8_t kHeight = 64;
 constexpr uint8_t kStatusHeight = 12;
-constexpr uint8_t kI2cAddress = 0x3C;
-constexpr uint8_t kSdaPin = 21;
-constexpr uint8_t kSclPin = 22;
+#ifndef DISPLAY_I2C_ADDRESS
+#define DISPLAY_I2C_ADDRESS 0x3C
+#endif
+#ifndef DISPLAY_I2C_SDA_PIN
+#define DISPLAY_I2C_SDA_PIN 21
+#endif
+#ifndef DISPLAY_I2C_SCL_PIN
+#define DISPLAY_I2C_SCL_PIN 22
+#endif
+constexpr uint8_t kI2cAddress = DISPLAY_I2C_ADDRESS;
+constexpr uint8_t kSdaPin = DISPLAY_I2C_SDA_PIN;
+constexpr uint8_t kSclPin = DISPLAY_I2C_SCL_PIN;
 }
 
 DisplayManager::DisplayManager() : wire_(&Wire), display_(kWidth, kHeight, wire_, -1) {}

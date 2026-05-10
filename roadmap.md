@@ -103,3 +103,17 @@
 
 
 - 2026-05-10 Follow-up 3: Dokumentation präzisiert (zentraler Save-Pfad, Shared-ADC/MUX-Ehrlichkeit, useGlobalNoiseRef-Wirkbereich) und Buildversuche mit lokal installiertem PlatformIO erneut ausgeführt.
+
+- 2026-05-10 Follow-up 4: Shared-ADC/MUX-Lücke geschlossen: `PressureSensor` nutzt zentralen Shared-Sampling-Pfad, `sharedAdcFrontend` aktiviert gleiche ADC-Pins (inkl. Druck+NTC), und Validierung blockiert doppelte Pins nur noch ohne Shared-Frontend.
+
+- 2026-05-10 Follow-up 5: WebUI-Konfig-Save-Konsistenz gehärtet: nach zentralem saveCfg()-Pfad wird kein Roh-Kandidat zurückgeschrieben; WireGuard-Post-Save nutzt den normalisierten Runtime-Stand (`cfg_`).
+
+- 2026-05-10 Follow-up 6: Telegram-`/saveconfig` Konsistenz fixiert: AlarmManager synchronisiert nach erfolgreichem zentralem Save explizit aus der gemeinsamen Runtime-Config (`gConfig`) statt im potenziell rohen Kandidatstand zu bleiben.
+
+- 2026-05-10 Follow-up 7: WireGuard/MQTT-Semantik geschärft: `mqtt.requireWireguard=true` blockiert jetzt Reconnect + Publish bei offlineem Tunnel; WireGuard-Status meldet explizit den derzeitigen Heuristik-Charakter (WiFi-Link statt echter Handshake-Telemetrie).
+
+- 2026-05-10 Follow-up 8: Persistenz-/Security-Härtung: Main speichert nur noch bei erfolgreich initialisiertem ConfigStore, und Telegram-Befehle werden strikt auf die konfigurierte `telegramChatId` gefiltert.
+
+- 2026-05-10 Follow-up 9: README/Feature-Semantik geschärft (Display-Hardwarebindung, strict `requireWireguard`, WireGuard-Online-Heuristik, Shared-ADC-Grenzen) für ehrliche Laufzeitdokumentation.
+
+- 2026-05-10 Follow-up 10: Display-Portabilität verbessert (I2C-Pins/Adresse per Build-Defines konfigurierbar) und MQTT-Telemetrie um Shared-ADC-Semantikfelder ergänzt.

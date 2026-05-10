@@ -16,6 +16,11 @@
 #define DEBUG_BRIDGE_OUT_PIN 25
 #define DEBUG_BRIDGE_IN_PIN 26
 
+// Display defaults (SSD1306 over I2C)
+#define DISPLAY_I2C_SDA_PIN 21
+#define DISPLAY_I2C_SCL_PIN 22
+#define DISPLAY_I2C_ADDRESS 0x3C
+
 // WireGuard defaults (non-secret where possible)
 #define WIREGUARD_ENABLED_DEFAULT 0
 #define WIREGUARD_LOCAL_ADDRESS ""

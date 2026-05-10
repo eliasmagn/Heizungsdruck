@@ -25,6 +25,7 @@ void AlarmManager::begin(const AppConfig &cfg) {
 }
 void AlarmManager::updateConfig(const AppConfig &cfg) { cfg_ = cfg; }
 void AlarmManager::attachConfigSaver(bool (*saveFn)(const AppConfig &)) { saveConfig_ = saveFn; }
+void AlarmManager::attachRuntimeConfig(const AppConfig *cfg) { runtimeConfig_ = cfg; }
 bool AlarmManager::isAlarmState(PressureState s) const { return s == PressureState::PRESSURE_LOW || s == PressureState::PRESSURE_HIGH || s == PressureState::SENSOR_FAULT; }
 
 AlarmDispatchResult AlarmManager::sendTelegramMessage(const String &text) const {
@@ -107,6 +108,9 @@ void AlarmManager::handleTelegramCommand(const String &cmd) {
       sendTelegramMessage("Config speichern fehlgeschlagen.");
       return;
     }
+    if (runtimeConfig_ != nullptr) {
+      cfg_ = *runtimeConfig_;
+    }
     sendTelegramMessage("Config gespeichert.");
     return;
   }
@@ -136,6 +140,11 @@ void AlarmManager::pollTelegramCommands(uint32_t nowMs) {
   for (JsonObject u : updates) {
     telegramUpdateOffset_ = u["update_id"].as<int64_t>() + 1;
     String text = u["message"]["text"].as<const char *>();
+    String chatId = u["message"]["chat"]["id"].as<String>();
+    if (!cfg_.alarm.telegramChatId.empty() && chatId != String(cfg_.alarm.telegramChatId.c_str())) {
+      Serial.printf("[Alarm][TelegramCmd] ignoring update from unauthorized chat id=%s\n", chatId.c_str());
+      continue;
+    }
     if (text.length() > 0) handleTelegramCommand(text);
   }
 }

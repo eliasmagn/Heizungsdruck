@@ -178,8 +178,8 @@ bool AppConfig::validate(std::string &error) const {
     if (trim(ch.id).empty()) { error = "analog channel id must not be empty"; return false; }
     if (std::find(ids.begin(), ids.end(), ch.id) != ids.end()) { error = "analog channel ids must be unique"; return false; }
     ids.push_back(ch.id);
-    if (std::find(pins.begin(), pins.end(), ch.adcPin) != pins.end()) {
-      error = "duplicate adcPin across analogChannels requires sharedAdcFrontend runtime (not implemented)";
+    if (std::find(pins.begin(), pins.end(), ch.adcPin) != pins.end() && !sharedFrontendConfigured) {
+      error = "duplicate adcPin across analogChannels requires sharedAdcFrontend";
       return false;
     }
     pins.push_back(ch.adcPin);
@@ -206,10 +206,6 @@ bool AppConfig::validate(std::string &error) const {
     error = "useGlobalNoiseRef must be set on pressure source channel";
     return false;
   }
-  if (sharedFrontendConfigured) {
-    error = "sharedAdcFrontend is model-only for now; runtime switching/mux is not implemented yet";
-    return false;
-  }
   if (sensor.temperature.enabled && sensor.temperature.mode == TemperatureMode::NTC) {
     int pressurePin = -1;
     for (const auto &ch : sensor.analogChannels) {
@@ -218,8 +214,8 @@ bool AppConfig::validate(std::string &error) const {
         break;
       }
     }
-    if (pressurePin >= 0 && pressurePin == sensor.temperature.ntc.adcPin) {
-      error = "pressure+NTC on same ADC pin is currently unsupported (shared ADC frontend runtime pending)";
+    if (pressurePin >= 0 && pressurePin == sensor.temperature.ntc.adcPin && !sharedFrontendConfigured) {
+      error = "pressure+NTC on same ADC pin requires sharedAdcFrontend";
       return false;
     }
   }

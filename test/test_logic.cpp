@@ -77,6 +77,28 @@ void test_json_roundtrip() {
   TEST_ASSERT_EQUAL_STRING("vpn.example.com", out.wireguard.peerEndpoint.c_str());
 }
 
+void test_shared_adc_validation() {
+  AppConfig cfg = defaultConfig();
+  cfg.sensor.analogChannels.clear();
+  AnalogChannelConfig pressure;
+  pressure.id = "pressure_main";
+  pressure.adcPin = cfg.sensor.adcPin;
+  pressure.role = AnalogChannelRole::PRESSURE;
+  pressure.pressureSource = true;
+  cfg.sensor.analogChannels.push_back(pressure);
+
+  AnalogChannelConfig aux;
+  aux.id = "aux_same_pin";
+  aux.adcPin = cfg.sensor.adcPin;
+  aux.role = AnalogChannelRole::AUX;
+  cfg.sensor.analogChannels.push_back(aux);
+
+  std::string err;
+  TEST_ASSERT_FALSE(cfg.validate(err));
+  cfg.sensor.slim.sharedAdcFrontend = SlimSharedAdcFrontend::CD4051_MUX;
+  TEST_ASSERT_TRUE(cfg.validate(err));
+}
+
 int main(int, char **) {
   UNITY_BEGIN();
   RUN_TEST(test_adc_to_bar_linear);
@@ -84,5 +106,6 @@ int main(int, char **) {
   RUN_TEST(test_state_hysteresis);
   RUN_TEST(test_config_validation);
   RUN_TEST(test_json_roundtrip);
+  RUN_TEST(test_shared_adc_validation);
   return UNITY_END();
 }
