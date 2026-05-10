@@ -171,6 +171,7 @@ bool AppConfig::validate(std::string &error) const {
   int pressureSourceCount = 0;
   int noiseRefCount = 0;
   bool hasAnyUseGlobalNoiseRef = false;
+  bool pressureChannelUsesGlobalNoiseRef = false;
   std::vector<std::string> ids;
   std::vector<uint8_t> pins;
   for (const auto &ch : sensor.analogChannels) {
@@ -182,7 +183,10 @@ bool AppConfig::validate(std::string &error) const {
       return false;
     }
     pins.push_back(ch.adcPin);
-    if (ch.pressureSource || ch.role == AnalogChannelRole::PRESSURE) pressureSourceCount++;
+    if (ch.pressureSource || ch.role == AnalogChannelRole::PRESSURE) {
+      pressureSourceCount++;
+      if (ch.useGlobalNoiseRef) pressureChannelUsesGlobalNoiseRef = true;
+    }
     if (ch.role == AnalogChannelRole::NOISE_REF) noiseRefCount++;
     if (ch.useGlobalNoiseRef) hasAnyUseGlobalNoiseRef = true;
   }
@@ -196,6 +200,10 @@ bool AppConfig::validate(std::string &error) const {
   }
   if (hasAnyUseGlobalNoiseRef && noiseRefCount == 0) {
     error = "useGlobalNoiseRef requires exactly one NOISE_REF channel";
+    return false;
+  }
+  if (hasAnyUseGlobalNoiseRef && !pressureChannelUsesGlobalNoiseRef) {
+    error = "useGlobalNoiseRef must be set on pressure source channel";
     return false;
   }
   if (sharedFrontendConfigured) {

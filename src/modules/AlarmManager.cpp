@@ -107,7 +107,6 @@ void AlarmManager::handleTelegramCommand(const String &cmd) {
       sendTelegramMessage("Config speichern fehlgeschlagen.");
       return;
     }
-    cfg_ = candidate;
     sendTelegramMessage("Config gespeichert.");
     return;
   }

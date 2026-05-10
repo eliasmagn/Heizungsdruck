@@ -69,3 +69,14 @@ pio test -e native
 - Config-Save-Pfad: Normalisierung passiert zentral in `saveCfg()`; WebUI überschreibt den RAM-Stand danach nicht mehr mit rohen Kandidatdaten.
 
 - Boot-Resilienz: Ist eine geladene Konfiguration ungültig, wird auf Defaults zurückgesetzt und (falls Store verfügbar) repariert persistiert.
+
+
+## Konfig-Save-Konsistenz (Stand 2026-05-10)
+- Alle API-/Telegram-Saves laufen über den zentralen `saveCfg()`-Pfad in `main.cpp`.
+- Dort passieren Persistenz + Normalisierung (z. B. Device-Identity-Abgleich) + Runtime-Reinit.
+- Weder WebUI noch Telegram-`/saveconfig` schreiben danach den rohen Kandidaten zurück in ihren internen Zustand.
+
+## Shared-ADC/MUX Ehrlichkeit
+- `sensor.slim.sharedAdcFrontend` und `sensor.slim.bootSensorSelection` sind weiterhin nur Modellfelder und werden validierungsseitig abgelehnt, solange keine echte Runtime-Umschaltung/MUX-Ansteuerung existiert.
+- `useGlobalNoiseRef` ist nur dann wirksam, wenn der Druckkanal selbst dieses Flag setzt **und** genau ein `NOISE_REF`-Kanal vorhanden ist.
+- Dadurch ist sichergestellt: keine akzeptierte Konfiguration ohne reale Laufzeitwirkung.
