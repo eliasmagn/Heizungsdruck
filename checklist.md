@@ -137,3 +137,7 @@
 - [x] 2026-05-09: Shared-ADC/MUX-Modellfelder auf ehrlichen Reserve-Status zurückgestuft (keine Scheinunterstützung ohne Runtime-MUX).
 - [x] 2026-05-09: Validierung und Laufzeit konsistent gemacht: gleicher ADC-Pin für Druck+NTC ist bis echter Shared-ADC-Implementierung gesperrt.
 - [x] 2026-05-09: WebUI-Config-Roundtrip für Slim-Felder gehärtet (`/api/config` nutzt konsistent `configFromJson`; kein fehlerhafter Sonderpfad mehr).
+
+
+- 2026-05-10: Restprobleme bereinigt: saveUpdatedConfig-RAM/Persistenz-Konsistenz, NTC-Medianfilter, DS18B20-only OneWire-Init, strengere Kanalvalidierung, ConfigStore-Init-Fehlerpfad, klare Shared-ADC/MUX-Ehrlichkeit.
+- 2026-05-10 Follow-up: Beim Boot wird nun auch *inhaltlich* invalid geladene Config erkannt; definierter Default-Fallback mit Reparatur-Speicherung (wenn Store verfügbar).

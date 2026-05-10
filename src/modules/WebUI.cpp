@@ -173,7 +173,6 @@ bool WebUI::saveUpdatedConfig(const AppConfig &candidate, String &errorOut) {
     errorOut = "persist failed";
     return false;
   }
-  *cfg_ = candidate;
   return true;
 }
 
