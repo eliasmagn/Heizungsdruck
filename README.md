@@ -55,16 +55,16 @@ pio test -e native
 - JSON-POST akzeptiert jetzt praxisübliche Header wie `application/json; charset=utf-8`.
 - Netzwerkänderungen werden gespeichert, aber nicht aggressiv live erzwungen; für Hostname/PHY/SSID-Änderungen wird ein Reboot bzw. Reconnect-Zyklus empfohlen.
 
-- Shared-ADC/MUX-Felder (`sensor.slim.sharedAdcFrontend`, `sensor.slim.bootSensorSelection`) bleiben aktuell **reserviert**: Die Laufzeit nutzt weiterhin direkte ADC-Abtastung ohne echte MUX-Umschaltlogik.
-- `sharedAdcFrontend`-Werte ungleich `NONE` (z. B. ADS1115/ADS1015/TLA2024/CD4051/TCA9548A) sind derzeit **unsupported/reserved** und werden von der Validierung abgelehnt.
-- `bootSensorSelection=temperature` hat aktuell **keine zulässige Runtime-Wirkung** und ist daher bis zur echten Shared-ADC-Implementierung ebenfalls validierungsseitig gesperrt.
-- Deshalb ist Druck+NTC auf demselben ADC-Pin derzeit bewusst nicht zulässig; die Validierung blockiert solche Konfigurationen konsequent.
+- Shared-ADC/MUX-Felder (`sensor.slim.sharedAdcFrontend`, `sensor.slim.bootSensorSelection`) sind nun in der Laufzeit angebunden: gleiche ADC-Pins sind mit aktivem Shared-Frontend validierungsseitig erlaubt und werden seriell gesampelt.
+- Die konkrete externe Frontend-Ansteuerung (z. B. ADS1115/ADS1015/TLA2024/CD4051/TCA9548A) ist weiterhin nicht hardwarespezifisch ausprogrammiert; das Modell steuert aktuell den Shared-Sampling-Pfad (inkl. kurzer Settling-Zeit vor NTC-Messung).
+- `bootSensorSelection` wird als Shared-Profil-Intent akzeptiert; die Messlogik bleibt nicht-blockierend und erfasst weiterhin Druck + Temperatur in den jeweiligen Updatezyklen.
+- Druck+NTC auf demselben ADC-Pin ist zulässig, **wenn** `sharedAdcFrontend != NONE` gesetzt ist.
 
 
 ## Shared-ADC/MUX Status (ehrlich)
-- `sensor.slim.sharedAdcFrontend` und `bootSensorSelection` werden serialisiert, sind aber **noch nicht runtime-wirksam**. Validierung blockiert diese Modi daher weiterhin explizit.
+- `sensor.slim.sharedAdcFrontend` und `bootSensorSelection` werden serialisiert **und** für Shared-Sampling/Validierung genutzt.
 - `useGlobalNoiseRef` ist runtime-wirksam: Kompensation wird nur angewandt, wenn der Druckkanal `useGlobalNoiseRef=true` hat und genau ein `NOISE_REF` existiert.
-- Kanalregeln: eindeutige `id`, max. ein `NOISE_REF`, keine doppelten `adcPin` ohne echte Shared-Frontend-Runtime.
+- Kanalregeln: eindeutige `id`, max. ein `NOISE_REF`, doppelte `adcPin` nur mit aktivem Shared-Frontend.
 - NTC nutzt jetzt echten Median der Samples; DS18B20-Initialisierung erfolgt nur im DS18B20-Modus.
 - Config-Save-Pfad: Normalisierung passiert zentral in `saveCfg()`; WebUI überschreibt den RAM-Stand danach nicht mehr mit rohen Kandidatdaten.
 
@@ -77,6 +77,8 @@ pio test -e native
 - Weder WebUI noch Telegram-`/saveconfig` schreiben danach den rohen Kandidaten zurück in ihren internen Zustand.
 
 ## Shared-ADC/MUX Ehrlichkeit
-- `sensor.slim.sharedAdcFrontend` und `sensor.slim.bootSensorSelection` sind weiterhin nur Modellfelder und werden validierungsseitig abgelehnt, solange keine echte Runtime-Umschaltung/MUX-Ansteuerung existiert.
+- `sensor.slim.sharedAdcFrontend` und `sensor.slim.bootSensorSelection` sind im Runtime-Pfad aktiv (Shared-ADC-Validierung + sequentielles Sampling).
 - `useGlobalNoiseRef` ist nur dann wirksam, wenn der Druckkanal selbst dieses Flag setzt **und** genau ein `NOISE_REF`-Kanal vorhanden ist.
 - Dadurch ist sichergestellt: keine akzeptierte Konfiguration ohne reale Laufzeitwirkung.
+
+- 2026-05-10 Follow-up 5: WebUI-Konfig-Save-Konsistenz gehärtet: nach zentralem saveCfg()-Pfad wird kein Roh-Kandidat zurückgeschrieben; WireGuard-Post-Save nutzt den normalisierten Runtime-Stand (`cfg_`).

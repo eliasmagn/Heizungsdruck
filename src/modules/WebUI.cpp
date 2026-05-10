@@ -173,6 +173,9 @@ bool WebUI::saveUpdatedConfig(const AppConfig &candidate, String &errorOut) {
     errorOut = "persist failed";
     return false;
   }
+  // `saveConfig_` (main.cpp::saveCfg) normalizes and writes into the shared
+  // runtime config object (`gConfig`). `cfg_` points to that object, so we must
+  // not overwrite it here with the raw candidate.
   return true;
 }
 
@@ -421,9 +424,9 @@ void WebUI::setupRoutes() {
     if (!doc["keepAliveSeconds"].isNull()) candidate.wireguard.keepAliveSeconds = doc["keepAliveSeconds"].as<uint16_t>();
     String outErr;
     if (!saveUpdatedConfig(candidate, outErr)) return request->send(400, "text/plain", outErr);
-    if (wireguard_ != nullptr) {
-      if (candidate.wireguard.enabled) {
-        wireguard_->enable(candidate.wireguard);
+    if (wireguard_ != nullptr && cfg_ != nullptr) {
+      if (cfg_->wireguard.enabled) {
+        wireguard_->enable(cfg_->wireguard);
       } else {
         wireguard_->disable();
       }

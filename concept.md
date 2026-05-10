@@ -120,3 +120,7 @@ Das System entwickelt sich von Einzel-ADC auf modulare Mehrkanal-Erfassung (ein 
 
 
 - 2026-05-10 Follow-up 3: Dokumentation präzisiert (zentraler Save-Pfad, Shared-ADC/MUX-Ehrlichkeit, useGlobalNoiseRef-Wirkbereich) und Buildversuche mit lokal installiertem PlatformIO erneut ausgeführt.
+
+- 2026-05-10 Follow-up 4: Shared-ADC/MUX-Lücke geschlossen: `PressureSensor` nutzt zentralen Shared-Sampling-Pfad, `sharedAdcFrontend` aktiviert gleiche ADC-Pins (inkl. Druck+NTC), und Validierung blockiert doppelte Pins nur noch ohne Shared-Frontend.
+
+- 2026-05-10 Follow-up 5: WebUI-Konfig-Save-Konsistenz gehärtet: nach zentralem saveCfg()-Pfad wird kein Roh-Kandidat zurückgeschrieben; WireGuard-Post-Save nutzt den normalisierten Runtime-Stand (`cfg_`).

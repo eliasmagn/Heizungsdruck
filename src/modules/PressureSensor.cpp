@@ -149,6 +149,20 @@ bool PressureSensor::classifyFault(const PressureReading &candidate, SensorFault
 }
 
 PressureReading PressureSensor::sample(uint32_t nowMs) {
+  auto readChannelSamples = [&](uint8_t pin) {
+    std::vector<int> samples;
+    samples.reserve(cfg_.sensor.sampleCount);
+  #if HAS_ADC_DMA
+    samples = readAdcSamplesDma(pin, cfg_.sensor.sampleCount);
+  #endif
+    if (samples.empty()) {
+      for (uint16_t i = 0; i < cfg_.sensor.sampleCount; ++i) {
+        samples.push_back(analogRead(pin));
+      }
+    }
+    return samples;
+  };
+
   std::vector<int> pressureSamples;
   pressureSamples.reserve(cfg_.sensor.sampleCount);
   channelLastRaw_.clear();
@@ -172,13 +186,7 @@ PressureReading PressureSensor::sample(uint32_t nowMs) {
   }
   applyNoiseCompensation = pressureUseGlobalNoiseRef && noiseId.length() > 0;
   for (const auto &ch : cfg_.sensor.analogChannels) {
-    std::vector<int> samples; samples.reserve(cfg_.sensor.sampleCount);
-    #if HAS_ADC_DMA
-    samples = readAdcSamplesDma(ch.adcPin, cfg_.sensor.sampleCount);
-    #endif
-    if (samples.empty()) {
-      for (uint16_t i=0;i<cfg_.sensor.sampleCount;++i){ samples.push_back(analogRead(ch.adcPin)); }
-    }
+    std::vector<int> samples = readChannelSamples(ch.adcPin);
     channelLastRaw_[ch.id]=samples[samples.size()/2];
     channelLastFiltered_[ch.id]=math_.robustFilter(samples);
     if (ch.adcPin==pressurePin) pressureSamples = samples;
@@ -199,8 +207,10 @@ PressureReading PressureSensor::sample(uint32_t nowMs) {
       float t = dallas_.getTempCByIndex(0);
       if (t > -100.0f && t < 150.0f) { lastTempC_ = t; lastTempValid_ = true; } else { lastTempValid_ = false; }
     } else if (cfg_.sensor.temperature.mode == TemperatureMode::NTC) {
-      std::vector<int> ntcSamples; ntcSamples.reserve(cfg_.sensor.sampleCount);
-      for (uint16_t i=0;i<cfg_.sensor.sampleCount;++i) ntcSamples.push_back(analogRead(cfg_.sensor.temperature.ntc.adcPin));
+      if (cfg_.sensor.slim.sharedAdcFrontend != SlimSharedAdcFrontend::NONE) {
+        delayMicroseconds(150);
+      }
+      std::vector<int> ntcSamples = readChannelSamples(cfg_.sensor.temperature.ntc.adcPin);
       lastTempC_ = readNtcC(ntcSamples, cfg_.sensor.temperature.ntc, cfg_.sensor.adcMax);
       lastTempValid_ = (lastTempC_ > -50.0f && lastTempC_ < 150.0f);
     } else { lastTempValid_ = false; }
