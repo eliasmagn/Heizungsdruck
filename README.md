@@ -59,3 +59,13 @@ pio test -e native
 - `sharedAdcFrontend`-Werte ungleich `NONE` (z. B. ADS1115/ADS1015/TLA2024/CD4051/TCA9548A) sind derzeit **unsupported/reserved** und werden von der Validierung abgelehnt.
 - `bootSensorSelection=temperature` hat aktuell **keine zulässige Runtime-Wirkung** und ist daher bis zur echten Shared-ADC-Implementierung ebenfalls validierungsseitig gesperrt.
 - Deshalb ist Druck+NTC auf demselben ADC-Pin derzeit bewusst nicht zulässig; die Validierung blockiert solche Konfigurationen konsequent.
+
+
+## Shared-ADC/MUX Status (ehrlich)
+- `sensor.slim.sharedAdcFrontend` und `bootSensorSelection` werden serialisiert, sind aber **noch nicht runtime-wirksam**. Validierung blockiert diese Modi daher weiterhin explizit.
+- `useGlobalNoiseRef` ist runtime-wirksam: Kompensation wird nur angewandt, wenn der Druckkanal `useGlobalNoiseRef=true` hat und genau ein `NOISE_REF` existiert.
+- Kanalregeln: eindeutige `id`, max. ein `NOISE_REF`, keine doppelten `adcPin` ohne echte Shared-Frontend-Runtime.
+- NTC nutzt jetzt echten Median der Samples; DS18B20-Initialisierung erfolgt nur im DS18B20-Modus.
+- Config-Save-Pfad: Normalisierung passiert zentral in `saveCfg()`; WebUI überschreibt den RAM-Stand danach nicht mehr mit rohen Kandidatdaten.
+
+- Boot-Resilienz: Ist eine geladene Konfiguration ungültig, wird auf Defaults zurückgesetzt und (falls Store verfügbar) repariert persistiert.

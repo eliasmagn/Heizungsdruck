@@ -90,7 +90,7 @@
 namespace {
 ConfigStore gStore; AppConfig gConfig; PressureSensor *gSensor=nullptr; PressureStateMachine *gStateMachine=nullptr;
 PressureHistory gHistory(240); MqttManager gMqtt; AlarmManager gAlarm; WebUI gWeb; DisplayManager gDisplay; WireGuardManager gWireGuard;
-PressureReading gLastReading; PressureState gLastState=PressureState::UNKNOWN; uint32_t gLastSampleMs=0; uint32_t gLastMinimalLogMs=0; bool gDebugVerbose=false; bool gNetworkReconfigureNeeded=false;
+PressureReading gLastReading; PressureState gLastState=PressureState::UNKNOWN; uint32_t gLastSampleMs=0; uint32_t gLastMinimalLogMs=0; bool gDebugVerbose=false; bool gNetworkReconfigureNeeded=false; bool gConfigStoreReady=false;
 DisplayState gDisplayState;
 #if TARGET_ESP32
 portMUX_TYPE gDisplayMux = portMUX_INITIALIZER_UNLOCKED;
@@ -112,7 +112,7 @@ bool bridgeDebugEnabled(){
 }
 void logConfigIfVerbose(){if(!gDebugVerbose) return; const std::string cfgJson=configToJson(gConfig); Serial.println("==== CONFIG DUMP (DEBUG BRIDGE D25<->D26) ===="); Serial.println(cfgJson.c_str()); Serial.println("==============================================");}
 String generateApPassword(){ char buf[11]; snprintf(buf, sizeof(buf), "%08lx", static_cast<unsigned long>(random(0xFFFFFFFFUL))); return String(buf); }
-bool saveCfg(const AppConfig &cfg){AppConfig normalized=cfg;ensureDeviceIdentity(normalized);const AppConfig prev=gConfig; if(!gStore.save(normalized)) return false;gConfig=normalized; if(gSensor) gSensor->updateConfig(gConfig); if(gStateMachine) gStateMachine->updateConfig(gConfig); gMqtt.begin(gConfig); gAlarm.updateConfig(gConfig); if(gConfig.wireguard.enabled) gWireGuard.enable(gConfig.wireguard); else gWireGuard.disable(); const bool networkChanged=(prev.network.wifiSsid!=gConfig.network.wifiSsid)||(prev.network.wifiPassword!=gConfig.network.wifiPassword)||(prev.network.apSsid!=gConfig.network.apSsid)||(prev.network.apPassword!=gConfig.network.apPassword)||(prev.network.hostname!=gConfig.network.hostname)||(prev.network.wifiTxPowerDbm!=gConfig.network.wifiTxPowerDbm)||(prev.network.wifi11bMode!=gConfig.network.wifi11bMode); if(networkChanged){gNetworkReconfigureNeeded=true; Serial.println("[NET] Network settings changed; apply via reboot or reconnect cycle.");} return true;}
+bool saveCfg(const AppConfig &cfg){AppConfig normalized=cfg;ensureDeviceIdentity(normalized);const AppConfig prev=gConfig; if(!gConfigStoreReady){ Serial.println("[CFG] Persist skipped: config store unavailable"); return false;} if(!gStore.save(normalized)) return false;gConfig=normalized; if(gSensor) gSensor->updateConfig(gConfig); if(gStateMachine) gStateMachine->updateConfig(gConfig); gMqtt.begin(gConfig); gAlarm.updateConfig(gConfig); if(gConfig.wireguard.enabled) gWireGuard.enable(gConfig.wireguard); else gWireGuard.disable(); const bool networkChanged=(prev.network.wifiSsid!=gConfig.network.wifiSsid)||(prev.network.wifiPassword!=gConfig.network.wifiPassword)||(prev.network.apSsid!=gConfig.network.apSsid)||(prev.network.apPassword!=gConfig.network.apPassword)||(prev.network.hostname!=gConfig.network.hostname)||(prev.network.wifiTxPowerDbm!=gConfig.network.wifiTxPowerDbm)||(prev.network.wifi11bMode!=gConfig.network.wifi11bMode); if(networkChanged){gNetworkReconfigureNeeded=true; Serial.println("[NET] Network settings changed; apply via reboot or reconnect cycle.");} return true;}
 bool isWireGuardOnline(){return gWireGuard.status().online;}
 bool connectWithCreds(const char *ssid,const char *pass,uint32_t timeoutMs){if(ssid==nullptr||strlen(ssid)==0) return false; WiFi.begin(ssid,pass); uint32_t start=millis(); while(WiFi.status()!=WL_CONNECTED && millis()-start<timeoutMs){delay(250);} return WiFi.status()==WL_CONNECTED;}
 
@@ -147,8 +147,22 @@ void setup() {
   Serial.printf("Debug mode: %s (bridge D25<->D26 %s)\n", gDebugVerbose ? "VERBOSE" : "MINIMAL",
                 gDebugVerbose ? "detected" : "not detected");
 
-  gStore.begin();
-  gConfig = gStore.load();
+  gConfigStoreReady = gStore.begin();
+  if (!gConfigStoreReady) {
+    Serial.println("[CFG] Config store init failed. Falling back to defaults for this boot.");
+    gConfig = defaultConfig();
+  } else {
+    gConfig = gStore.load();
+  }
+  std::string cfgErr;
+  if (!gConfig.validate(cfgErr)) {
+    Serial.printf("[CFG] Loaded config invalid (%s). Reverting to defaults.
+", cfgErr.c_str());
+    gConfig = defaultConfig();
+    if (gConfigStoreReady && !gStore.save(gConfig)) {
+      Serial.println("[CFG] Failed to persist recovered default config.");
+    }
+  }
   ensureDeviceIdentity(gConfig);
   if (gConfig.network.hostname.empty()) gConfig.network.hostname = DEVICE_HOSTNAME;
   if (gConfig.sensor.adcPin == 34) gConfig.sensor.adcPin = SENSOR_ADC_PIN_DEFAULT;

@@ -64,12 +64,8 @@ AppConfig defaultConfig() {
 
 bool AppConfig::validate(std::string &error) const {
   const bool sharedFrontendConfigured = sensor.slim.sharedAdcFrontend != SlimSharedAdcFrontend::NONE;
-  if (sharedFrontendConfigured) {
-    error = "sensor.slim.sharedAdcFrontend is reserved but not yet runtime-supported";
-    return false;
-  }
-  if (sensor.slim.bootSensorSelection != SlimBootSensorSelection::PRESSURE) {
-    error = "sensor.slim.bootSensorSelection=temperature is reserved until shared ADC runtime support exists";
+  if (!sharedFrontendConfigured && sensor.slim.bootSensorSelection != SlimBootSensorSelection::PRESSURE) {
+    error = "bootSensorSelection=temperature requires sharedAdcFrontend";
     return false;
   }
 
@@ -173,11 +169,37 @@ bool AppConfig::validate(std::string &error) const {
   }
   int validPointCount = 0;
   int pressureSourceCount = 0;
+  int noiseRefCount = 0;
+  bool hasAnyUseGlobalNoiseRef = false;
+  std::vector<std::string> ids;
+  std::vector<uint8_t> pins;
   for (const auto &ch : sensor.analogChannels) {
+    if (trim(ch.id).empty()) { error = "analog channel id must not be empty"; return false; }
+    if (std::find(ids.begin(), ids.end(), ch.id) != ids.end()) { error = "analog channel ids must be unique"; return false; }
+    ids.push_back(ch.id);
+    if (std::find(pins.begin(), pins.end(), ch.adcPin) != pins.end()) {
+      error = "duplicate adcPin across analogChannels requires sharedAdcFrontend runtime (not implemented)";
+      return false;
+    }
+    pins.push_back(ch.adcPin);
     if (ch.pressureSource || ch.role == AnalogChannelRole::PRESSURE) pressureSourceCount++;
+    if (ch.role == AnalogChannelRole::NOISE_REF) noiseRefCount++;
+    if (ch.useGlobalNoiseRef) hasAnyUseGlobalNoiseRef = true;
   }
   if (pressureSourceCount != 1) {
     error = "exactly one analog channel must be pressureSource/PRESSURE";
+    return false;
+  }
+  if (noiseRefCount > 1) {
+    error = "at most one NOISE_REF channel is allowed";
+    return false;
+  }
+  if (hasAnyUseGlobalNoiseRef && noiseRefCount == 0) {
+    error = "useGlobalNoiseRef requires exactly one NOISE_REF channel";
+    return false;
+  }
+  if (sharedFrontendConfigured) {
+    error = "sharedAdcFrontend is model-only for now; runtime switching/mux is not implemented yet";
     return false;
   }
   if (sensor.temperature.enabled && sensor.temperature.mode == TemperatureMode::NTC) {

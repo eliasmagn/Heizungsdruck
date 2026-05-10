@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include "../platform_caps.h"
 #include <math.h>
+#include <algorithm>
 
 #if __has_include("driver/adc.h") && __has_include("esp_adc/adc_continuous.h")
 #include "driver/adc.h"
@@ -91,7 +92,9 @@ std::vector<int> readAdcSamplesDma(uint8_t pin, uint16_t sampleCount) {
 
 static float readNtcC(const std::vector<int> &samples, const NtcConfig &ntc, int adcMax) {
   if (samples.empty()) return 0.0f;
-  const int adc = samples[samples.size()/2];
+  std::vector<int> sorted = samples;
+  std::sort(sorted.begin(), sorted.end());
+  const int adc = sorted[sorted.size()/2];
   if (adc <= 0 || adc >= adcMax) return 0.0f;
   const float rNtc = ntc.seriesResistorOhm * (static_cast<float>(adc) / static_cast<float>(adcMax - adc));
   const float t0 = ntc.nominalTempC + 273.15f;
@@ -105,7 +108,7 @@ void PressureSensor::initForCurrentConfig() {
   analogReadResolution(12);
 #endif
   for (const auto &ch : cfg_.sensor.analogChannels) pinMode(ch.adcPin, INPUT);
-  if (cfg_.sensor.temperature.enabled) {
+  if (cfg_.sensor.temperature.enabled && cfg_.sensor.temperature.mode == TemperatureMode::DS18B20) {
     oneWire_ = OneWire(cfg_.sensor.temperature.oneWirePin);
     dallas_ = DallasTemperature(&oneWire_);
     dallas_.begin();
@@ -153,12 +156,21 @@ PressureReading PressureSensor::sample(uint32_t nowMs) {
   uint8_t pressurePin = cfg_.sensor.adcPin;
   std::string pressureChannelId = "pressure_main";
   String noiseId="";
+  bool applyNoiseCompensation = false;
   for (const auto &ch : cfg_.sensor.analogChannels) {
     if (ch.pressureSource || ch.role==AnalogChannelRole::PRESSURE) { pressurePin = ch.adcPin; pressureChannelId = ch.id; break; }
+  }
+  bool pressureUseGlobalNoiseRef = true;
+  for (const auto &ch : cfg_.sensor.analogChannels) {
+    if (ch.id == pressureChannelId) {
+      pressureUseGlobalNoiseRef = ch.useGlobalNoiseRef;
+      break;
+    }
   }
   for (const auto &ch : cfg_.sensor.analogChannels) {
     if (ch.role==AnalogChannelRole::NOISE_REF) { noiseId = ch.id.c_str(); break; }
   }
+  applyNoiseCompensation = pressureUseGlobalNoiseRef && noiseId.length() > 0;
   for (const auto &ch : cfg_.sensor.analogChannels) {
     std::vector<int> samples; samples.reserve(cfg_.sensor.sampleCount);
     #if HAS_ADC_DMA
@@ -197,7 +209,7 @@ PressureReading PressureSensor::sample(uint32_t nowMs) {
   r.temperatureValid = lastTempValid_;
   r.channelRaw = channelLastRaw_;
   r.channelFiltered = channelLastFiltered_;
-  if (noiseId.length()>0 && channelLastRaw_.count(noiseId.c_str())) {
+  if (applyNoiseCompensation && channelLastRaw_.count(noiseId.c_str())) {
     r.hasNoiseRef = true;
     r.noiseRawAdc = channelLastRaw_[noiseId.c_str()];
     r.noiseFilteredAdc = channelLastFiltered_[noiseId.c_str()];
