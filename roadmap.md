@@ -119,3 +119,4 @@
 - 2026-05-10 Follow-up 10: Display-Portabilität verbessert (I2C-Pins/Adresse per Build-Defines konfigurierbar) und MQTT-Telemetrie um Shared-ADC-Semantikfelder ergänzt.
 
 - 2026-05-10 Follow-up 11: Shared-ADC/MUX now enforced as **reserved only** until real hardware frontend control exists; configs with `sharedAdcFrontend != NONE` are rejected. NTC uses robust filter ADC path; WireGuard handshake timestamp is intentionally reported as unavailable (0) instead of WiFi-derived pseudo-value.
+- 2026-05-11 Follow-up 12: WireGuard runtime/config honesty tightened: only backend-used fields are mandatory, reserved fields stay persisted-only, status split into `lastError` (errors) + `lastInfo` (hints), and stale WG status data is cleared on disable/failure paths.

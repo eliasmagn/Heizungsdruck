@@ -41,27 +41,27 @@ void WireGuardManager::begin(const WireGuardConfig &cfg) {
 void WireGuardManager::loop(uint32_t nowSec) {
 #if !HAS_WIREGUARD
   (void)nowSec;
-  online_ = false;
+  heuristicOnline_ = false;
   lastHandshake_ = 0;
   return;
 #else
   (void)nowSec;
   if (!enabled_) {
-    online_ = false;
+    heuristicOnline_ = false;
     lastHandshake_ = 0;
     return;
   }
 
   const wl_status_t wifiStatus = WiFi.status();
-  online_ = configured_ && (wifiStatus == WL_CONNECTED);
-  if (!online_) {
+  heuristicOnline_ = configured_ && (wifiStatus == WL_CONNECTED);
+  if (!heuristicOnline_) {
     lastHandshake_ = 0;
-    lastError_ = "WireGuard transport offline (WiFi disconnected or tunnel not configured)";
-  } else {
-    // Library does not provide real handshake metrics.
-    lastHandshake_ = 0;
-    lastError_ = "WireGuard active; handshake timestamp unavailable in current backend";
+    lastInfo_ = "Heuristic offline: WiFi disconnected or WireGuard not configured";
+    return;
   }
+  // Library does not provide real handshake metrics.
+  lastHandshake_ = 0;
+  lastInfo_ = "Heuristic online: configured + WiFi connected; backend has no handshake timestamp";
 #endif
 }
 
@@ -70,18 +70,20 @@ bool WireGuardManager::enable(const WireGuardConfig &cfg) {
   (void)cfg;
   configured_ = false;
   enabled_ = false;
-  online_ = false;
+  heuristicOnline_ = false;
   lastError_ = "WireGuard not supported on this profile";
+  lastInfo_.clear();
   return false;
 #else
   if (!applyConfig(cfg)) {
     enabled_ = false;
-    online_ = false;
+    heuristicOnline_ = false;
     return false;
   }
   enabled_ = true;
-  online_ = WiFi.status() == WL_CONNECTED;
+  heuristicOnline_ = configured_ && (WiFi.status() == WL_CONNECTED);
   lastHandshake_ = 0;
+  lastInfo_ = "WireGuard configuration applied";
   return true;
 #endif
 }
@@ -91,21 +93,29 @@ void WireGuardManager::disable() {
   gWireGuard.end();
 #endif
   enabled_ = false;
-  online_ = false;
+  heuristicOnline_ = false;
   configured_ = false;
   lastHandshake_ = 0;
+  lastError_.clear();
+  lastInfo_ = "WireGuard disabled";
+  localAddress_.clear();
+  peerEndpoint_.clear();
+  peerPort_ = 0;
 }
 
 WireGuardStatus WireGuardManager::status() const {
   WireGuardStatus s;
   s.enabled = enabled_;
   s.configured = configured_;
-  s.online = online_;
+  s.heuristicOnline = heuristicOnline_;
+  s.online = heuristicOnline_;
   s.localAddress = localAddress_;
   s.peerEndpoint = peerEndpoint_;
   s.peerPort = peerPort_;
   s.lastHandshake = lastHandshake_;
+  s.handshakeSupported = false;
   s.lastError = lastError_;
+  s.lastInfo = lastInfo_;
   return s;
 }
 
@@ -130,10 +140,6 @@ bool WireGuardManager::configLooksUsable(const WireGuardConfig &cfg, std::string
     error = "peerPublicKey missing";
     return false;
   }
-  if (cfg.allowedIp1.empty() && cfg.allowedIp2.empty()) {
-    error = "at least one allowed IP required";
-    return false;
-  }
   error.clear();
   return true;
 }
@@ -143,6 +149,7 @@ bool WireGuardManager::applyConfig(const WireGuardConfig &cfg) {
   (void)cfg;
   configured_ = false;
   lastError_ = "WireGuard not supported on this profile";
+  lastInfo_.clear();
   return false;
 #else
   std::string error;
@@ -172,20 +179,19 @@ bool WireGuardManager::applyConfig(const WireGuardConfig &cfg) {
   configured_ = ok;
   if (!ok) {
     lastError_ = "WireGuard begin failed";
+    lastInfo_.clear();
+    localAddress_.clear();
+    peerEndpoint_.clear();
+    peerPort_ = 0;
     return false;
   }
 
   localAddress_ = localAddressRaw;
   peerEndpoint_ = cfg.peerEndpoint;
   peerPort_ = cfg.peerPort;
-  // The WireGuard-ESP32 API used here does not expose explicit setters for
-  // netmask/presharedKey/allowed IP list/keepalive; these fields are still
-  // validated and persisted for future backend support.
-  if (cidrPrefix > 0) {
-    lastError_ = "CIDR accepted; runtime tunnel health currently inferred from WiFi link state only";
-  } else {
-    lastError_ = "runtime tunnel health currently inferred from WiFi link state only";
-  }
+  lastError_.clear();
+  if (cidrPrefix > 0) lastInfo_ = "CIDR host parsed; only host IP is applied by current backend";
+  else lastInfo_ = "WireGuard runtime uses configured host IP and peer endpoint/public key/port";
   return true;
 #endif
 }
