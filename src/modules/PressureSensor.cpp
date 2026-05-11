@@ -90,11 +90,7 @@ std::vector<int> readAdcSamplesDma(uint8_t pin, uint16_t sampleCount) {
 }  // namespace
 
 
-static float readNtcC(const std::vector<int> &samples, const NtcConfig &ntc, int adcMax) {
-  if (samples.empty()) return 0.0f;
-  std::vector<int> sorted = samples;
-  std::sort(sorted.begin(), sorted.end());
-  const int adc = sorted[sorted.size()/2];
+static float readNtcC(int adc, const NtcConfig &ntc, int adcMax) {
   if (adc <= 0 || adc >= adcMax) return 0.0f;
   const float rNtc = ntc.seriesResistorOhm * (static_cast<float>(adc) / static_cast<float>(adcMax - adc));
   const float t0 = ntc.nominalTempC + 273.15f;
@@ -207,11 +203,9 @@ PressureReading PressureSensor::sample(uint32_t nowMs) {
       float t = dallas_.getTempCByIndex(0);
       if (t > -100.0f && t < 150.0f) { lastTempC_ = t; lastTempValid_ = true; } else { lastTempValid_ = false; }
     } else if (cfg_.sensor.temperature.mode == TemperatureMode::NTC) {
-      if (cfg_.sensor.slim.sharedAdcFrontend != SlimSharedAdcFrontend::NONE) {
-        delayMicroseconds(150);
-      }
       std::vector<int> ntcSamples = readChannelSamples(cfg_.sensor.temperature.ntc.adcPin);
-      lastTempC_ = readNtcC(ntcSamples, cfg_.sensor.temperature.ntc, cfg_.sensor.adcMax);
+      const int ntcFilteredAdc = math_.robustFilter(ntcSamples);
+      lastTempC_ = readNtcC(ntcFilteredAdc, cfg_.sensor.temperature.ntc, cfg_.sensor.adcMax);
       lastTempValid_ = (lastTempC_ > -50.0f && lastTempC_ < 150.0f);
     } else { lastTempValid_ = false; }
   }

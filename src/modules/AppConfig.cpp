@@ -64,6 +64,10 @@ AppConfig defaultConfig() {
 
 bool AppConfig::validate(std::string &error) const {
   const bool sharedFrontendConfigured = sensor.slim.sharedAdcFrontend != SlimSharedAdcFrontend::NONE;
+  if (sharedFrontendConfigured) {
+    error = "sharedAdcFrontend is currently persisted for future use, but not supported in runtime yet";
+    return false;
+  }
   if (!sharedFrontendConfigured && sensor.slim.bootSensorSelection != SlimBootSensorSelection::PRESSURE) {
     error = "bootSensorSelection=temperature requires sharedAdcFrontend";
     return false;
@@ -180,6 +184,14 @@ bool AppConfig::validate(std::string &error) const {
     ids.push_back(ch.id);
     if (std::find(pins.begin(), pins.end(), ch.adcPin) != pins.end() && !sharedFrontendConfigured) {
       error = "duplicate adcPin across analogChannels requires sharedAdcFrontend";
+      return false;
+    }
+    if (ch.role == AnalogChannelRole::TEMPERATURE_NTC && ch.adcPin != sensor.temperature.ntc.adcPin) {
+      error = "TEMPERATURE_NTC channel must use sensor.temperature.ntc.adcPin";
+      return false;
+    }
+    if (ch.role == AnalogChannelRole::NOISE_REF && ch.pressureSource) {
+      error = "NOISE_REF channel cannot be pressureSource";
       return false;
     }
     pins.push_back(ch.adcPin);
