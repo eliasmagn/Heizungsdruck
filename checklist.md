@@ -159,3 +159,5 @@
 - 2026-05-10 Follow-up 9: README/Feature-Semantik geschärft (Display-Hardwarebindung, strict `requireWireguard`, WireGuard-Online-Heuristik, Shared-ADC-Grenzen) für ehrliche Laufzeitdokumentation.
 
 - 2026-05-10 Follow-up 10: Display-Portabilität verbessert (I2C-Pins/Adresse per Build-Defines konfigurierbar) und MQTT-Telemetrie um Shared-ADC-Semantikfelder ergänzt.
+
+- 2026-05-10 Follow-up 11: Shared-ADC/MUX now enforced as **reserved only** until real hardware frontend control exists; configs with `sharedAdcFrontend != NONE` are rejected. NTC uses robust filter ADC path; WireGuard handshake timestamp is intentionally reported as unavailable (0) instead of WiFi-derived pseudo-value.

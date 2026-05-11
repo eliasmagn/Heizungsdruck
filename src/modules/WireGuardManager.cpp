@@ -42,17 +42,25 @@ void WireGuardManager::loop(uint32_t nowSec) {
 #if !HAS_WIREGUARD
   (void)nowSec;
   online_ = false;
+  lastHandshake_ = 0;
   return;
 #else
+  (void)nowSec;
   if (!enabled_) {
     online_ = false;
+    lastHandshake_ = 0;
     return;
   }
 
   const wl_status_t wifiStatus = WiFi.status();
   online_ = configured_ && (wifiStatus == WL_CONNECTED);
   if (!online_) {
+    lastHandshake_ = 0;
     lastError_ = "WireGuard transport offline (WiFi disconnected or tunnel not configured)";
+  } else {
+    // Library does not provide real handshake metrics.
+    lastHandshake_ = 0;
+    lastError_ = "WireGuard active; handshake timestamp unavailable in current backend";
   }
 #endif
 }
@@ -73,9 +81,7 @@ bool WireGuardManager::enable(const WireGuardConfig &cfg) {
   }
   enabled_ = true;
   online_ = WiFi.status() == WL_CONNECTED;
-  if (online_) {
-    lastHandshake_ = millis() / 1000;
-  }
+  lastHandshake_ = 0;
   return true;
 #endif
 }
@@ -86,6 +92,8 @@ void WireGuardManager::disable() {
 #endif
   enabled_ = false;
   online_ = false;
+  configured_ = false;
+  lastHandshake_ = 0;
 }
 
 WireGuardStatus WireGuardManager::status() const {
