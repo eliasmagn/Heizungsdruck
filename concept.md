@@ -137,3 +137,4 @@ Das System entwickelt sich von Einzel-ADC auf modulare Mehrkanal-Erfassung (ein 
 
 - 2026-05-10 Follow-up 11: Shared-ADC/MUX now enforced as **reserved only** until real hardware frontend control exists; configs with `sharedAdcFrontend != NONE` are rejected. NTC uses robust filter ADC path; WireGuard handshake timestamp is intentionally reported as unavailable (0) instead of WiFi-derived pseudo-value.
 - 2026-05-11 Follow-up 12: WireGuard-Konzept geschärft: Runtime-aktive Felder und nur-persistierte Reserven klar getrennt, Online-Status als Heuristik benannt, Handshake-Status explizit als backendseitig nicht verfügbar behandelt, Fehler-/Infotexte diagnostisch getrennt.
+- 2026-05-11 Follow-up 13: `allowedIp1/allowedIp2` explizit als derzeit nicht abgeleitet/nicht angewendet dokumentiert; bleiben bewusst nur als Persistenz-Reserve bis Backend-Unterstützung vorhanden ist.

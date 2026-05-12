@@ -189,9 +189,17 @@ bool WireGuardManager::applyConfig(const WireGuardConfig &cfg) {
   localAddress_ = localAddressRaw;
   peerEndpoint_ = cfg.peerEndpoint;
   peerPort_ = cfg.peerPort;
+  const bool hasReservedFields =
+      !cfg.netmask.empty() || !cfg.presharedKey.empty() || !cfg.allowedIp1.empty() || !cfg.allowedIp2.empty() || cfg.keepAliveSeconds > 0;
   lastError_.clear();
-  if (cidrPrefix > 0) lastInfo_ = "CIDR host parsed; only host IP is applied by current backend";
-  else lastInfo_ = "WireGuard runtime uses configured host IP and peer endpoint/public key/port";
+  if (cidrPrefix > 0) {
+    lastInfo_ = "CIDR host parsed; backend applies host IP only";
+  } else {
+    lastInfo_ = "Backend applies localAddress/privateKey/peerEndpoint/peerPort/peerPublicKey";
+  }
+  if (hasReservedFields) {
+    lastInfo_ += "; netmask/presharedKey/allowedIp1/allowedIp2/keepAliveSeconds are persisted but currently ignored by this backend";
+  }
   return true;
 #endif
 }

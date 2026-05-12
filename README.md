@@ -104,6 +104,7 @@ pio test -e native
 ## WireGuard-Semantik (Stand 2026-05-11)
 - Aktiv zur Laufzeit angewendet werden aktuell nur: `localAddress` (IP/CIDR akzeptiert, nur Host-IP wird genutzt), `privateKey`, `peerEndpoint`, `peerPort`, `peerPublicKey`.
 - Nur persistent gespeichert/reserviert (aktuell ohne Runtime-Wirkung): `netmask`, `presharedKey`, `allowedIp1`, `allowedIp2`, `keepAliveSeconds`.
+- Wichtig: `allowedIp1/allowedIp2` werden aktuell **nicht** automatisch abgeleitet oder implizit in Routingregeln umgesetzt; sie sind nur gespeicherte Reserven für ein künftiges Backend mit Peer-AllowedIPs-Support.
 - `wireguard.online`/`wireguard.heuristicOnline` bedeutet aktuell **heuristisch**: `configured && WiFi connected` (kein kryptographischer Tunnel-/Handshake-Beweis).
 - `lastHandshake` bleibt `0` und wird explizit als nicht vom aktuellen Backend unterstützt markiert (`handshakeSupported=false`).
 - `lastError` enthält nur echte Fehler; laufende Zustands-/Hinweistexte stehen in `lastInfo`.

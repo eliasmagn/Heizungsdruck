@@ -120,3 +120,4 @@
 
 - 2026-05-10 Follow-up 11: Shared-ADC/MUX now enforced as **reserved only** until real hardware frontend control exists; configs with `sharedAdcFrontend != NONE` are rejected. NTC uses robust filter ADC path; WireGuard handshake timestamp is intentionally reported as unavailable (0) instead of WiFi-derived pseudo-value.
 - 2026-05-11 Follow-up 12: WireGuard runtime/config honesty tightened: only backend-used fields are mandatory, reserved fields stay persisted-only, status split into `lastError` (errors) + `lastInfo` (hints), and stale WG status data is cleared on disable/failure paths.
+- 2026-05-11 Follow-up 13: Explicitly clarified that `allowedIp1/allowedIp2` are not currently derived/applied by the active ESP32 backend; informational status now calls out reserved-but-ignored fields when present.
