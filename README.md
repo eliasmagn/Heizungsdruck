@@ -111,3 +111,5 @@ pio test -e native
 - `lastHandshake` bleibt `0` und wird explizit als nicht vom aktuellen Backend unterstützt markiert (`handshakeSupported=false`).
 - `lastError` enthält nur echte Fehler; laufende Zustands-/Hinweistexte stehen in `lastInfo`.
 - `mqtt.requireWireguard=true` blockiert Reconnect/Publish strikt anhand dieses heuristischen WireGuard-Status (also „WG-konfiguriert+WiFi up“, nicht „Handshake verifiziert“).
+
+- 2026-05-12: Robustheitsfix: `PressureMath::adcToVoltage` gibt bei fehlerhaftem `adcMax<=0` jetzt sicher `0.0V` zurück statt einer Division durch 0. Zusätzlich wurde ein nativer Regressionstest ergänzt.

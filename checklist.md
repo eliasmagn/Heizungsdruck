@@ -165,3 +165,5 @@
 - [x] 2026-05-11 Follow-up 13: WireGuard-Reservierungsfelder präzisiert: `allowedIp1/allowedIp2` werden derzeit weder abgeleitet noch angewendet; Runtime meldet das jetzt explizit in `lastInfo`.
 - [x] 2026-05-12 Follow-up 14: WireGuard-Startpfad lauffähig gehärtet: vor Tunnelstart wird NTP-Zeit synchronisiert (Timeout 8s), damit Handshake nicht an ungültiger Systemzeit scheitert.
 - [x] 2026-05-12 Follow-up 15: WireGuard-Autoretry ergänzt: wenn Start wegen fehlender Voraussetzungen scheitert, wird bei aktiviertem WG alle 5 Minuten automatisch erneut `applyConfig` versucht.
+
+- [x] 2026-05-12: Logikfix ergänzt: Schutz gegen Division durch 0 in `PressureMath::adcToVoltage` + nativer Regressionstest.
