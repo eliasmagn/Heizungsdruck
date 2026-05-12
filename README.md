@@ -102,6 +102,7 @@ pio test -e native
 - 2026-05-10 Follow-up 11: Shared-ADC/MUX now enforced as **reserved only** until real hardware frontend control exists; configs with `sharedAdcFrontend != NONE` are rejected. NTC uses robust filter ADC path; WireGuard handshake timestamp is intentionally reported as unavailable (0) instead of WiFi-derived pseudo-value.
 
 ## WireGuard-Semantik (Stand 2026-05-11)
+- WireGuard-Start synchronisiert jetzt vor `wg.begin(...)` die Systemzeit per NTP (max. 8s Timeout), weil Handshakes ohne gültige Uhrzeit regelmäßig fehlschlagen.
 - Aktiv zur Laufzeit angewendet werden aktuell nur: `localAddress` (IP/CIDR akzeptiert, nur Host-IP wird genutzt), `privateKey`, `peerEndpoint`, `peerPort`, `peerPublicKey`.
 - Nur persistent gespeichert/reserviert (aktuell ohne Runtime-Wirkung): `netmask`, `presharedKey`, `allowedIp1`, `allowedIp2`, `keepAliveSeconds`.
 - Wichtig: `allowedIp1/allowedIp2` werden aktuell **nicht** automatisch abgeleitet oder implizit in Routingregeln umgesetzt; sie sind nur gespeicherte Reserven für ein künftiges Backend mit Peer-AllowedIPs-Support.

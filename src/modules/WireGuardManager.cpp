@@ -1,6 +1,7 @@
 #include "WireGuardManager.h"
 
 #include <Arduino.h>
+#include <time.h>
 #include "../platform_caps.h"
 
 #if HAS_WIREGUARD
@@ -14,6 +15,21 @@ WireGuard gWireGuard;
 
 bool parseIp(const std::string &raw, IPAddress &out) {
   return out.fromString(raw.c_str());
+}
+
+bool ensureClockSynced(uint32_t timeoutMs, std::string &errorOut) {
+  time_t now = time(nullptr);
+  if (now > 1700000000) return true;  // already synced (after ~2023-11)
+
+  configTime(0, 0, "pool.ntp.org", "time.nist.gov", "time.google.com");
+  const uint32_t started = millis();
+  while (millis() - started < timeoutMs) {
+    delay(100);
+    now = time(nullptr);
+    if (now > 1700000000) return true;
+  }
+  errorOut = "NTP time sync timeout (required by WireGuard)";
+  return false;
 }
 
 bool parseCidrAddress(const std::string &raw, std::string &ipOut, uint8_t &prefixOut) {
@@ -156,6 +172,13 @@ bool WireGuardManager::applyConfig(const WireGuardConfig &cfg) {
   if (!configLooksUsable(cfg, error)) {
     configured_ = false;
     lastError_ = error;
+    return false;
+  }
+
+  if (!ensureClockSynced(8000, error)) {
+    configured_ = false;
+    lastError_ = error;
+    lastInfo_.clear();
     return false;
   }
 
