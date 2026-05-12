@@ -64,10 +64,6 @@ AppConfig defaultConfig() {
 
 bool AppConfig::validate(std::string &error) const {
   const bool sharedFrontendConfigured = sensor.slim.sharedAdcFrontend != SlimSharedAdcFrontend::NONE;
-  if (sharedFrontendConfigured) {
-    error = "sharedAdcFrontend is currently persisted for future use, but not supported in runtime yet";
-    return false;
-  }
   if (!sharedFrontendConfigured && sensor.slim.bootSensorSelection != SlimBootSensorSelection::PRESSURE) {
     error = "bootSensorSelection=temperature requires sharedAdcFrontend";
     return false;

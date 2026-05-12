@@ -99,7 +99,7 @@ pio test -e native
 - Display-I2C ist jetzt minimal konfigurierbar über `DISPLAY_I2C_SDA_PIN`, `DISPLAY_I2C_SCL_PIN`, `DISPLAY_I2C_ADDRESS` (Default weiter 21/22/0x3C).
 - MQTT-Telemetrie enthält jetzt zusätzlich `sharedAdcFrontend`, `bootSensorSelection` und `noiseCompActive`, damit Discovery/Monitoring die Sensorpfad-Semantik transparent sieht.
 
-- 2026-05-10 Follow-up 11: Shared-ADC/MUX now enforced as **reserved only** until real hardware frontend control exists; configs with `sharedAdcFrontend != NONE` are rejected. NTC uses robust filter ADC path; WireGuard handshake timestamp is intentionally reported as unavailable (0) instead of WiFi-derived pseudo-value.
+- 2026-05-12: Validierungsregression korrigiert: `sharedAdcFrontend != NONE` wird nicht mehr pauschal verworfen; Shared-ADC-Konfigurationen sind wieder konsistent zur dokumentierten und implementierten Shared-Sampling-Logik zulässig.
 
 ## WireGuard-Semantik (Stand 2026-05-11)
 - WireGuard-Start synchronisiert jetzt vor `wg.begin(...)` die Systemzeit per NTP (max. 8s Timeout), weil Handshakes ohne gültige Uhrzeit regelmäßig fehlschlagen.

@@ -156,8 +156,7 @@ void setup() {
   }
   std::string cfgErr;
   if (!gConfig.validate(cfgErr)) {
-    Serial.printf("[CFG] Loaded config invalid (%s). Reverting to defaults.
-", cfgErr.c_str());
+    Serial.printf("[CFG] Loaded config invalid (%s). Reverting to defaults.\n", cfgErr.c_str());
     gConfig = defaultConfig();
     if (gConfigStoreReady && !gStore.save(gConfig)) {
       Serial.println("[CFG] Failed to persist recovered default config.");
