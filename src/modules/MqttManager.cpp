@@ -44,8 +44,8 @@ void MqttManager::reconnect(uint32_t nowMs) {
   if (cfg_.mqtt.requireWireguard && !wireguardOnline) {
     if (nowMs - lastReconnectTryMs_ >= 5000) {
       lastReconnectTryMs_ = nowMs;
-      lastError_ = "wireguard required but offline (connect blocked)";
-      Serial.println("[MQTT] requireWireguard=1 and tunnel offline; connect blocked");
+      lastError_ = "wireguard required but heuristic wireguard status is offline (connect blocked)";
+      Serial.println("[MQTT] requireWireguard=1 and heuristic WG status offline; connect blocked");
     }
     return;
   }
@@ -97,8 +97,8 @@ void MqttManager::publishReading(const PressureReading &reading, PressureState s
   if (!cfg_.mqtt.enabled || !client_.connected()) return;
   const bool wireguardOnline = (wireGuardOnlineFn_ != nullptr) && wireGuardOnlineFn_();
   if (cfg_.mqtt.requireWireguard && !wireguardOnline) {
-    lastError_ = "wireguard required but offline (publish blocked)";
-    Serial.println("[MQTT] requireWireguard=1 and tunnel offline; publish blocked");
+    lastError_ = "wireguard required but heuristic wireguard status is offline (publish blocked)";
+    Serial.println("[MQTT] requireWireguard=1 and heuristic WG status offline; publish blocked");
     return;
   }
 
