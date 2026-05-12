@@ -125,3 +125,4 @@
 - 2026-05-12 Follow-up 15: Added periodic WireGuard self-healing: when enabled but not configured, runtime retries WG apply every 5 minutes to recover automatically once NTP/network prerequisites become available.
 
 - 2026-05-12 Follow-up 16: Sensor-Mathematik gehärtet (adcMax<=0 Guard in `adcToVoltage`) und per Unit-Test abgesichert.
+- 2026-05-12 Follow-up 17: Validierungsregression bereinigt: Shared-ADC-Frontend wird wieder gemäß Runtime-Semantik akzeptiert (kein pauschales Reject in `AppConfig::validate`).

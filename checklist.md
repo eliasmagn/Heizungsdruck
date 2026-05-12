@@ -167,3 +167,4 @@
 - [x] 2026-05-12 Follow-up 15: WireGuard-Autoretry ergänzt: wenn Start wegen fehlender Voraussetzungen scheitert, wird bei aktiviertem WG alle 5 Minuten automatisch erneut `applyConfig` versucht.
 
 - [x] 2026-05-12: Logikfix ergänzt: Schutz gegen Division durch 0 in `PressureMath::adcToVoltage` + nativer Regressionstest.
+- [x] 2026-05-12: Validierungsfehler behoben: `sharedAdcFrontend`-Configs werden nicht mehr fälschlich global als ungültig abgelehnt (konsistent mit Shared-ADC-Pfad und Tests).
