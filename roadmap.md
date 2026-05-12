@@ -123,3 +123,5 @@
 - 2026-05-11 Follow-up 13: Explicitly clarified that `allowedIp1/allowedIp2` are not currently derived/applied by the active ESP32 backend; informational status now calls out reserved-but-ignored fields when present.
 - 2026-05-12 Follow-up 14: WireGuard startup reliability improved by adding NTP time synchronization before `wg.begin(...)` (with bounded timeout/error), addressing common handshake failures caused by invalid device time.
 - 2026-05-12 Follow-up 15: Added periodic WireGuard self-healing: when enabled but not configured, runtime retries WG apply every 5 minutes to recover automatically once NTP/network prerequisites become available.
+
+- 2026-05-12 Follow-up 16: Sensor-Mathematik gehärtet (adcMax<=0 Guard in `adcToVoltage`) und per Unit-Test abgesichert.

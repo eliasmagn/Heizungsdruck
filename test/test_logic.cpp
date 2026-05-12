@@ -99,6 +99,13 @@ void test_shared_adc_validation() {
   TEST_ASSERT_TRUE(cfg.validate(err));
 }
 
+void test_adc_to_voltage_handles_invalid_adcmax() {
+  AppConfig cfg = defaultConfig();
+  cfg.sensor.adcMax = 0;
+  PressureMath math(cfg);
+  TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, math.adcToVoltage(1234));
+}
+
 int main(int, char **) {
   UNITY_BEGIN();
   RUN_TEST(test_adc_to_bar_linear);
@@ -107,5 +114,6 @@ int main(int, char **) {
   RUN_TEST(test_config_validation);
   RUN_TEST(test_json_roundtrip);
   RUN_TEST(test_shared_adc_validation);
+  RUN_TEST(test_adc_to_voltage_handles_invalid_adcmax);
   return UNITY_END();
 }

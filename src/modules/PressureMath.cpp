@@ -48,5 +48,6 @@ float PressureMath::adcToBar(int adc) const {
 }
 
 float PressureMath::adcToVoltage(int adc) const {
+  if (cfg_.sensor.adcMax <= 0) return 0.0f;
   return (static_cast<float>(adc) / static_cast<float>(cfg_.sensor.adcMax)) * cfg_.sensor.adcVref;
 }

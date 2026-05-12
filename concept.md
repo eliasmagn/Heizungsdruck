@@ -140,3 +140,5 @@ Das System entwickelt sich von Einzel-ADC auf modulare Mehrkanal-Erfassung (ein 
 - 2026-05-11 Follow-up 13: `allowedIp1/allowedIp2` explizit als derzeit nicht abgeleitet/nicht angewendet dokumentiert; bleiben bewusst nur als Persistenz-Reserve bis Backend-Unterstützung vorhanden ist.
 - 2026-05-12 Follow-up 14: Betriebsfähigkeit verbessert: WireGuard initialisiert den Tunnel erst nach NTP-Zeitsync (oder sauberem Timeout-Fehler), da die Kryptoprüfung eine plausible Systemzeit benötigt.
 - 2026-05-12 Follow-up 15: Resilienz ergänzt: bleibt WireGuard aktiviert, triggert die Laufzeit bei Startfehlern alle 5 Minuten einen erneuten Konfigurationsversuch.
+
+- 2026-05-12 Follow-up 16: Kleine Robustheitskorrektur in `PressureMath::adcToVoltage` (Guard bei `adcMax<=0`, sonst droht NaN/Inf). Dazu ein nativer Regressionstest (`test_adc_to_voltage_handles_invalid_adcmax`).
