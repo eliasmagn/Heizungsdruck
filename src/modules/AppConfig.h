@@ -75,7 +75,20 @@ struct CalibrationConfig {
 struct AlarmConfig { float lowBar{1.0f}; float highBar{2.2f}; float hysteresisBar{0.1f}; uint16_t repeatMinutes{30}; std::string telegramBotToken; std::string telegramChatId; std::string emailWebhookUrl; };
 struct MqttConfig { bool enabled{false}; std::string host{"192.168.1.50"}; uint16_t port{1883}; std::string username; std::string password; std::string clientId{"heizungsdruck"}; std::string topicBase{"heizungsdruck"}; uint32_t publishIntervalMs{10000}; bool requireWireguard{false}; };
 struct NetworkConfig { std::string wifiSsid; std::string wifiPassword; std::string apSsid{"Heizungsdruck-Setup"}; std::string apPassword; std::string hostname{"heizungsdruck"}; float wifiTxPowerDbm{8.5f}; bool wifi11bMode{true}; };
-struct WireGuardConfig { bool enabled{false}; std::string localAddress; std::string netmask{"255.255.255.0"}; std::string privateKey; std::string peerEndpoint; uint16_t peerPort{0}; std::string peerPublicKey; std::string presharedKey; std::string allowedIp1; std::string allowedIp2; uint16_t keepAliveSeconds{0}; };
+struct WireGuardConfig {
+  bool enabled{false};
+  std::string localAddress;
+  std::string privateKey;
+  std::string peerEndpoint;
+  uint16_t peerPort{0};
+  std::string peerPublicKey;
+  // Persisted for future backend support, currently not applied at runtime:
+  std::string netmask{"255.255.255.0"};
+  std::string presharedKey;
+  std::string allowedIp1;
+  std::string allowedIp2;
+  uint16_t keepAliveSeconds{0};
+};
 
 struct AppConfig {
   SensorConfig sensor;

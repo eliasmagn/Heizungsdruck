@@ -89,11 +89,14 @@ String WebUI::statusJson() const {
     w["enabled"] = wg.enabled;
     w["configured"] = wg.configured;
     w["online"] = wg.online;
+    w["heuristicOnline"] = wg.heuristicOnline;
     w["localAddress"] = wg.localAddress.c_str();
     w["peerEndpoint"] = wg.peerEndpoint.c_str();
     w["peerPort"] = wg.peerPort;
     w["lastHandshake"] = wg.lastHandshake;
+    w["handshakeSupported"] = wg.handshakeSupported;
     w["lastError"] = wg.lastError.c_str();
+    w["lastInfo"] = wg.lastInfo.c_str();
   }
   String out;
   serializeJson(doc, out);
@@ -143,11 +146,14 @@ String WebUI::diagnosticsJson() const {
     w["enabled"] = wg.enabled;
     w["configured"] = wg.configured;
     w["online"] = wg.online;
+    w["heuristicOnline"] = wg.heuristicOnline;
     w["localAddress"] = wg.localAddress.c_str();
     w["peerEndpoint"] = wg.peerEndpoint.c_str();
     w["peerPort"] = wg.peerPort;
     w["lastHandshake"] = wg.lastHandshake;
+    w["handshakeSupported"] = wg.handshakeSupported;
     w["lastError"] = wg.lastError.c_str();
+    w["lastInfo"] = wg.lastInfo.c_str();
   }
   String out;
   serializeJson(doc, out);
@@ -532,11 +538,14 @@ void WebUI::setupRoutes() {
     doc["enabled"] = wg.enabled;
     doc["configured"] = wg.configured;
     doc["online"] = wg.online;
+    doc["heuristicOnline"] = wg.heuristicOnline;
     doc["localAddress"] = wg.localAddress.c_str();
     doc["peerEndpoint"] = wg.peerEndpoint.c_str();
     doc["peerPort"] = wg.peerPort;
     doc["lastHandshake"] = wg.lastHandshake;
+    doc["handshakeSupported"] = wg.handshakeSupported;
     doc["lastError"] = wg.lastError.c_str();
+    doc["lastInfo"] = wg.lastInfo.c_str();
     String out;
     serializeJson(doc, out);
     request->send(200, "application/json", out);
