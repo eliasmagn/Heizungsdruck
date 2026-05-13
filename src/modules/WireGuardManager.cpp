@@ -62,16 +62,27 @@ void WireGuardManager::loop(uint32_t nowSec) {
   return;
 #else
   (void)nowSec;
+  const bool wifiConnected = WiFi.status() == WL_CONNECTED;
   if (!enabled_) {
     heuristicOnline_ = false;
     lastHandshake_ = 0;
+    lastWifiConnected_ = wifiConnected;
     return;
   }
 
+  if (configured_ && !wifiConnected && lastWifiConnected_) {
+    // Drop stale backend state quickly after WiFi link loss so recovery can re-apply on reconnect.
+    gWireGuard.end();
+    configured_ = false;
+    heuristicOnline_ = false;
+    lastHandshake_ = 0;
+    lastInfo_ = "WiFi link lost; WireGuard backend reset, waiting for reconnect";
+  }
+  lastWifiConnected_ = wifiConnected;
+
   maybeRetryConfigure(nowSec);
 
-  const wl_status_t wifiStatus = WiFi.status();
-  heuristicOnline_ = configured_ && (wifiStatus == WL_CONNECTED);
+  heuristicOnline_ = configured_ && wifiConnected;
   if (!heuristicOnline_) {
     lastHandshake_ = 0;
     lastInfo_ = "Heuristic offline: WiFi disconnected or WireGuard not configured";
@@ -113,14 +124,21 @@ void WireGuardManager::disable() {
 #if HAS_WIREGUARD
   gWireGuard.end();
 #endif
+  resetRuntimeStatus();
+  enabled_ = false;
+  hasRetryConfig_ = false;
+  lastRetrySec_ = 0;
+  lastInfo_ = "WireGuard disabled";
+}
+
+void WireGuardManager::resetRuntimeStatus() {
   enabled_ = false;
   heuristicOnline_ = false;
   configured_ = false;
-  hasRetryConfig_ = false;
-  lastRetrySec_ = 0;
+  lastWifiConnected_ = false;
   lastHandshake_ = 0;
   lastError_.clear();
-  lastInfo_ = "WireGuard disabled";
+  lastInfo_.clear();
   localAddress_.clear();
   peerEndpoint_.clear();
   peerPort_ = 0;
@@ -134,6 +152,11 @@ void WireGuardManager::maybeRetryConfigure(uint32_t nowSec) {
   if (!enabled_) return;
   if (configured_) return;
   if (!hasRetryConfig_) return;
+  const bool wifiConnected = WiFi.status() == WL_CONNECTED;
+  if (!wifiConnected) {
+    lastInfo_ = "WireGuard retry waiting for WiFi link";
+    return;
+  }
   if (lastRetrySec_ != 0 && (nowSec - lastRetrySec_) < 300) return;
   lastRetrySec_ = nowSec;
   if (applyConfig(retryConfig_)) {
@@ -198,15 +221,16 @@ bool WireGuardManager::applyConfig(const WireGuardConfig &cfg) {
 #else
   std::string error;
   if (!configLooksUsable(cfg, error)) {
-    configured_ = false;
+    resetRuntimeStatus();
+    enabled_ = true;
     lastError_ = error;
     return false;
   }
 
   if (!ensureClockSynced(8000, error)) {
-    configured_ = false;
+    resetRuntimeStatus();
+    enabled_ = true;
     lastError_ = error;
-    lastInfo_.clear();
     return false;
   }
 
@@ -219,7 +243,8 @@ bool WireGuardManager::applyConfig(const WireGuardConfig &cfg) {
 
   IPAddress localAddress;
   if (!parseIp(localAddressRaw, localAddress)) {
-    configured_ = false;
+    resetRuntimeStatus();
+    enabled_ = true;
     lastError_ = "localAddress invalid (use IP or CIDR, e.g. 10.66.0.2 or 10.66.0.2/24)";
     return false;
   }
@@ -230,10 +255,8 @@ bool WireGuardManager::applyConfig(const WireGuardConfig &cfg) {
   configured_ = ok;
   if (!ok) {
     lastError_ = "WireGuard begin failed";
-    lastInfo_.clear();
-    localAddress_.clear();
-    peerEndpoint_.clear();
-    peerPort_ = 0;
+    resetRuntimeStatus();
+    enabled_ = true;
     return false;
   }
 

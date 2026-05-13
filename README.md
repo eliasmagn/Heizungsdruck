@@ -113,3 +113,6 @@ pio test -e native
 - `mqtt.requireWireguard=true` blockiert Reconnect/Publish strikt anhand dieses heuristischen WireGuard-Status (also „WG-konfiguriert+WiFi up“, nicht „Handshake verifiziert“).
 
 - 2026-05-12: Robustheitsfix: `PressureMath::adcToVoltage` gibt bei fehlerhaftem `adcMax<=0` jetzt sicher `0.0V` zurück statt einer Division durch 0. Zusätzlich wurde ein nativer Regressionstest ergänzt.
+- 2026-05-12: WireGuard-Reconnect wurde praxisnah gehärtet: fällt WiFi aus, räumt die Runtime den WG-Backendzustand aktiv auf; Re-Konfiguration startet erst wieder bei vorhandenem WiFi-Link, damit Reconnects deterministisch funktionieren.
+- 2026-05-12: Klarstellung + Fix: Ja, einige WireGuard-Felder (`netmask`, `presharedKey`, `allowedIp1`, `allowedIp2`, `keepAliveSeconds`) sind im aktuellen ESP32-Backend weiterhin nur persistent (nicht angewendet). Zusätzlich bleibt der 5-Minuten-Retry-Takt nun stabil, auch wenn `applyConfig` fehlschlägt (kein unbeabsichtigter Schnell-Loop mehr).
+- 2026-05-13: WireGuard-Validierung geschärft: bei `wireguard.enabled=true` ist jetzt mindestens ein Allowed-IP-Feld Pflicht (`allowedIp1` oder Legacy-`allowedIp2`). `allowedIp2` bleibt nur als Alt-/Kompatibilitätsfeld bestehen.

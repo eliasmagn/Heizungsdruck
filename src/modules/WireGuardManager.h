@@ -31,11 +31,13 @@ class WireGuardManager {
   bool applyConfig(const WireGuardConfig &cfg);
   bool configLooksUsable(const WireGuardConfig &cfg, std::string &error) const;
   void maybeRetryConfigure(uint32_t nowSec);
+  void resetRuntimeStatus();
 
   bool configured_{false};
   bool enabled_{false};
   bool heuristicOnline_{false};
   uint32_t lastRetrySec_{0};
+  bool lastWifiConnected_{false};
   bool hasRetryConfig_{false};
   WireGuardConfig retryConfig_{};
   uint32_t lastHandshake_{0};
