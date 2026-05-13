@@ -143,3 +143,6 @@ Das System entwickelt sich von Einzel-ADC auf modulare Mehrkanal-Erfassung (ein 
 
 - 2026-05-12 Follow-up 16: Kleine Robustheitskorrektur in `PressureMath::adcToVoltage` (Guard bei `adcMax<=0`, sonst droht NaN/Inf). Dazu ein nativer Regressionstest (`test_adc_to_voltage_handles_invalid_adcmax`).
 - 2026-05-12 Follow-up 17: Validierungssemantik wieder mit Runtime abgeglichen: `sharedAdcFrontend` wird nicht mehr pauschal abgelehnt, damit Shared-ADC-Konfigurationen konsistent ladbar/testbar bleiben.
+- 2026-05-12 Follow-up 18: WireGuard-Laufzeitverhalten auf echte Verbindungswechsel angepasst: WiFi-Down triggert gezielten Backend-Reset, Re-Konfiguration erfolgt nur mit aktivem WiFi und dadurch reproduzierbarer beim Reconnect.
+- 2026-05-12 Follow-up 19: WireGuard-Konzept präzisiert: aktive Runtime-Felder vs. persistierte Reservefelder klar bestätigt; Retry-Timing bleibt bei Apply-Fehlern bewusst gedrosselt (kein Loop-Spam).
+- 2026-05-13 Follow-up 20: WireGuard-AllowedIP-Semantik präzisiert: `allowedIp1` ist der primäre Pflichtwert bei aktivem WG; `allowedIp2` bleibt nur für Legacy-Kompatibilität und wird nicht als neuer Standard propagiert.

@@ -168,3 +168,6 @@
 
 - [x] 2026-05-12: Logikfix ergänzt: Schutz gegen Division durch 0 in `PressureMath::adcToVoltage` + nativer Regressionstest.
 - [x] 2026-05-12: Validierungsfehler behoben: `sharedAdcFrontend`-Configs werden nicht mehr fälschlich global als ungültig abgelehnt (konsistent mit Shared-ADC-Pfad und Tests).
+- [x] 2026-05-12 Follow-up 18: WireGuard-Recovery praxisnäher gemacht: bei WiFi-Linkverlust wird das Backend sauber zurückgesetzt; Re-Apply wartet auf WiFi und startet nach Reconnect zuverlässig erneut (statt an stale state zu hängen).
+- [x] 2026-05-12 Follow-up 19: WireGuard-Retry-Bugfix: bei `applyConfig`-Fehlern bleibt das 5-Minuten-Intervall intakt (kein sofortiges Dauer-Reapply); Semantik „aktive Felder vs. reservierte Persistenzfelder“ explizit nachgeschärft.
+- [x] 2026-05-13 Follow-up 20: WireGuard-Validation ergänzt: bei aktivem WG muss jetzt mindestens ein AllowedIP gesetzt sein (`allowedIp1` oder Legacy-`allowedIp2`), um unvollständige Peer-Routen nicht still zu akzeptieren.

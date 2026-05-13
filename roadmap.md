@@ -126,3 +126,6 @@
 
 - 2026-05-12 Follow-up 16: Sensor-Mathematik gehärtet (adcMax<=0 Guard in `adcToVoltage`) und per Unit-Test abgesichert.
 - 2026-05-12 Follow-up 17: Validierungsregression bereinigt: Shared-ADC-Frontend wird wieder gemäß Runtime-Semantik akzeptiert (kein pauschales Reject in `AppConfig::validate`).
+- 2026-05-12 Follow-up 18: WireGuard-Reconnect-Härtung umgesetzt (WiFi-Down => WG-Reset, Retry nur bei aktivem WiFi), damit Tunnel nach Linkwechseln wieder deterministisch hochkommt.
+- 2026-05-12 Follow-up 19: WireGuard-Retry-Stabilisierung erledigt: fehlgeschlagene Re-Applys löschen den Retry-Timestamp nicht mehr; dadurch bleibt die gedrosselte 5-Minuten-Selbstheilung erhalten.
+- 2026-05-13 Follow-up 20: WG-Konfig-Qualität erhöht: AllowedIP ist nun verpflichtend (mindestens `allowedIp1`; `allowedIp2` nur Legacy-Kompatibilität).

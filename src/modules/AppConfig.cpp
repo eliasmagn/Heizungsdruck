@@ -158,6 +158,10 @@ bool AppConfig::validate(std::string &error) const {
       error = "wireguard peerPublicKey must not be empty when enabled";
       return false;
     }
+    if (wireguard.allowedIp1.empty() && wireguard.allowedIp2.empty()) {
+      error = "wireguard allowedIp1 (or legacy allowedIp2) must not be empty when enabled";
+      return false;
+    }
   }
   if (calib.points.size() > CalibrationConfig::kMaxPointCount) {
     error = "too many calibration points";
